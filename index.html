@@ -1306,7 +1306,7 @@ const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJ
 
 // Admin passphrase — change this to your secret value
 // Note: stored in client; real security comes from Supabase RLS + role check
-const _adminPhrase = 'codestash-admin-2025';
+const _adminPhrase = '2026';
 
 // ── SECURITY: RATE LIMITING ─────────────────────────
 const RATE_LIMIT = { max: 5, window: 0 }; // track attempts, no lockout freeze
@@ -1525,6 +1525,7 @@ async function handleAuth() {
   // Validation
   if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
   if (!validateEmail(email)) { showAuthError('Please enter a valid email address.'); return; }
+
 
   if (_authMode === 'signup') {
     const confirm = document.getElementById('authConfirm').value || '';
