@@ -1,201 +1,146 @@
 # ⚡ CodeStash
 
-A self-hosted code snippet manager with admin-controlled access, user approval workflows, and site-wide lock/unlock — built as a single HTML file powered by Supabase.
+A self-hosted code snippet manager. Save, search, and copy your code snippets — with admin-controlled access so only approved people can use it.
+
+Single HTML file. No install. No build step. Powered by Supabase.
 
 ---
 
-## Features
+## What you need
 
-- **Three-tier auth** — separate Sign In, Sign Up, and Admin login flows
-- **Approval queue** — new signups are held in *pending* state until an admin approves them
-- **Admin portal** — dedicated dashboard to manage users and control site access
-- **Site lock/unlock** — admin can open the site to the public (no login needed) or lock it down to approved users only
-- **Security hardened** — rate limiting, input sanitization, inactivity timeout, XSS protection, and Supabase Row Level Security
-- **Snippet manager** — save, search, copy, and delete code snippets with language tagging
-- Zero dependencies, no build step — just one `.html` file
+- A free [Supabase](https://supabase.com) account
+- A way to host a static HTML file (GitHub Pages, Netlify, anywhere)
+- 10 minutes
 
 ---
 
-## Getting Started
+## Setup
 
 ### 1. Create a Supabase project
 
-Go to [supabase.com](https://supabase.com) and create a free project. Copy your **Project URL** and **anon public key** from `Settings → API`.
+Go to [supabase.com](https://supabase.com) → New Project → wait for it to spin up.
 
-### 2. Configure the HTML file
+### 2. Run the database SQL
 
-Open `index.html` and update the two config values near the top of the `<script>` block:
+In your Supabase dashboard → **SQL Editor** → paste and run the contents of `supabase_setup.sql`.
+
+This creates three tables (`profiles`, `site_settings`, `snippets`) with all the security rules.
+
+### 3. Configure the HTML file
+
+Open `index.html` and find this section near the top of the `<script>`:
 
 ```js
-const _c = 'https://YOUR-PROJECT.supabase.co';   // your project URL
-const _k = 'YOUR-ANON-KEY';                       // your anon/public key
+const _c = 'https://your-project.supabase.co';   // ← your Project URL
+const _k = 'your-anon-key';                        // ← your anon public key
+const _adminPhrase = 'codestash-admin-2025';        // ← change this!
 ```
 
-Also change the admin passphrase to something secret:
+Get your URL and anon key from: Supabase → **Settings → API**.
 
-```js
-const _adminPhrase = 'your-secret-passphrase';
-```
+> ⚠️ Change `_adminPhrase` to something only you know before deploying.
 
-> **Note:** The passphrase is a client-side gate. Real access control is enforced by Supabase RLS policies on the server.
+### 4. Deploy
 
-### 3. Run the SQL setup
+Upload `index.html` anywhere that serves static files. GitHub Pages, Netlify drag-and-drop, Vercel — all work fine.
 
-In your Supabase dashboard go to **SQL Editor** and run the full SQL block found at the bottom of `index.html` (inside the HTML comment). It creates:
+---
 
-| Table | Purpose |
-|---|---|
-| `profiles` | Stores each user's role (`admin`/`user`) and status (`pending`/`approved`/`rejected`) |
-| `site_settings` | Single-row table that holds the global site lock state |
-| `snippets` | The code snippets with RLS scoped to approved users |
+## Creating your admin account
 
-### 4. Create your first admin
-
-After running the SQL, sign up once through the app normally, then run this in the Supabase SQL editor:
+1. Open the app → **Sign Up** tab → register with your email and password
+2. Go to Supabase → **SQL Editor** → run:
 
 ```sql
 UPDATE profiles
 SET role = 'admin', status = 'approved'
-WHERE email = 'your-admin@email.com';
+WHERE email = 'your-email@example.com';
 ```
 
-### 5. Deploy
+3. Back in the app → click the **⚙ Admin** tab → sign in with your email, password, and your admin passphrase
 
-Drop `index.html` anywhere — GitHub Pages, Netlify, Vercel, an S3 bucket, or just open it locally. No server required.
+That's it. You're in.
+
+> If you see "User already registered" on signup, your account already exists — just go straight to the Admin tab and sign in.
+
+> If you see "Access denied", your profile row is missing or has the wrong role. Run the `UPDATE` query above (or `INSERT` if the profiles table is empty — see Troubleshooting below).
 
 ---
 
-## How It Works
+## How it works
 
-### Auth Flow
+| Role | What they can do |
+|------|-----------------|
+| **Admin** | Approve/reject users, lock or unlock the site, view all snippets |
+| **Approved user** | Save, search, copy, and delete their own snippets |
+| **Pending user** | Nothing — sees a waiting screen until approved |
+| **Public** (site unlocked) | Read-only view of snippets, no login needed |
 
-```
-User visits site
-      │
-      ├─ Site unlocked? ──► Show app directly (public access)
-      │
-      └─ Site locked?
-            │
-            ├─ Sign In ──► Check profile status
-            │                   ├─ pending  ──► Show waiting screen
-            │                   ├─ rejected ──► Show error
-            │                   └─ approved ──► Show app ✓
-            │
-            ├─ Sign Up ──► Create profile (status: pending)
-            │              Show "awaiting approval" notice
-            │
-            └─ Admin ───► Passphrase check + role check
-                          └─ role = admin ──► Admin portal ✓
-```
-
-### Admin Portal
-
-The admin portal has two sections:
-
-**Site Access Control**
-A toggle switch that flips the `locked` field in the `site_settings` table. When unlocked, the site skips authentication entirely on page load and shows the app to everyone.
-
-**User Management**
-Filterable list of all registered users (Pending / Approved / Rejected / All). Each user card shows their email, join time, and current status with action buttons:
-
-| Status | Available actions |
-|---|---|
-| Pending | Approve, Reject |
-| Approved | Revoke |
-| Rejected | Restore |
+New signups are always **pending** until an admin approves them from the Admin Portal.
 
 ---
 
-## Security
+## Admin Portal
 
-| Measure | Details |
-|---|---|
-| **Rate limiting** | 5 failed login attempts locks the form for 15 minutes (tracked in `sessionStorage`) |
-| **Input sanitization** | Email, password, and text fields are validated and stripped of HTML/special characters |
-| **XSS protection** | All user-generated content rendered via `escHtml()` which encodes `&`, `<`, `>`, `"`, `'` |
-| **Inactivity timeout** | Session auto-expires after 30 minutes of no user activity |
-| **Admin passphrase** | Extra credential required beyond email/password for admin login |
-| **Supabase RLS** | Row Level Security policies enforce server-side access rules regardless of client-side code |
-| **DevTools detection** | Overlay blocks access if browser developer tools are detected |
-| **Anti-inspect** | Right-click, F12, and common devtools keyboard shortcuts are intercepted |
+Log in via the **⚙ Admin** tab. You'll need your email, password, and the admin passphrase.
 
-### RLS Policy Summary
-
-```
-profiles
-  ├─ SELECT  users see own row; admins see all
-  ├─ INSERT  users insert own row on signup
-  └─ UPDATE  admins only
-
-site_settings
-  ├─ SELECT  public (needed for lock check on page load)
-  └─ UPDATE  admins only
-
-snippets
-  ├─ SELECT  approved users + admins
-  ├─ INSERT  approved users (own snippets only)
-  └─ DELETE  own snippets; admins can delete any
-```
+From the portal you can:
+- **Approve or reject** pending users
+- **Revoke** access from existing users
+- **Lock/unlock** the site — unlocked means anyone can view snippets without logging in
 
 ---
 
-## Customization
+## Customisation
 
-### Change the inactivity timeout
-
-```js
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes — adjust as needed
-```
-
-### Change the rate limit window
-
-```js
-const RATE_LIMIT = { max: 5, window: 15 * 60 * 1000 }; // 5 attempts per 15 min
-```
-
-### Add more snippet languages
-
-Find the `<select id="snippetLang">` element in the HTML and add more `<option>` tags.
+| What | Where |
+|------|-------|
+| Admin passphrase | `const _adminPhrase = '...'` |
+| Session timeout | `const INACTIVITY_TIMEOUT = 30 * 60 * 1000` (milliseconds) |
+| Snippet languages | `<select id="snippetLang">` in the HTML |
+| Colours / fonts | CSS variables at the top of `<style>` |
 
 ---
 
-## Project Structure
+## Troubleshooting
 
+**"User already registered" on signup**
+Your account exists in Supabase Auth but has no profile row. Run this in SQL Editor:
+```sql
+-- First get your user ID
+SELECT id FROM auth.users WHERE email = 'your-email@example.com';
+
+-- Then insert the profile
+INSERT INTO profiles (id, email, role, status)
+VALUES ('paste-id-here', 'your-email@example.com', 'admin', 'approved');
 ```
-index.html
-│
-├── CSS (embedded)
-│   ├── Auth screen styles
-│   ├── Admin portal styles
-│   ├── App / snippet styles
-│   └── Animations & responsive
-│
-├── HTML
-│   ├── #authScreen        — login / signup / admin tabs
-│   ├── #pendingScreen     — shown to unapproved users
-│   ├── #adminPortal       — full admin dashboard
-│   └── #appContainer      — main snippet manager
-│
-└── JavaScript (embedded IIFE)
-    ├── Anti-inspect / DevTools detection
-    ├── Rate limiting
-    ├── Auth handlers (login, signup, admin)
-    ├── Profile management (fetch, create, update)
-    ├── Admin functions (lock toggle, user approval)
-    ├── Snippet CRUD (fetch, save, delete, render)
-    └── Utilities (toast, escHtml, relTime, inactivity)
+
+**"Access denied" on admin login**
+Your profile exists but doesn't have admin role. Fix it:
+```sql
+UPDATE profiles SET role = 'admin', status = 'approved'
+WHERE email = 'your-email@example.com';
 ```
+
+**Snippets not loading**
+Check that the Supabase URL and anon key in `index.html` are correct. You can verify in Supabase → Settings → API.
+
+**SQL setup failed with "relation does not exist"**
+Make sure you're running `supabase_setup.sql` in full, top to bottom, in one go. The order matters — tables must exist before the functions and policies that reference them.
 
 ---
 
-## Requirements
+## Security notes
 
-- A [Supabase](https://supabase.com) project (free tier works)
-- A modern browser (Chrome, Firefox, Safari, Edge)
-- No Node.js, no npm, no build tools
+- The admin passphrase in `index.html` is client-side — anyone can view it in source. Change it, but don't treat it as your only security. The real protection is Supabase Row Level Security (RLS), which enforces access at the database level regardless of what the client does.
+- The anon key in the HTML is safe to expose — it's designed to be public. RLS policies control what it can actually access.
+- Sessions auto-expire after 30 minutes of inactivity.
 
 ---
 
-## License
+## Stack
 
-MIT — do whatever you want with it.
+- **Frontend** — vanilla HTML, CSS, JavaScript. Zero dependencies.
+- **Backend** — [Supabase](https://supabase.com) (Postgres + Auth + REST API)
+- **Auth** — Supabase Auth with a custom approval layer on top
+- **Hosting** — any static host
