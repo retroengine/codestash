@@ -29,7 +29,6 @@
     overflow-x: hidden;
   }
 
-  /* Noise texture overlay */
   body::before {
     content: '';
     position: fixed;
@@ -40,15 +39,139 @@
     opacity: 0.6;
   }
 
+  /* ── AUTH SCREEN ── */
+  #authScreen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    background: var(--bg);
+  }
+
+  .auth-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 400px;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .auth-logo h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .auth-logo span { color: var(--accent); }
+
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+  }
+
+  .auth-field {
+    margin-bottom: 14px;
+  }
+
+  .auth-field label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 7px;
+  }
+
+  .auth-field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .auth-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,106,247,0.12);
+  }
+
+  .auth-error {
+    font-size: 0.78rem;
+    color: var(--danger);
+    margin-bottom: 12px;
+    display: none;
+    padding: 10px 14px;
+    background: rgba(245,101,101,0.08);
+    border: 1px solid rgba(245,101,101,0.2);
+    border-radius: 8px;
+  }
+
+  .auth-error.show { display: block; }
+
+  /* ── MAIN APP ── */
   .container {
     max-width: 900px;
     margin: 0 auto;
     padding: 40px 24px;
     position: relative;
     z-index: 1;
+    display: none;
   }
 
-  /* Header */
+  .container.visible { display: block; }
+
   header {
     display: flex;
     align-items: center;
@@ -64,17 +187,6 @@
     gap: 12px;
   }
 
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-  }
-
   .logo h1 {
     font-family: 'Syne', sans-serif;
     font-size: 1.6rem;
@@ -82,8 +194,12 @@
     letter-spacing: -0.02em;
   }
 
-  .logo span {
-    color: var(--accent);
+  .logo span { color: var(--accent); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 
   .status-dot {
@@ -105,7 +221,20 @@
   .dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
   .dot.error { background: var(--danger); }
 
-  /* Upload panel */
+  .btn-signout {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
   .upload-panel {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -147,7 +276,7 @@
 
   input[type="text"]:focus, select:focus, textarea:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(124, 106, 247, 0.12);
+    box-shadow: 0 0 0 3px rgba(124,106,247,0.12);
   }
 
   select option { background: var(--surface2); }
@@ -183,12 +312,12 @@
 
   .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(124, 106, 247, 0.35);
+    box-shadow: 0 8px 24px rgba(124,106,247,0.35);
   }
 
   .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-  /* Snippets section */
   .snippets-header {
     display: flex;
     align-items: center;
@@ -211,15 +340,12 @@
     color: var(--muted);
   }
 
-  /* Search */
   .search-bar {
     position: relative;
     margin-bottom: 20px;
   }
 
-  .search-bar input {
-    padding-left: 40px;
-  }
+  .search-bar input { padding-left: 40px; }
 
   .search-icon {
     position: absolute;
@@ -231,7 +357,6 @@
     pointer-events: none;
   }
 
-  /* Snippet cards */
   .snippets-list {
     display: flex;
     flex-direction: column;
@@ -275,25 +400,26 @@
     letter-spacing: 0.08em;
     padding: 3px 8px;
     border-radius: 5px;
-    background: rgba(124, 106, 247, 0.15);
+    background: rgba(124,106,247,0.15);
     color: var(--accent);
     white-space: nowrap;
-    border: 1px solid rgba(124, 106, 247, 0.25);
+    border: 1px solid rgba(124,106,247,0.25);
     flex-shrink: 0;
   }
 
   .snippet-name {
     font-size: 0.9rem;
     font-weight: 600;
-    truncate: ellipsis;
     overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .snippet-date {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: var(--muted);
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .snippet-actions {
@@ -304,54 +430,48 @@
   }
 
   .icon-btn {
-    background: none;
+    padding: 5px 12px;
+    border-radius: 6px;
     border: 1px solid var(--border);
-    border-radius: 7px;
+    background: transparent;
     color: var(--muted);
-    cursor: pointer;
-    padding: 6px 10px;
-    font-size: 0.75rem;
     font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
     transition: all 0.2s;
-    white-space: nowrap;
   }
 
-  .icon-btn:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
-  .icon-btn.copy-success { color: var(--success); border-color: var(--success); }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
   .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .icon-btn.copy-success { border-color: var(--success); color: var(--success); }
 
   .snippet-body {
     display: none;
-    padding: 18px;
+    padding: 0;
   }
 
   .snippet-body.open { display: block; }
 
   .code-block {
-    background: #0d0d14;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    overflow-x: auto;
+    padding: 18px;
     font-size: 0.82rem;
     line-height: 1.7;
-    color: #c9c2e8;
+    overflow-x: auto;
     white-space: pre;
-    max-height: 400px;
-    overflow-y: auto;
+    color: var(--accent2);
+    border-top: 1px solid var(--border);
   }
 
-  /* Empty state */
   .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.8;
   }
 
-  .empty-state .big-icon { font-size: 3rem; margin-bottom: 16px; }
-  .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+  .big-icon { font-size: 2.5rem; margin-bottom: 12px; }
 
-  /* Toast */
   .toast {
     position: fixed;
     bottom: 32px;
@@ -369,34 +489,38 @@
     gap: 8px;
     transform: translateY(80px);
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
   }
 
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.success { border-color: var(--success); }
   .toast.error { border-color: var(--danger); }
 
-  /* Config banner */
-  .config-banner {
-    background: rgba(124, 106, 247, 0.08);
-    border: 1px solid rgba(124, 106, 247, 0.3);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    font-size: 0.8rem;
-    line-height: 1.7;
-    color: #b3a9f5;
+  /* ── DEVTOOLS OVERLAY ── */
+  #devtoolsOverlay {
     display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'Syne', sans-serif;
   }
 
-  .config-banner.show { display: block; }
-  .config-banner strong { color: var(--accent); }
-  .config-banner code {
-    background: rgba(124, 106, 247, 0.12);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.78rem;
+  #devtoolsOverlay.show { display: flex; }
+
+  #devtoolsOverlay .big-icon { font-size: 3rem; }
+
+  #devtoolsOverlay h2 {
+    font-size: 1.4rem;
+    color: var(--danger);
+    font-weight: 800;
   }
+
+  #devtoolsOverlay p { color: var(--muted); font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
@@ -411,23 +535,57 @@
 </head>
 <body>
 
-<div class="container">
+<!-- DevTools Overlay -->
+<div id="devtoolsOverlay">
+  <div class="big-icon">🔒</div>
+  <h2>Access Restricted</h2>
+  <p>Close developer tools to continue.</p>
+</div>
+
+<!-- Auth Screen -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-icon">⚡</div>
+      <h1>Code<span>Stash</span></h1>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-field">
+      <label>Email</label>
+      <input type="text" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="auth-field">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn btn-primary" id="authBtn" onclick="handleAuth()">Sign In</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div class="container" id="appContainer">
   <header>
     <div class="logo">
       <div class="logo-icon">⚡</div>
       <h1>Code<span>Stash</span></h1>
     </div>
-    <div class="status-dot">
-      <div class="dot" id="statusDot"></div>
-      <span id="statusText">connecting...</span>
+    <div class="header-right">
+      <div class="status-dot">
+        <div class="dot" id="statusDot"></div>
+        <span id="statusText">connecting...</span>
+      </div>
+      <button class="btn-signout" onclick="signOut()">sign out</button>
     </div>
   </header>
 
-  <!-- Upload Panel -->
   <div class="upload-panel">
     <div class="panel-title">// new snippet</div>
     <div class="input-row">
-      <input type="text" id="snippetName" placeholder="Snippet name  (e.g. FFT solver)" />
+      <input type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" />
       <select id="snippetLang">
         <option value="python">Python</option>
         <option value="c">C</option>
@@ -445,7 +603,6 @@
     <button class="btn btn-primary" onclick="saveSnippet()">⬆ Save Snippet</button>
   </div>
 
-  <!-- Snippets List -->
   <div class="snippets-header">
     <div class="snippets-title">Saved Snippets</div>
     <div class="count-badge" id="countBadge">0</div>
@@ -467,51 +624,150 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // =============================================
-  //   CONFIGURE THESE TWO VALUES
-  // =============================================
-  const SUPABASE_URL = 'https://sdliegtdpqjtpfkvsqrr.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGllZ3RkcHFqdHBma3ZzcXJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2OTI5OTksImV4cCI6MjA4NzI2ODk5OX0.BIsvIPB02ydNwh36hmwKSrf9MwfXwJjvIo3BLH8UDpU';
-  // =============================================
+(function() {
+  // ── ANTI-INSPECT ──────────────────────────────────────
+  // 1. Disable right-click
+  document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
-  const isConfigured = true;
+  // 2. Block keyboard shortcuts for devtools / view-source
+  document.addEventListener('keydown', function(e) {
+    const blocked = (
+      e.key === 'F12' ||
+      (e.ctrlKey && e.shiftKey && ['I','J','C','K'].includes(e.key.toUpperCase())) ||
+      (e.ctrlKey && e.key.toUpperCase() === 'U') ||
+      (e.metaKey && e.altKey && ['I','J','C'].includes(e.key.toUpperCase()))
+    );
+    if (blocked) { e.preventDefault(); e.stopPropagation(); return false; }
+  });
+
+  // 3. DevTools size detection
+  const _dt = { threshold: 160 };
+  function checkDevTools() {
+    const widthDiff  = window.outerWidth  - window.innerWidth  > _dt.threshold;
+    const heightDiff = window.outerHeight - window.innerHeight > _dt.threshold;
+    const overlay = document.getElementById('devtoolsOverlay');
+    if (overlay) overlay.classList.toggle('show', widthDiff || heightDiff);
+  }
+  setInterval(checkDevTools, 1000);
+  window.addEventListener('resize', checkDevTools);
+
+  // 4. Console trap — clears console and warns on open
+  const _noop = function(){};
+  try {
+    Object.defineProperty(console, '_commandLineAPI', { get: function(){ throw new Error('devtools'); } });
+  } catch(e) {}
+
+  // ── CONFIG (obfuscated) ──────────────────────────────
+  const _c = atob('aHR0cHM6Ly9zZGxpZWd0ZHBxanRwZmt2c3Fyci5zdXBhYmFzZS5jbw==');
+  const _k = atob('ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhUQ0o5LmV5SnBjM01pT2lKemRHbHVZWEJoYldVaUxDSnlaV1lpT2lKelpHeHBaV2QwWkhCeGFuUndabXRyZG5Od2NTSXNJbkpzYjJVaU9pSmhibTl1SWl3aWFXRjBJanoxTmpnM01qWTVPVGt3TENKbGVIQWlPakk0TURjeU5qZzVPVGw5LkJJc3ZJUEJCMHJ3ZE53aDM2aG13S1NyZjlNd2ZYd0pqdklvM0JMSDhVRHBV');
+
+  // ── SESSION ──────────────────────────────────────────
+  let _session = null;
   let snippets = [];
+  let _authMode = 'login';
 
-  // API helpers
-  const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
-  };
+  function _headers(token) {
+    return {
+      'apikey': _k,
+      'Authorization': 'Bearer ' + (token || _k),
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    };
+  }
 
-  async function fetchSnippets() {
-    if (!isConfigured) { setStatus('not configured', 'error'); return; }
+  // ── AUTH ─────────────────────────────────────────────
+  function switchTab(mode) {
+    _authMode = mode;
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && mode === 'login') || (i === 1 && mode === 'signup'));
+    });
+    document.getElementById('authBtn').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
+    document.getElementById('authError').classList.remove('show');
+  }
+
+  async function handleAuth() {
+    const email    = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const errEl    = document.getElementById('authError');
+    const btn      = document.getElementById('authBtn');
+
+    if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = _authMode === 'login' ? 'Signing in...' : 'Creating account...';
+
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/snippets?order=created_at.desc`, { headers });
+      let url, body;
+      if (_authMode === 'login') {
+        url  = _c + '/auth/v1/token?grant_type=password';
+        body = JSON.stringify({ email, password });
+      } else {
+        url  = _c + '/auth/v1/signup';
+        body = JSON.stringify({ email, password });
+      }
+
+      const res  = await fetch(url, { method: 'POST', headers: { 'apikey': _k, 'Content-Type': 'application/json' }, body });
+      const data = await res.json();
+
+      if (!res.ok) { showAuthError(data.error_description || data.msg || 'Authentication failed.'); return; }
+      if (_authMode === 'signup' && !data.access_token) {
+        showAuthError('Check your email to confirm your account, then sign in.');
+        btn.disabled = false; btn.textContent = 'Create Account'; return;
+      }
+
+      _session = data;
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appContainer').classList.add('visible');
+      fetchSnippets();
+    } catch(err) {
+      showAuthError('Network error. Check your connection.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = _authMode === 'login' ? 'Sign In' : 'Create Account';
+    }
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('authError');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function signOut() {
+    _session = null;
+    snippets = [];
+    document.getElementById('appContainer').classList.remove('visible');
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+  }
+
+  // ── SNIPPETS ──────────────────────────────────────────
+  async function fetchSnippets() {
+    if (!_session) return;
+    try {
+      const res = await fetch(_c + '/rest/v1/snippets?order=created_at.desc', { headers: _headers(_session.access_token) });
+      if (res.status === 401) { signOut(); return; }
       if (!res.ok) throw new Error();
       snippets = await res.json();
       setStatus('connected', 'connected');
       renderSnippets();
-    } catch {
-      setStatus('connection error', 'error');
-    }
+    } catch { setStatus('connection error', 'error'); }
   }
 
   async function saveSnippet() {
-    const name = document.getElementById('snippetName').value.trim();
+    const name     = document.getElementById('snippetName').value.trim();
     const language = document.getElementById('snippetLang').value;
-    const code = document.getElementById('snippetCode').value.trim();
+    const code     = document.getElementById('snippetCode').value.trim();
 
     if (!name) { showToast('⚠ Give your snippet a name', 'error'); return; }
     if (!code) { showToast('⚠ Code cannot be empty', 'error'); return; }
-    if (!isConfigured) { showToast('⚠ Configure Supabase first', 'error'); return; }
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/snippets`, {
+      const res = await fetch(_c + '/rest/v1/snippets', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ name, language, code })
+        headers: _headers(_session.access_token),
+        body: JSON.stringify({ name, language, code, user_id: _session.user.id })
       });
       if (!res.ok) throw new Error();
       const [saved] = await res.json();
@@ -520,86 +776,79 @@
       document.getElementById('snippetName').value = '';
       document.getElementById('snippetCode').value = '';
       showToast('✓ Snippet saved!', 'success');
-    } catch {
-      showToast('✗ Failed to save', 'error');
-    }
+    } catch { showToast('✗ Failed to save', 'error'); }
   }
 
   async function deleteSnippet(id, el) {
     el.textContent = '...';
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/snippets?id=eq.${id}`, { method: 'DELETE', headers });
-      snippets = snippets.filter(s => s.id !== id);
+      await fetch(_c + '/rest/v1/snippets?id=eq.' + id, { method: 'DELETE', headers: _headers(_session.access_token) });
+      snippets = snippets.filter(function(s) { return s.id !== id; });
       renderSnippets();
       showToast('Snippet deleted', '');
-    } catch {
-      showToast('✗ Delete failed', 'error');
-      el.textContent = 'del';
-    }
+    } catch { showToast('✗ Delete failed', 'error'); el.textContent = 'del'; }
   }
 
   function renderSnippets() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = snippets.filter(s =>
-      s.name.toLowerCase().includes(query) ||
-      s.language.toLowerCase().includes(query)
-    );
+    const query    = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = snippets.filter(function(s) {
+      return s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query);
+    });
 
     document.getElementById('countBadge').textContent = snippets.length;
     const list = document.getElementById('snippetsList');
 
     if (filtered.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="big-icon">📋</div><p>${snippets.length ? 'No matches found.' : 'No snippets yet.<br>Save your first code above.'}</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="big-icon">📋</div><p>' + (snippets.length ? 'No matches found.' : 'No snippets yet.<br>Save your first code above.') + '</p></div>';
       return;
     }
 
-    list.innerHTML = filtered.map(s => `
-      <div class="snippet-card">
-        <div class="snippet-header" onclick="toggleCard('${s.id}')">
-          <div class="snippet-meta">
-            <span class="lang-badge">${s.language}</span>
-            <span class="snippet-name">${escHtml(s.name)}</span>
-            <span class="snippet-date">${relTime(s.created_at)}</span>
-          </div>
-          <div class="snippet-actions">
-            <button class="icon-btn" id="copy-${s.id}" onclick="event.stopPropagation(); copySnippet('${s.id}')">copy</button>
-            <button class="icon-btn danger" onclick="event.stopPropagation(); deleteSnippet('${s.id}', this)">del</button>
-          </div>
-        </div>
-        <div class="snippet-body" id="body-${s.id}">
-          <div class="code-block">${escHtml(s.code)}</div>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = filtered.map(function(s) {
+      return '<div class="snippet-card">' +
+        '<div class="snippet-header" onclick="toggleCard(\'' + s.id + '\')">' +
+          '<div class="snippet-meta">' +
+            '<span class="lang-badge">' + s.language + '</span>' +
+            '<span class="snippet-name">' + escHtml(s.name) + '</span>' +
+            '<span class="snippet-date">' + relTime(s.created_at) + '</span>' +
+          '</div>' +
+          '<div class="snippet-actions">' +
+            '<button class="icon-btn" id="copy-' + s.id + '" onclick="event.stopPropagation(); copySnippet(\'' + s.id + '\')">copy</button>' +
+            '<button class="icon-btn danger" onclick="event.stopPropagation(); deleteSnippet(\'' + s.id + '\', this)">del</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="snippet-body" id="body-' + s.id + '">' +
+          '<div class="code-block">' + escHtml(s.code) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
   }
 
   function toggleCard(id) {
-    const body = document.getElementById(`body-${id}`);
-    body.classList.toggle('open');
+    document.getElementById('body-' + id).classList.toggle('open');
   }
 
   function copySnippet(id) {
-    const s = snippets.find(x => x.id === id);
+    const s = snippets.find(function(x) { return x.id === id; });
     if (!s) return;
-    navigator.clipboard.writeText(s.code).then(() => {
-      const btn = document.getElementById(`copy-${id}`);
+    navigator.clipboard.writeText(s.code).then(function() {
+      const btn = document.getElementById('copy-' + id);
       btn.textContent = 'copied!';
       btn.classList.add('copy-success');
-      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copy-success'); }, 2000);
+      setTimeout(function() { btn.textContent = 'copy'; btn.classList.remove('copy-success'); }, 2000);
     });
   }
 
+  // ── UTILS ─────────────────────────────────────────────
   function setStatus(text, type) {
     document.getElementById('statusText').textContent = text;
-    const dot = document.getElementById('statusDot');
-    dot.className = 'dot ' + (type || '');
+    document.getElementById('statusDot').className = 'dot ' + (type || '');
   }
 
   function showToast(msg, type) {
     const t = document.getElementById('toast');
     t.textContent = msg;
-    t.className = `toast ${type} show`;
-    setTimeout(() => t.classList.remove('show'), 3000);
+    t.className = 'toast ' + type + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
   }
 
   function escHtml(s) {
@@ -609,25 +858,60 @@
   function relTime(iso) {
     const d = new Date(iso), now = new Date();
     const diff = Math.floor((now - d) / 1000);
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return Math.floor(diff/60)   + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600)  + 'h ago';
     return d.toLocaleDateString();
   }
 
   // Tab key in textarea
-  document.getElementById('snippetCode').addEventListener('keydown', e => {
+  document.getElementById('snippetCode').addEventListener('keydown', function(e) {
     if (e.key === 'Tab') {
       e.preventDefault();
-      const ta = e.target;
-      const s = ta.selectionStart;
+      const ta = e.target, s = ta.selectionStart;
       ta.value = ta.value.substring(0, s) + '  ' + ta.value.substring(ta.selectionEnd);
       ta.selectionStart = ta.selectionEnd = s + 2;
     }
   });
 
-  fetchSnippets();
-  setInterval(fetchSnippets, 30000); // auto-refresh every 30s
+  // Enter key on auth inputs
+  ['authEmail','authPassword'].forEach(function(id) {
+    document.getElementById(id).addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleAuth();
+    });
+  });
+
+  // Expose needed functions to global scope
+  window.switchTab     = switchTab;
+  window.handleAuth    = handleAuth;
+  window.signOut       = signOut;
+  window.saveSnippet   = saveSnippet;
+  window.deleteSnippet = deleteSnippet;
+  window.toggleCard    = toggleCard;
+  window.copySnippet   = copySnippet;
+  window.renderSnippets = renderSnippets;
+
+  setInterval(function() { if (_session) fetchSnippets(); }, 30000);
+})();
 </script>
+
+<!--
+  ═══════════════════════════════════════════════════
+   SUPABASE SETUP — run this SQL in your project
+  ═══════════════════════════════════════════════════
+
+  -- 1. Add user_id column (if table already exists):
+  ALTER TABLE snippets ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
+
+  -- 2. Enable Row Level Security:
+  ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
+
+  -- 3. Create policies (users only see their own data):
+  CREATE POLICY "select_own" ON snippets FOR SELECT USING (auth.uid() = user_id);
+  CREATE POLICY "insert_own" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id);
+  CREATE POLICY "delete_own" ON snippets FOR DELETE USING (auth.uid() = user_id);
+
+  ═══════════════════════════════════════════════════
+-->
 </body>
 </html>
