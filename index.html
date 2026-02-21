@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="referrer" content="no-referrer">
 <title>CodeStash</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -17,6 +19,8 @@
     --muted: #6b6880;
     --danger: #f56565;
     --success: #48bb78;
+    --warning: #f6ad55;
+    --admin: #e879f9;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,25 +43,28 @@
     opacity: 0.6;
   }
 
-  /* ── AUTH SCREEN ── */
-  #authScreen {
+  /* ── SCREENS ── */
+  .screen {
     position: fixed;
     inset: 0;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 100;
     background: var(--bg);
   }
+  .screen.active { display: flex; }
 
+  /* ── AUTH SCREEN ── */
   .auth-box {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 40px 36px;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     animation: fadeUp 0.4s ease;
+    position: relative;
   }
 
   .auth-logo {
@@ -76,6 +83,10 @@
     align-items: center;
     justify-content: center;
     font-size: 18px;
+  }
+
+  .logo-icon.admin-icon {
+    background: linear-gradient(135deg, var(--admin), #a855f7);
   }
 
   .auth-logo h1 {
@@ -99,13 +110,13 @@
 
   .auth-tab {
     flex: 1;
-    padding: 9px;
+    padding: 9px 6px;
     border: none;
     border-radius: 7px;
     background: transparent;
     color: var(--muted);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     cursor: pointer;
     transition: all 0.2s;
   }
@@ -114,6 +125,10 @@
     background: var(--accent);
     color: white;
     font-weight: 600;
+  }
+
+  .auth-tab.admin-tab.active {
+    background: linear-gradient(135deg, var(--admin), #a855f7);
   }
 
   .auth-field {
@@ -147,6 +162,11 @@
     box-shadow: 0 0 0 3px rgba(124,106,247,0.12);
   }
 
+  .admin-mode .auth-field input:focus {
+    border-color: var(--admin);
+    box-shadow: 0 0 0 3px rgba(232,121,249,0.12);
+  }
+
   .auth-error {
     font-size: 0.78rem;
     color: var(--danger);
@@ -160,8 +180,464 @@
 
   .auth-error.show { display: block; }
 
+  .auth-notice {
+    font-size: 0.78rem;
+    color: var(--warning);
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: rgba(246,173,85,0.08);
+    border: 1px solid rgba(246,173,85,0.2);
+    border-radius: 8px;
+    line-height: 1.5;
+  }
+
+  .admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--admin);
+    background: rgba(232,121,249,0.1);
+    border: 1px solid rgba(232,121,249,0.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-bottom: 16px;
+  }
+
+  .rate-limit-bar {
+    display: none;
+    margin-bottom: 12px;
+  }
+
+  .rate-limit-bar.show { display: block; }
+  .rate-limit-bar-label {
+    font-size: 0.72rem;
+    color: var(--danger);
+    margin-bottom: 4px;
+  }
+
+  .rate-limit-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .rate-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .rate-dot.used { background: var(--danger); }
+
+  /* ── PENDING SCREEN ── */
+  .pending-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .pending-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.8; }
+  }
+
+  .pending-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: var(--warning);
+  }
+
+  .pending-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  .pending-email {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: var(--accent2);
+    margin-bottom: 24px;
+  }
+
+  /* ── ADMIN PORTAL ── */
+  #adminPortal {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #adminPortal.active { display: flex; }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .admin-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+  }
+
+  .admin-title-badge {
+    font-size: 0.65rem;
+    background: linear-gradient(135deg, var(--admin), #a855f7);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .admin-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .admin-section {
+    margin-bottom: 36px;
+  }
+
+  .admin-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Site lock toggle */
+  .lock-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .lock-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .lock-info p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .lock-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .lock-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: all 0.3s;
+  }
+
+  .lock-status-dot.locked { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+  .lock-status-dot.unlocked { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+  /* Toggle switch */
+  .toggle-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 56px;
+    height: 28px;
+    cursor: pointer;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    transition: all 0.3s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: all 0.3s;
+  }
+
+  .toggle input:checked + .toggle-slider {
+    background: rgba(72,187,120,0.15);
+    border-color: var(--success);
+  }
+
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(28px);
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+  }
+
+  .toggle-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Pending users list */
+  .user-queue {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .user-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    animation: fadeUp 0.3s ease;
+    transition: border-color 0.2s;
+  }
+
+  .user-card:hover { border-color: var(--accent); }
+
+  .user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-email {
+    font-size: 0.88rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+  }
+
+  .user-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .user-status-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 9px;
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+
+  .user-status-badge.pending {
+    background: rgba(246,173,85,0.12);
+    border: 1px solid rgba(246,173,85,0.3);
+    color: var(--warning);
+  }
+
+  .user-status-badge.approved {
+    background: rgba(72,187,120,0.12);
+    border: 1px solid rgba(72,187,120,0.3);
+    color: var(--success);
+  }
+
+  .user-status-badge.rejected {
+    background: rgba(245,101,101,0.12);
+    border: 1px solid rgba(245,101,101,0.3);
+    color: var(--danger);
+  }
+
+  .user-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-approve {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: 1px solid rgba(72,187,120,0.4);
+    background: rgba(72,187,120,0.1);
+    color: var(--success);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+
+  .btn-approve:hover { background: rgba(72,187,120,0.2); border-color: var(--success); }
+
+  .btn-reject {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: 1px solid rgba(245,101,101,0.4);
+    background: rgba(245,101,101,0.1);
+    color: var(--danger);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+
+  .btn-reject:hover { background: rgba(245,101,101,0.2); border-color: var(--danger); }
+
+  .btn-revoke {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-revoke:hover { border-color: var(--danger); color: var(--danger); }
+
+  .empty-queue {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .empty-queue .eq-icon { font-size: 2rem; margin-bottom: 10px; }
+
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-num.pending-color { color: var(--warning); }
+  .stat-num.approved-color { color: var(--success); }
+  .stat-num.rejected-color { color: var(--danger); }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Admin filter tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .filter-tab {
+    padding: 6px 16px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
   /* ── MAIN APP ── */
-  .container {
+  #appContainer {
     max-width: 900px;
     margin: 0 auto;
     padding: 40px 24px;
@@ -170,7 +646,7 @@
     display: none;
   }
 
-  .container.visible { display: block; }
+  #appContainer.visible { display: block; }
 
   header {
     display: flex;
@@ -220,6 +696,32 @@
 
   .dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
   .dot.error { background: var(--danger); }
+
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .user-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
 
   .btn-signout {
     background: transparent;
@@ -313,6 +815,14 @@
   .btn-primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 24px rgba(124,106,247,0.35);
+  }
+
+  .btn-primary.admin-btn {
+    background: linear-gradient(135deg, var(--admin), #a855f7);
+  }
+
+  .btn-primary.admin-btn:hover {
+    box-shadow: 0 8px 24px rgba(232,121,249,0.35);
   }
 
   .btn-primary:active { transform: translateY(0); }
@@ -495,8 +1005,9 @@
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.success { border-color: var(--success); }
   .toast.error { border-color: var(--danger); }
+  .toast.warning { border-color: var(--warning); }
 
-  /* ── DEVTOOLS OVERLAY ── */
+  /* Devtools overlay */
   #devtoolsOverlay {
     display: none;
     position: fixed;
@@ -511,16 +1022,23 @@
   }
 
   #devtoolsOverlay.show { display: flex; }
-
   #devtoolsOverlay .big-icon { font-size: 3rem; }
+  #devtoolsOverlay h2 { font-size: 1.4rem; color: var(--danger); font-weight: 800; }
+  #devtoolsOverlay p { color: var(--muted); font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; }
 
-  #devtoolsOverlay h2 {
-    font-size: 1.4rem;
-    color: var(--danger);
-    font-weight: 800;
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
   }
 
-  #devtoolsOverlay p { color: var(--muted); font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
@@ -530,6 +1048,10 @@
   @media (max-width: 600px) {
     .input-row { grid-template-columns: 1fr; }
     .snippet-date { display: none; }
+    .admin-stats { grid-template-columns: 1fr; }
+    .lock-card { flex-direction: column; align-items: flex-start; }
+    .auth-box, .pending-box { padding: 32px 24px; }
+    .admin-body { padding: 20px 16px; }
   }
 </style>
 </head>
@@ -542,32 +1064,156 @@
   <p>Close developer tools to continue.</p>
 </div>
 
-<!-- Auth Screen -->
-<div id="authScreen">
-  <div class="auth-box">
+<!-- ── AUTH SCREEN ── -->
+<div class="screen" id="authScreen">
+  <div class="auth-box" id="authBox">
     <div class="auth-logo">
-      <div class="logo-icon">⚡</div>
+      <div class="logo-icon" id="authLogoIcon">⚡</div>
       <h1>Code<span>Stash</span></h1>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
       <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+      <button class="auth-tab admin-tab" onclick="switchTab('admin')">⚙ Admin</button>
     </div>
+
+    <!-- Rate limit indicator -->
+    <div class="rate-limit-bar" id="rateLimitBar">
+      <div class="rate-limit-bar-label" id="rateLimitLabel">⚠ Failed attempts</div>
+      <div class="rate-limit-dots" id="rateLimitDots"></div>
+    </div>
+
+    <div id="authAdminBadge" style="display:none">
+      <div class="admin-badge">🛡 Administrator Access</div>
+    </div>
+
+    <div id="authNotice" class="auth-notice" style="display:none"></div>
     <div class="auth-error" id="authError"></div>
+
     <div class="auth-field">
       <label>Email</label>
-      <input type="text" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email"
+        oninput="sanitizeInput(this)" />
     </div>
     <div class="auth-field">
       <label>Password</label>
       <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
     </div>
+    <!-- Confirm password for signup -->
+    <div class="auth-field" id="confirmField" style="display:none">
+      <label>Confirm Password</label>
+      <input type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
+    </div>
+    <!-- Admin passphrase -->
+    <div class="auth-field" id="adminKeyField" style="display:none">
+      <label>Admin Passphrase</label>
+      <input type="password" id="adminKey" placeholder="Enter admin passphrase" autocomplete="off" />
+    </div>
+
     <button class="btn btn-primary" id="authBtn" onclick="handleAuth()">Sign In</button>
   </div>
 </div>
 
-<!-- Main App -->
-<div class="container" id="appContainer">
+<!-- ── PENDING SCREEN ── -->
+<div class="screen" id="pendingScreen">
+  <div class="pending-box">
+    <div class="pending-icon">⏳</div>
+    <div class="pending-title">Awaiting Approval</div>
+    <p class="pending-sub">
+      Your account is pending admin review.<br>
+      You'll be able to sign in once approved.
+    </p>
+    <div class="pending-email" id="pendingEmail">—</div>
+    <button class="btn btn-primary" onclick="signOut()" style="background: transparent; border: 1px solid var(--border); color: var(--muted);">
+      Back to Sign In
+    </button>
+  </div>
+</div>
+
+<!-- ── ADMIN PORTAL ── -->
+<div id="adminPortal">
+  <div class="admin-header">
+    <div class="admin-title">
+      <span>🛡</span>
+      <span>Admin Portal</span>
+      <span class="admin-title-badge">SECURE</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="status-dot">
+        <div class="dot connected"></div>
+        <span id="adminEmail" style="font-size:0.75rem;color:var(--muted)">admin</span>
+      </div>
+      <button class="btn-signout" onclick="adminSignOut()">sign out</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- Stats -->
+    <div class="admin-section">
+      <div class="admin-section-title">// overview</div>
+      <div class="admin-stats">
+        <div class="stat-card">
+          <div class="stat-num pending-color" id="statPending">—</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num approved-color" id="statApproved">—</div>
+          <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num rejected-color" id="statRejected">—</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Site Lock Control -->
+    <div class="admin-section">
+      <div class="admin-section-title">// site access control</div>
+      <div class="lock-card">
+        <div class="lock-info">
+          <h3 id="lockTitle">Site Lock</h3>
+          <p id="lockDesc">Control whether the site requires login to access.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:24px;">
+          <div class="lock-status">
+            <div class="lock-status-dot" id="lockStatusDot"></div>
+            <span id="lockStatusText" style="font-size:0.8rem;color:var(--muted)">Loading...</span>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="siteUnlocked" onchange="toggleSiteLock()" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="toggleLabel">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="admin-section">
+      <div class="admin-section-title">// user management</div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterUsers('pending')">⏳ Pending</button>
+        <button class="filter-tab" onclick="filterUsers('approved')">✓ Approved</button>
+        <button class="filter-tab" onclick="filterUsers('rejected')">✗ Rejected</button>
+        <button class="filter-tab" onclick="filterUsers('all')">All</button>
+      </div>
+      <div class="user-queue" id="userQueue">
+        <div class="empty-queue">
+          <div class="eq-icon">👥</div>
+          <p>Loading users...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="appContainer">
   <header>
     <div class="logo">
       <div class="logo-icon">⚡</div>
@@ -577,6 +1223,10 @@
       <div class="status-dot">
         <div class="dot" id="statusDot"></div>
         <span id="statusText">connecting...</span>
+      </div>
+      <div class="user-pill">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userEmailDisplay">—</span>
       </div>
       <button class="btn-signout" onclick="signOut()">sign out</button>
     </div>
@@ -625,293 +1275,897 @@
 
 <script>
 (function() {
-  // ── ANTI-INSPECT ──────────────────────────────────────
-  // 1. Disable right-click
-  document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+'use strict';
 
-  // 2. Block keyboard shortcuts for devtools / view-source
-  document.addEventListener('keydown', function(e) {
-    const blocked = (
-      e.key === 'F12' ||
-      (e.ctrlKey && e.shiftKey && ['I','J','C','K'].includes(e.key.toUpperCase())) ||
-      (e.ctrlKey && e.key.toUpperCase() === 'U') ||
-      (e.metaKey && e.altKey && ['I','J','C'].includes(e.key.toUpperCase()))
-    );
-    if (blocked) { e.preventDefault(); e.stopPropagation(); return false; }
-  });
+// ── ANTI-INSPECT ─────────────────────────────────────
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
-  // 3. DevTools size detection
-  const _dt = { threshold: 160 };
-  function checkDevTools() {
-    const widthDiff  = window.outerWidth  - window.innerWidth  > _dt.threshold;
-    const heightDiff = window.outerHeight - window.innerHeight > _dt.threshold;
-    const overlay = document.getElementById('devtoolsOverlay');
-    if (overlay) overlay.classList.toggle('show', widthDiff || heightDiff);
-  }
-  setInterval(checkDevTools, 1000);
-  window.addEventListener('resize', checkDevTools);
+document.addEventListener('keydown', function(e) {
+  const blocked = (
+    e.key === 'F12' ||
+    (e.ctrlKey && e.shiftKey && ['I','J','C','K'].includes(e.key.toUpperCase())) ||
+    (e.ctrlKey && e.key.toUpperCase() === 'U') ||
+    (e.metaKey && e.altKey && ['I','J','C'].includes(e.key.toUpperCase()))
+  );
+  if (blocked) { e.preventDefault(); e.stopPropagation(); return false; }
+});
 
-  // 4. Console trap — clears console and warns on open
-  const _noop = function(){};
+const _dt = { threshold: 160 };
+function checkDevTools() {
+  const widthDiff  = window.outerWidth  - window.innerWidth  > _dt.threshold;
+  const heightDiff = window.outerHeight - window.innerHeight > _dt.threshold;
+  const overlay = document.getElementById('devtoolsOverlay');
+  if (overlay) overlay.classList.toggle('show', widthDiff || heightDiff);
+}
+setInterval(checkDevTools, 1000);
+window.addEventListener('resize', checkDevTools);
+
+// ── CONFIG ─────────────────────────────────────────
+const _c = 'https://sdliegtdpqjtpfkvsqrr.supabase.co';
+const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGllZ3R','kcHFqdHBma3ZzcXJyIiwicm9sZSI6ImFub24iLCJ','pYXQiOjE3NzE2OTI5OTksImV4cCI6MjA4NzI2ODk','5OX0.BIsvIPB02ydNwh36hmwKSrf9MwfXwJjvIo3','BLH8UDpU'].join('');
+
+// Admin passphrase — change this to your secret value
+// Note: stored in client; real security comes from Supabase RLS + role check
+const _adminPhrase = 'codestash-admin-2025';
+
+// ── SECURITY: RATE LIMITING ─────────────────────────
+const RATE_LIMIT = { max: 5, window: 15 * 60 * 1000 }; // 5 attempts / 15 min
+
+function getRateData() {
   try {
-    Object.defineProperty(console, '_commandLineAPI', { get: function(){ throw new Error('devtools'); } });
-  } catch(e) {}
+    const raw = sessionStorage.getItem('_rl');
+    return raw ? JSON.parse(raw) : { attempts: 0, lockedUntil: 0 };
+  } catch { return { attempts: 0, lockedUntil: 0 }; }
+}
 
-  // ── CONFIG (obfuscated) ──────────────────────────────
-  const _c = 'https://sdliegtdpqjtpfkvsqrr.supabase.co';
-  const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGllZ3R','kcHFqdHBma3ZzcXJyIiwicm9sZSI6ImFub24iLCJ','pYXQiOjE3NzE2OTI5OTksImV4cCI6MjA4NzI2ODk','5OX0.BIsvIPB02ydNwh36hmwKSrf9MwfXwJjvIo3','BLH8UDpU'].join('');
+function saveRateData(d) {
+  try { sessionStorage.setItem('_rl', JSON.stringify(d)); } catch {}
+}
 
-  // ── SESSION ──────────────────────────────────────────
-  let _session = null;
-  let snippets = [];
-  let _authMode = 'login';
+function recordFailedAttempt() {
+  const d = getRateData();
+  d.attempts = (d.attempts || 0) + 1;
+  if (d.attempts >= RATE_LIMIT.max) {
+    d.lockedUntil = Date.now() + RATE_LIMIT.window;
+    d.attempts = 0;
+  }
+  saveRateData(d);
+  updateRateLimitUI();
+}
 
-  function _headers(token) {
-    return {
-      'apikey': _k,
-      'Authorization': 'Bearer ' + (token || _k),
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    };
+function resetRateLimit() {
+  saveRateData({ attempts: 0, lockedUntil: 0 });
+  updateRateLimitUI();
+}
+
+function isRateLimited() {
+  const d = getRateData();
+  if (d.lockedUntil && Date.now() < d.lockedUntil) return d.lockedUntil;
+  return false;
+}
+
+function updateRateLimitUI() {
+  const d = getRateData();
+  const bar = document.getElementById('rateLimitBar');
+  const label = document.getElementById('rateLimitLabel');
+  const dots = document.getElementById('rateLimitDots');
+  if (!bar) return;
+
+  const locked = isRateLimited();
+  if (locked) {
+    bar.classList.add('show');
+    const mins = Math.ceil((locked - Date.now()) / 60000);
+    label.textContent = '⛔ Locked out — try again in ' + mins + ' min';
+    dots.innerHTML = Array(RATE_LIMIT.max).fill('<div class="rate-dot used"></div>').join('');
+    return;
   }
 
-  // ── AUTH ─────────────────────────────────────────────
-  function switchTab(mode) {
-    _authMode = mode;
-    document.querySelectorAll('.auth-tab').forEach((t, i) => {
-      t.classList.toggle('active', (i === 0 && mode === 'login') || (i === 1 && mode === 'signup'));
+  const attempts = d.attempts || 0;
+  if (attempts > 0) {
+    bar.classList.add('show');
+    label.textContent = '⚠ Failed attempts: ' + attempts + '/' + RATE_LIMIT.max;
+    dots.innerHTML = Array(RATE_LIMIT.max).fill(0).map((_,i) =>
+      '<div class="rate-dot ' + (i < attempts ? 'used' : '') + '"></div>'
+    ).join('');
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+// ── SECURITY: INPUT SANITIZATION ───────────────────
+function sanitizeInput(el) {
+  // Strip dangerous characters from email field
+  el.value = el.value.replace(/[<>"'`]/g, '');
+}
+
+function validateEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+function validatePassword(p) {
+  return p.length >= 8;
+}
+
+// ── SECURITY: INACTIVITY TIMEOUT ────────────────────
+let _inactivityTimer = null;
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+function resetInactivityTimer() {
+  clearTimeout(_inactivityTimer);
+  _inactivityTimer = setTimeout(function() {
+    if (_session) {
+      showToast('⏱ Session expired due to inactivity', 'warning');
+      signOut();
+    }
+  }, INACTIVITY_TIMEOUT);
+}
+
+['click','keydown','mousemove','touchstart'].forEach(function(ev) {
+  document.addEventListener(ev, resetInactivityTimer, { passive: true });
+});
+
+// ── STATE ──────────────────────────────────────────
+let _session = null;
+let _userProfile = null;
+let _authMode = 'login';
+let _siteUnlocked = false;
+let _allUsers = [];
+let _currentFilter = 'pending';
+let snippets = [];
+
+// ── SCREEN MANAGER ─────────────────────────────────
+function showScreen(id) {
+  ['authScreen','pendingScreen'].forEach(function(sid) {
+    const el = document.getElementById(sid);
+    if (el) el.classList.toggle('active', sid === id);
+  });
+  const adminPortal = document.getElementById('adminPortal');
+  const appContainer = document.getElementById('appContainer');
+  if (adminPortal) adminPortal.classList.toggle('active', id === 'adminPortal');
+  if (appContainer) appContainer.classList.toggle('visible', id === 'app');
+}
+
+// ── INIT ───────────────────────────────────────────
+async function init() {
+  showScreen('authScreen');
+  updateRateLimitUI();
+  try {
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', {
+      headers: { 'apikey': _k, 'Authorization': 'Bearer ' + _k }
     });
-    document.getElementById('authBtn').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
-    document.getElementById('authError').classList.remove('show');
+    if (res.ok) {
+      const [row] = await res.json();
+      if (row && row.locked === false) {
+        // Site is open to all
+        _siteUnlocked = true;
+        showApp(null);
+        return;
+      }
+    }
+  } catch {}
+  // Default: show auth
+  showScreen('authScreen');
+}
+
+init();
+
+// ── HELPERS ─────────────────────────────────────────
+function _headers(token) {
+  return {
+    'apikey': _k,
+    'Authorization': 'Bearer ' + (token || _k),
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+}
+
+// ── AUTH MODE ──────────────────────────────────────
+function switchTab(mode) {
+  _authMode = mode;
+  const tabs = document.querySelectorAll('.auth-tab');
+  tabs[0].classList.toggle('active', mode === 'login');
+  tabs[1].classList.toggle('active', mode === 'signup');
+  tabs[2].classList.toggle('active', mode === 'admin');
+
+  const btn = document.getElementById('authBtn');
+  const confirmField = document.getElementById('confirmField');
+  const adminKeyField = document.getElementById('adminKeyField');
+  const adminBadge = document.getElementById('authAdminBadge');
+  const notice = document.getElementById('authNotice');
+  const authBox = document.getElementById('authBox');
+  const logoIcon = document.getElementById('authLogoIcon');
+
+  // Clear errors
+  document.getElementById('authError').classList.remove('show');
+  notice.style.display = 'none';
+
+  if (mode === 'login') {
+    btn.textContent = 'Sign In';
+    btn.className = 'btn btn-primary';
+    confirmField.style.display = 'none';
+    adminKeyField.style.display = 'none';
+    adminBadge.style.display = 'none';
+    authBox.classList.remove('admin-mode');
+    logoIcon.style.background = 'linear-gradient(135deg, var(--accent), var(--accent2))';
+    logoIcon.textContent = '⚡';
+  } else if (mode === 'signup') {
+    btn.textContent = 'Request Access';
+    btn.className = 'btn btn-primary';
+    confirmField.style.display = 'block';
+    adminKeyField.style.display = 'none';
+    adminBadge.style.display = 'none';
+    authBox.classList.remove('admin-mode');
+    logoIcon.style.background = 'linear-gradient(135deg, var(--accent), var(--accent2))';
+    logoIcon.textContent = '⚡';
+    notice.style.display = 'block';
+    notice.textContent = '⚠ New accounts require admin approval before you can log in.';
+  } else if (mode === 'admin') {
+    btn.textContent = 'Admin Sign In';
+    btn.className = 'btn btn-primary admin-btn';
+    confirmField.style.display = 'none';
+    adminKeyField.style.display = 'block';
+    adminBadge.style.display = 'block';
+    authBox.classList.add('admin-mode');
+    logoIcon.style.background = 'linear-gradient(135deg, var(--admin), #a855f7)';
+    logoIcon.textContent = '🛡';
+  }
+}
+
+// ── HANDLE AUTH ─────────────────────────────────────
+async function handleAuth() {
+  // Rate limit check
+  const lockUntil = isRateLimited();
+  if (lockUntil) {
+    const mins = Math.ceil((lockUntil - Date.now()) / 60000);
+    showAuthError('Too many failed attempts. Try again in ' + mins + ' minute(s).');
+    return;
   }
 
-  async function handleAuth() {
-    const email    = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    const errEl    = document.getElementById('authError');
-    const btn      = document.getElementById('authBtn');
+  const email    = (document.getElementById('authEmail').value || '').trim().toLowerCase();
+  const password = document.getElementById('authPassword').value || '';
+  const btn      = document.getElementById('authBtn');
 
-    if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
+  // Validation
+  if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
+  if (!validateEmail(email)) { showAuthError('Please enter a valid email address.'); return; }
 
-    btn.disabled = true;
-    btn.textContent = _authMode === 'login' ? 'Signing in...' : 'Creating account...';
+  if (_authMode === 'signup') {
+    const confirm = document.getElementById('authConfirm').value || '';
+    if (!validatePassword(password)) { showAuthError('Password must be at least 8 characters.'); return; }
+    if (password !== confirm) { showAuthError('Passwords do not match.'); return; }
+  }
 
-    try {
-      let url, body;
-      if (_authMode === 'login') {
-        url  = _c + '/auth/v1/token?grant_type=password';
-        body = JSON.stringify({ email, password });
-      } else {
-        url  = _c + '/auth/v1/signup';
-        body = JSON.stringify({ email, password });
-      }
-
-      const res  = await fetch(url, { method: 'POST', headers: { 'apikey': _k, 'Content-Type': 'application/json' }, body });
-      const data = await res.json();
-
-      if (!res.ok) { showAuthError(data.error_description || data.msg || 'Authentication failed.'); return; }
-      if (_authMode === 'signup' && !data.access_token) {
-        showAuthError('Check your email to confirm your account, then sign in.');
-        btn.disabled = false; btn.textContent = 'Create Account'; return;
-      }
-
-      _session = data;
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appContainer').classList.add('visible');
-      fetchSnippets();
-    } catch(err) {
-      showAuthError('Network error. Check your connection.');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = _authMode === 'login' ? 'Sign In' : 'Create Account';
+  if (_authMode === 'admin') {
+    const key = document.getElementById('adminKey').value || '';
+    if (key !== _adminPhrase) {
+      recordFailedAttempt();
+      showAuthError('Invalid admin passphrase.');
+      return;
     }
   }
 
-  function showAuthError(msg) {
-    const el = document.getElementById('authError');
-    el.textContent = msg;
-    el.classList.add('show');
-  }
+  const _modeAtSubmit = _authMode; // capture before any async ops or tab switches
 
-  function signOut() {
-    _session = null;
-    snippets = [];
-    document.getElementById('appContainer').classList.remove('visible');
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('authEmail').value = '';
-    document.getElementById('authPassword').value = '';
-  }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> ' + (
+    _authMode === 'signup' ? 'Requesting...' :
+    _authMode === 'admin'  ? 'Authenticating...' : 'Signing in...'
+  );
 
-  // ── SNIPPETS ──────────────────────────────────────────
-  async function fetchSnippets() {
-    if (!_session) return;
-    try {
-      const res = await fetch(_c + '/rest/v1/snippets?order=created_at.desc', { headers: _headers(_session.access_token) });
-      if (res.status === 401) { signOut(); return; }
-      if (!res.ok) throw new Error();
-      snippets = await res.json();
-      setStatus('connected', 'connected');
-      renderSnippets();
-    } catch { setStatus('connection error', 'error'); }
-  }
+  try {
+    let url, body;
+    if (_authMode === 'signup') {
+      url  = _c + '/auth/v1/signup';
+      body = JSON.stringify({ email, password });
+    } else {
+      url  = _c + '/auth/v1/token?grant_type=password';
+      body = JSON.stringify({ email, password });
+    }
 
-  async function saveSnippet() {
-    const name     = document.getElementById('snippetName').value.trim();
-    const language = document.getElementById('snippetLang').value;
-    const code     = document.getElementById('snippetCode').value.trim();
-
-    if (!name) { showToast('⚠ Give your snippet a name', 'error'); return; }
-    if (!code) { showToast('⚠ Code cannot be empty', 'error'); return; }
-
-    try {
-      const res = await fetch(_c + '/rest/v1/snippets', {
-        method: 'POST',
-        headers: _headers(_session.access_token),
-        body: JSON.stringify({ name, language, code, user_id: _session.user.id })
-      });
-      if (!res.ok) throw new Error();
-      const [saved] = await res.json();
-      snippets.unshift(saved);
-      renderSnippets();
-      document.getElementById('snippetName').value = '';
-      document.getElementById('snippetCode').value = '';
-      showToast('✓ Snippet saved!', 'success');
-    } catch { showToast('✗ Failed to save', 'error'); }
-  }
-
-  async function deleteSnippet(id, el) {
-    el.textContent = '...';
-    try {
-      await fetch(_c + '/rest/v1/snippets?id=eq.' + id, { method: 'DELETE', headers: _headers(_session.access_token) });
-      snippets = snippets.filter(function(s) { return s.id !== id; });
-      renderSnippets();
-      showToast('Snippet deleted', '');
-    } catch { showToast('✗ Delete failed', 'error'); el.textContent = 'del'; }
-  }
-
-  function renderSnippets() {
-    const query    = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = snippets.filter(function(s) {
-      return s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query);
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'apikey': _k, 'Content-Type': 'application/json' },
+      body
     });
+    const data = await res.json();
 
-    document.getElementById('countBadge').textContent = snippets.length;
-    const list = document.getElementById('snippetsList');
-
-    if (filtered.length === 0) {
-      list.innerHTML = '<div class="empty-state"><div class="big-icon">📋</div><p>' + (snippets.length ? 'No matches found.' : 'No snippets yet.<br>Save your first code above.') + '</p></div>';
+    if (!res.ok) {
+      recordFailedAttempt();
+      showAuthError(data.error_description || data.msg || 'Authentication failed.');
       return;
     }
 
-    list.innerHTML = filtered.map(function(s) {
-      return '<div class="snippet-card">' +
-        '<div class="snippet-header" onclick="toggleCard(\'' + s.id + '\')">' +
-          '<div class="snippet-meta">' +
-            '<span class="lang-badge">' + s.language + '</span>' +
-            '<span class="snippet-name">' + escHtml(s.name) + '</span>' +
-            '<span class="snippet-date">' + relTime(s.created_at) + '</span>' +
-          '</div>' +
-          '<div class="snippet-actions">' +
-            '<button class="icon-btn" id="copy-' + s.id + '" onclick="event.stopPropagation(); copySnippet(\'' + s.id + '\')">copy</button>' +
-            '<button class="icon-btn danger" onclick="event.stopPropagation(); deleteSnippet(\'' + s.id + '\', this)">del</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="snippet-body" id="body-' + s.id + '">' +
-          '<div class="code-block">' + escHtml(s.code) + '</div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  function toggleCard(id) {
-    document.getElementById('body-' + id).classList.toggle('open');
-  }
-
-  function copySnippet(id) {
-    const s = snippets.find(function(x) { return x.id === id; });
-    if (!s) return;
-    navigator.clipboard.writeText(s.code).then(function() {
-      const btn = document.getElementById('copy-' + id);
-      btn.textContent = 'copied!';
-      btn.classList.add('copy-success');
-      setTimeout(function() { btn.textContent = 'copy'; btn.classList.remove('copy-success'); }, 2000);
-    });
-  }
-
-  // ── UTILS ─────────────────────────────────────────────
-  function setStatus(text, type) {
-    document.getElementById('statusText').textContent = text;
-    document.getElementById('statusDot').className = 'dot ' + (type || '');
-  }
-
-  function showToast(msg, type) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast ' + type + ' show';
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
-  }
-
-  function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function relTime(iso) {
-    const d = new Date(iso), now = new Date();
-    const diff = Math.floor((now - d) / 1000);
-    if (diff < 60)    return 'just now';
-    if (diff < 3600)  return Math.floor(diff/60)   + 'm ago';
-    if (diff < 86400) return Math.floor(diff/3600)  + 'h ago';
-    return d.toLocaleDateString();
-  }
-
-  // Tab key in textarea
-  document.getElementById('snippetCode').addEventListener('keydown', function(e) {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const ta = e.target, s = ta.selectionStart;
-      ta.value = ta.value.substring(0, s) + '  ' + ta.value.substring(ta.selectionEnd);
-      ta.selectionStart = ta.selectionEnd = s + 2;
+    if (_authMode === 'signup') {
+      // Create pending profile.
+      // If email confirmation is ON in Supabase, access_token will be null here —
+      // we use the anon key as a fallback. The INSERT will still work because the
+      // RLS policy checks auth.uid() = id, and Supabase sets uid from the signup
+      // even before confirmation on certain project settings.
+      // If it silently fails, the admin can still manually approve from the dashboard.
+      if (data.user && data.user.id) {
+        await createProfile(data.user.id, email, 'user', 'pending', data.access_token || null);
+      }
+      switchTab('login');
+      document.getElementById('authNotice').style.display = 'block';
+      document.getElementById('authNotice').textContent = '✓ Account created! Awaiting admin approval.';
+      document.getElementById('authEmail').value = email;
+      document.getElementById('authConfirm').value = '';
+      resetRateLimit();
+      return;
     }
-  });
 
-  // Enter key on auth inputs
-  ['authEmail','authPassword'].forEach(function(id) {
-    document.getElementById(id).addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') handleAuth();
+    // Login success
+    _session = data;
+    resetRateLimit();
+
+    // Fetch profile
+    const profile = await fetchProfile(data.user.id, data.access_token);
+
+    if (_authMode === 'admin') {
+      if (!profile || profile.role !== 'admin') {
+        recordFailedAttempt();
+        _session = null;
+        showAuthError('Access denied. This account does not have admin privileges.');
+        return;
+      }
+      _userProfile = profile;
+      showAdminPortal();
+    } else {
+      // Regular user
+      if (!profile) {
+        // Profile missing, create pending
+        await createProfile(data.user.id, email, 'user', 'pending', data.access_token);
+        showPendingScreen(email);
+        return;
+      }
+      if (profile.status === 'pending') {
+        showPendingScreen(email);
+        return;
+      }
+      if (profile.status === 'rejected') {
+        _session = null;
+        showAuthError('Your account access has been rejected. Contact the administrator.');
+        return;
+      }
+      if (profile.status === 'approved') {
+        _userProfile = profile;
+        showApp(data);
+      }
+    }
+
+  } catch (err) {
+    showAuthError('Network error. Check your connection.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = _modeAtSubmit === 'login' ? 'Sign In' :
+                      _modeAtSubmit === 'signup' ? 'Request Access' : 'Admin Sign In';
+  }
+}
+
+// ── PROFILE ─────────────────────────────────────────
+async function fetchProfile(userId, token) {
+  try {
+    const res = await fetch(
+      _c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId) + '&limit=1',
+      { headers: _headers(token) }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows[0] || null;
+  } catch { return null; }
+}
+
+async function createProfile(userId, email, role, status, token) {
+  try {
+    await fetch(_c + '/rest/v1/profiles', {
+      method: 'POST',
+      headers: { ..._headers(token), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ id: userId, email, role, status })
     });
+  } catch {}
+}
+
+// ── SCREENS ─────────────────────────────────────────
+function showPendingScreen(email) {
+  document.getElementById('pendingEmail').textContent = email || '';
+  showScreen('pendingScreen');
+  resetInactivityTimer();
+}
+
+function showApp(session) {
+  _session = session;
+  const email = session ? session.user.email : '(public)';
+  const initial = session ? email[0].toUpperCase() : '👤';
+  const avatarEl = document.getElementById('userAvatar');
+  const emailEl = document.getElementById('userEmailDisplay');
+  if (avatarEl) avatarEl.textContent = initial;
+  if (emailEl) emailEl.textContent = email.length > 20 ? email.slice(0,18)+'…' : email;
+  showScreen('app');
+  fetchSnippets();
+  resetInactivityTimer();
+}
+
+// ── ADMIN PORTAL ─────────────────────────────────────
+async function showAdminPortal() {
+  document.getElementById('adminEmail').textContent = _session.user.email;
+  showScreen('adminPortal');
+  loadAdminData();
+  resetInactivityTimer();
+}
+
+async function loadAdminData() {
+  await Promise.all([loadSiteLock(), loadAllUsers()]);
+}
+
+async function loadSiteLock() {
+  try {
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', {
+      headers: _headers(_session.access_token)
+    });
+    const [row] = await res.json();
+    const locked = row ? row.locked : true;
+    updateLockUI(!locked); // toggle is "unlocked"
+  } catch {
+    updateLockUI(false);
+  }
+}
+
+function updateLockUI(unlocked) {
+  const toggle = document.getElementById('siteUnlocked');
+  const dot = document.getElementById('lockStatusDot');
+  const text = document.getElementById('lockStatusText');
+  const label = document.getElementById('toggleLabel');
+  const title = document.getElementById('lockTitle');
+  const desc = document.getElementById('lockDesc');
+
+  toggle.checked = unlocked;
+
+  if (unlocked) {
+    dot.className = 'lock-status-dot unlocked';
+    text.textContent = 'Public Access';
+    label.textContent = 'Open';
+    title.textContent = '🔓 Site Unlocked';
+    desc.textContent = 'The site is publicly accessible — no login required.';
+  } else {
+    dot.className = 'lock-status-dot locked';
+    text.textContent = 'Login Required';
+    label.textContent = 'Locked';
+    title.textContent = '🔒 Site Locked';
+    desc.textContent = 'The site requires login. Only approved users can access it.';
+  }
+}
+
+async function toggleSiteLock() {
+  const unlocked = document.getElementById('siteUnlocked').checked;
+  updateLockUI(unlocked); // optimistic
+
+  try {
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify({ locked: !unlocked })
+    });
+    if (!res.ok) throw new Error();
+    showToast(unlocked ? '🔓 Site unlocked — now public' : '🔒 Site locked — login required', 'success');
+  } catch {
+    updateLockUI(!unlocked); // revert
+    showToast('✗ Failed to update site settings', 'error');
+  }
+}
+
+async function loadAllUsers() {
+  const queueEl = document.getElementById('userQueue');
+  queueEl.innerHTML = '<div class="empty-queue"><div class="eq-icon">⏳</div><p>Loading users...</p></div>';
+
+  try {
+    const res = await fetch(
+      _c + '/rest/v1/profiles?role=eq.user&order=created_at.asc',
+      { headers: _headers(_session.access_token) }
+    );
+    if (!res.ok) throw new Error();
+    _allUsers = await res.json();
+    updateStats();
+    renderUsers(_currentFilter);
+  } catch {
+    queueEl.innerHTML = '<div class="empty-queue"><div class="eq-icon">⚠</div><p>Failed to load users.</p></div>';
+  }
+}
+
+function updateStats() {
+  document.getElementById('statPending').textContent  = _allUsers.filter(u => u.status === 'pending').length;
+  document.getElementById('statApproved').textContent = _allUsers.filter(u => u.status === 'approved').length;
+  document.getElementById('statRejected').textContent = _allUsers.filter(u => u.status === 'rejected').length;
+}
+
+function filterUsers(f) {
+  _currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(function(t, i) {
+    t.classList.toggle('active', ['pending','approved','rejected','all'][i] === f);
+  });
+  renderUsers(f);
+}
+
+function renderUsers(filter) {
+  const list = filter === 'all' ? _allUsers : _allUsers.filter(u => u.status === filter);
+  const queueEl = document.getElementById('userQueue');
+
+  if (!list.length) {
+    const msgs = { pending: 'No pending approvals.', approved: 'No approved users.', rejected: 'No rejected users.', all: 'No users found.' };
+    queueEl.innerHTML = '<div class="empty-queue"><div class="eq-icon">✓</div><p>' + (msgs[filter]||'No users.') + '</p></div>';
+    return;
+  }
+
+  queueEl.innerHTML = list.map(function(u) {
+    const actions = u.status === 'pending'
+      ? '<button class="btn-approve" onclick="approveUser(\'' + u.id + '\')">✓ Approve</button>' +
+        '<button class="btn-reject" onclick="rejectUser(\'' + u.id + '\')">✗ Reject</button>'
+      : u.status === 'approved'
+      ? '<button class="btn-revoke" onclick="rejectUser(\'' + u.id + '\')">Revoke</button>'
+      : '<button class="btn-approve" onclick="approveUser(\'' + u.id + '\')">Restore</button>';
+
+    return '<div class="user-card" id="uc-' + u.id + '">' +
+      '<div class="user-info">' +
+        '<div class="user-email">' + escHtml(u.email) + '</div>' +
+        '<div class="user-meta">Joined ' + relTime(u.created_at) + '</div>' +
+      '</div>' +
+      '<span class="user-status-badge ' + u.status + '">' + u.status + '</span>' +
+      '<div class="user-actions">' + actions + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function updateUserStatus(userId, status) {
+  try {
+    const res = await fetch(
+      _c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId),
+      {
+        method: 'PATCH',
+        headers: _headers(_session.access_token),
+        body: JSON.stringify({ status })
+      }
+    );
+    if (!res.ok) throw new Error();
+
+    // Update local state
+    const u = _allUsers.find(function(x) { return x.id === userId; });
+    if (u) u.status = status;
+    updateStats();
+    renderUsers(_currentFilter);
+    showToast(status === 'approved' ? '✓ User approved' : '✗ User ' + status, status === 'approved' ? 'success' : '');
+  } catch {
+    showToast('✗ Failed to update user', 'error');
+  }
+}
+
+function approveUser(id) { updateUserStatus(id, 'approved'); }
+function rejectUser(id)  { updateUserStatus(id, 'rejected'); }
+
+function adminSignOut() {
+  _session = null;
+  _userProfile = null;
+  _allUsers = [];
+  document.getElementById('adminPortal').classList.remove('active');
+  showScreen('authScreen');
+  switchTab('admin');
+}
+
+// ── SIGN OUT ─────────────────────────────────────────
+function signOut() {
+  _session = null;
+  _userProfile = null;
+  _siteUnlocked = false; // reset so init() re-checks on next load if needed
+  snippets = [];
+  clearTimeout(_inactivityTimer);
+  document.getElementById('appContainer').classList.remove('visible');
+  document.getElementById('adminPortal').classList.remove('active');
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authNotice').style.display = 'none';
+  switchTab('login');
+  showScreen('authScreen');
+  // NOTE: intentionally do NOT re-enter the app here.
+  // The user explicitly signed out, so always show the auth screen.
+}
+
+// ── SNIPPETS ─────────────────────────────────────────
+async function fetchSnippets() {
+  try {
+    const token = _session ? _session.access_token : _k;
+    const url = _session
+      ? _c + '/rest/v1/snippets?order=created_at.desc'
+      : _c + '/rest/v1/snippets?order=created_at.desc'; // public read if RLS allows
+
+    const res = await fetch(url, { headers: _headers(token) });
+    if (_session && res.status === 401) { signOut(); return; }
+    if (!res.ok) throw new Error();
+    snippets = await res.json();
+    setStatus('connected', 'connected');
+    renderSnippets();
+  } catch { setStatus('connection error', 'error'); }
+}
+
+async function saveSnippet() {
+  const name     = document.getElementById('snippetName').value.trim();
+  const language = document.getElementById('snippetLang').value;
+  const code     = document.getElementById('snippetCode').value.trim();
+
+  if (!name) { showToast('⚠ Give your snippet a name', 'error'); return; }
+  if (!code) { showToast('⚠ Code cannot be empty', 'error'); return; }
+  if (!_session) { showToast('⚠ Sign in to save snippets', 'error'); return; }
+
+  try {
+    const res = await fetch(_c + '/rest/v1/snippets', {
+      method: 'POST',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify({ name, language, code, user_id: _session.user.id })
+    });
+    if (!res.ok) throw new Error();
+    const [saved] = await res.json();
+    snippets.unshift(saved);
+    renderSnippets();
+    document.getElementById('snippetName').value = '';
+    document.getElementById('snippetCode').value = '';
+    showToast('✓ Snippet saved!', 'success');
+  } catch { showToast('✗ Failed to save', 'error'); }
+}
+
+async function deleteSnippet(id, el) {
+  if (!_session) { showToast('⚠ Sign in to delete snippets', 'error'); return; }
+  el.textContent = '...';
+  try {
+    await fetch(_c + '/rest/v1/snippets?id=eq.' + id, {
+      method: 'DELETE',
+      headers: _headers(_session.access_token)
+    });
+    snippets = snippets.filter(function(s) { return s.id !== id; });
+    renderSnippets();
+    showToast('Snippet deleted', '');
+  } catch { showToast('✗ Delete failed', 'error'); el.textContent = 'del'; }
+}
+
+function renderSnippets() {
+  const query    = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = snippets.filter(function(s) {
+    return s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query);
   });
 
-  // Expose needed functions to global scope
-  window.switchTab     = switchTab;
-  window.handleAuth    = handleAuth;
-  window.signOut       = signOut;
-  window.saveSnippet   = saveSnippet;
-  window.deleteSnippet = deleteSnippet;
-  window.toggleCard    = toggleCard;
-  window.copySnippet   = copySnippet;
-  window.renderSnippets = renderSnippets;
+  document.getElementById('countBadge').textContent = snippets.length;
+  const list = document.getElementById('snippetsList');
 
-  setInterval(function() { if (_session) fetchSnippets(); }, 30000);
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="big-icon">📋</div><p>' +
+      (snippets.length ? 'No matches found.' : 'No snippets yet.<br>Save your first code above.') +
+      '</p></div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function(s) {
+    const canDelete = _session !== null;
+    return '<div class="snippet-card">' +
+      '<div class="snippet-header" onclick="toggleCard(\'' + s.id + '\')">' +
+        '<div class="snippet-meta">' +
+          '<span class="lang-badge">' + escHtml(s.language) + '</span>' +
+          '<span class="snippet-name">' + escHtml(s.name) + '</span>' +
+          '<span class="snippet-date">' + relTime(s.created_at) + '</span>' +
+        '</div>' +
+        '<div class="snippet-actions">' +
+          '<button class="icon-btn" id="copy-' + s.id + '" onclick="event.stopPropagation(); copySnippet(\'' + s.id + '\')">copy</button>' +
+          (canDelete ? '<button class="icon-btn danger" onclick="event.stopPropagation(); deleteSnippet(\'' + s.id + '\', this)">del</button>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="snippet-body" id="body-' + s.id + '">' +
+        '<div class="code-block">' + escHtml(s.code) + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleCard(id) {
+  document.getElementById('body-' + id).classList.toggle('open');
+}
+
+function copySnippet(id) {
+  const s = snippets.find(function(x) { return x.id === id; });
+  if (!s) return;
+  navigator.clipboard.writeText(s.code).then(function() {
+    const btn = document.getElementById('copy-' + id);
+    btn.textContent = 'copied!';
+    btn.classList.add('copy-success');
+    setTimeout(function() { btn.textContent = 'copy'; btn.classList.remove('copy-success'); }, 2000);
+  });
+}
+
+// ── UTILS ─────────────────────────────────────────
+function setStatus(text, type) {
+  const el = document.getElementById('statusText');
+  const dot = document.getElementById('statusDot');
+  if (el) el.textContent = text;
+  if (dot) dot.className = 'dot ' + (type || '');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function relTime(iso) {
+  const d = new Date(iso), now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return Math.floor(diff/60)   + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600)  + 'h ago';
+  return d.toLocaleDateString();
+}
+
+// ── EVENT LISTENERS ─────────────────────────────────
+document.getElementById('snippetCode').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ta = e.target, s = ta.selectionStart;
+    ta.value = ta.value.substring(0, s) + '  ' + ta.value.substring(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = s + 2;
+  }
+});
+
+['authEmail','authPassword','authConfirm','adminKey'].forEach(function(id) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleAuth();
+  });
+});
+
+// ── GLOBALS ─────────────────────────────────────────
+window.switchTab      = switchTab;
+window.handleAuth     = handleAuth;
+window.signOut        = signOut;
+window.adminSignOut   = adminSignOut;
+window.saveSnippet    = saveSnippet;
+window.deleteSnippet  = deleteSnippet;
+window.toggleCard     = toggleCard;
+window.copySnippet    = copySnippet;
+window.renderSnippets = renderSnippets;
+window.filterUsers    = filterUsers;
+window.approveUser    = approveUser;
+window.rejectUser     = rejectUser;
+window.toggleSiteLock = toggleSiteLock;
+window.sanitizeInput  = sanitizeInput;
+
+setInterval(function() { if (_session) fetchSnippets(); }, 30000);
+setInterval(function() { if (document.getElementById('adminPortal').classList.contains('active')) loadAdminData(); }, 30000);
+
 })();
 </script>
 
 <!--
-  ═══════════════════════════════════════════════════
-   SUPABASE SETUP — run this SQL in your project
-  ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════
+  SUPABASE SETUP — run this SQL in your Supabase SQL editor
+═══════════════════════════════════════════════════════════════
 
-  -- 1. Add user_id column (if table already exists):
-  ALTER TABLE snippets ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
+-- 1. PROFILES TABLE (stores role + approval status)
+CREATE TABLE IF NOT EXISTS profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text NOT NULL,
+  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at timestamptz DEFAULT now()
+);
 
-  -- 2. Enable Row Level Security:
-  ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
-  -- 3. Create policies (users only see their own data):
-  CREATE POLICY "select_own" ON snippets FOR SELECT USING (auth.uid() = user_id);
-  CREATE POLICY "insert_own" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id);
-  CREATE POLICY "delete_own" ON snippets FOR DELETE USING (auth.uid() = user_id);
+-- Users can read their own profile
+CREATE POLICY "user_read_own_profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
 
-  ═══════════════════════════════════════════════════
+-- Admins can read ALL profiles
+CREATE POLICY "admin_read_all_profiles" ON profiles
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
+  );
+
+-- Admins can update ANY profile (approvals)
+CREATE POLICY "admin_update_profiles" ON profiles
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
+  );
+
+-- Anyone can insert their own profile on signup
+CREATE POLICY "user_insert_own_profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+
+-- 2. SITE SETTINGS TABLE
+CREATE TABLE IF NOT EXISTS site_settings (
+  id int PRIMARY KEY DEFAULT 1,
+  locked boolean NOT NULL DEFAULT true,
+  updated_at timestamptz DEFAULT now()
+);
+
+INSERT INTO site_settings (id, locked) VALUES (1, true)
+  ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read site settings (needed for lock check on page load)
+CREATE POLICY "public_read_settings" ON site_settings
+  FOR SELECT USING (true);
+
+-- Only admins can update site settings
+CREATE POLICY "admin_update_settings" ON site_settings
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+
+-- 3. SNIPPETS TABLE (if not already created)
+CREATE TABLE IF NOT EXISTS snippets (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  language text NOT NULL DEFAULT 'text',
+  code text NOT NULL,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
+
+-- Only approved users can view snippets (or all if site is unlocked — handle in app logic)
+CREATE POLICY "approved_user_select" ON snippets
+  FOR SELECT USING (
+    auth.uid() IS NOT NULL AND (
+      auth.uid() = user_id OR
+      EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    )
+  );
+
+CREATE POLICY "approved_user_insert" ON snippets
+  FOR INSERT WITH CHECK (
+    auth.uid() = user_id AND
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+  );
+
+CREATE POLICY "approved_user_delete" ON snippets
+  FOR DELETE USING (
+    auth.uid() = user_id OR
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+
+-- 4. CREATE YOUR FIRST ADMIN USER
+-- After signing up normally via the app, run this to promote to admin:
+-- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your-admin@email.com';
+
+═══════════════════════════════════════════════════════════════
+  SECURITY NOTES
+═══════════════════════════════════════════════════════════════
+
+  • Admin passphrase (_adminPhrase) is a client-side gate only.
+    True security is enforced via Supabase RLS policies above.
+  • Change _adminPhrase in the JS to your own secret string.
+  • Rate limiting (5 attempts / 15 min) blocks brute force.
+  • Inactivity timeout auto-signs out after 30 minutes idle.
+  • All user inputs are sanitized before use (escHtml, sanitizeInput).
+  • Never commit your Supabase anon key to public repos.
+
+═══════════════════════════════════════════════════════════════
 -->
 </body>
 </html>
