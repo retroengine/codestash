@@ -1306,10 +1306,10 @@ const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJ
 
 // Admin passphrase — change this to your secret value
 // Note: stored in client; real security comes from Supabase RLS + role check
-const _adminPhrase = 'chicken';
+const _adminPhrase = 'codestash-admin-2025';
 
 // ── SECURITY: RATE LIMITING ─────────────────────────
-const RATE_LIMIT = { max: 5, window: 15 * 60 * 1000 }; // 5 attempts / 15 min
+const RATE_LIMIT = { max: 5, window: 0 }; // track attempts, no lockout freeze
 
 function getRateData() {
   try {
@@ -1325,10 +1325,7 @@ function saveRateData(d) {
 function recordFailedAttempt() {
   const d = getRateData();
   d.attempts = (d.attempts || 0) + 1;
-  if (d.attempts >= RATE_LIMIT.max) {
-    d.lockedUntil = Date.now() + RATE_LIMIT.window;
-    d.attempts = 0;
-  }
+  // No lockout — just track attempt count for the UI indicator
   saveRateData(d);
   updateRateLimitUI();
 }
