@@ -1958,15 +1958,24 @@ const userBtn         = document.getElementById('userBtn');
 const accountDropdown = document.getElementById('accountDropdown');
 const overlay         = document.getElementById('overlay');
 
-function openDropdown()  { accountDropdown.classList.add('open'); overlay.classList.add('active'); userBtn.setAttribute('aria-expanded','true'); }
-function closeDropdown() { accountDropdown.classList.remove('open'); overlay.classList.remove('active'); userBtn.setAttribute('aria-expanded','false'); }
+function openDropdown()  { accountDropdown.classList.add('open'); userBtn.setAttribute('aria-expanded','true'); }
+function closeDropdown() { accountDropdown.classList.remove('open'); userBtn.setAttribute('aria-expanded','false'); }
 
-userBtn.addEventListener('click', () => accountDropdown.classList.contains('open') ? closeDropdown() : openDropdown());
-accountDropdown.addEventListener('click', e => e.stopPropagation());
-overlay.addEventListener('mousedown', closeDropdown);
+userBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  accountDropdown.classList.contains('open') ? closeDropdown() : openDropdown();
+});
 
-// Sign out button (dropdown only)
-document.getElementById('dropdownSignOut').addEventListener('mousedown', signOut);
+// Close when clicking anywhere outside
+document.addEventListener('click', (e) => {
+  if (!userBtn.contains(e.target)) closeDropdown();
+});
+
+// Sign out
+document.getElementById('dropdownSignOut').addEventListener('click', (e) => {
+  e.stopPropagation();
+  signOut();
+});
 
 /* ════════════════════════════════════════════
    AUTO-REFRESH (every 30s while logged in)
