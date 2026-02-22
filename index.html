@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 /* ═══════════ TOKENS ═══════════ */
 :root {
@@ -680,6 +681,205 @@ select.field-input option { background: var(--surface2); }
 .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
 
 /* ════════════════════════════════════════════
+   PINNED SNIPPETS
+════════════════════════════════════════════ */
+.snippet-card.pinned {
+  border-color: rgba(139,120,255,0.3);
+  box-shadow: 0 0 0 1px rgba(139,120,255,0.1);
+}
+.pin-indicator {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+  box-shadow: 0 0 6px var(--accent);
+}
+.btn-icon.pinned { border-color: rgba(139,120,255,0.4); color: var(--accent); background: rgba(139,120,255,0.08); }
+.btn-icon.pinned:hover { border-color: var(--accent); background: rgba(139,120,255,0.16); }
+
+/* ════════════════════════════════════════════
+   TAGS
+════════════════════════════════════════════ */
+.tag-input-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; cursor: text;
+  transition: border-color 0.15s; margin-bottom: 9px;
+  min-height: 42px;
+}
+.tag-input-wrap:focus-within { border-color: var(--border-hi); }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.7rem; font-weight: 600; padding: 3px 9px;
+  border-radius: 20px; cursor: default; white-space: nowrap;
+}
+.tag-chip-remove {
+  background: none; border: none; cursor: pointer; color: inherit;
+  opacity: 0.6; padding: 0; font-size: 0.8rem; line-height: 1;
+  display: flex; align-items: center;
+}
+.tag-chip-remove:hover { opacity: 1; }
+.tag-input-field {
+  flex: 1; min-width: 80px; background: transparent; border: none;
+  outline: none; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem; padding: 0;
+}
+.tag-input-field::placeholder { color: var(--muted2); }
+.tag-input-hint { font-size: 0.65rem; color: var(--muted2); margin-bottom: 9px; }
+
+/* Tag colors palette */
+.tag-0 { background: rgba(139,120,255,0.15); border: 1px solid rgba(139,120,255,0.3); color: #a898ff; }
+.tag-1 { background: rgba(61,186,112,0.12);  border: 1px solid rgba(61,186,112,0.3);  color: #5dd48a; }
+.tag-2 { background: rgba(246,166,35,0.12);  border: 1px solid rgba(246,166,35,0.3);  color: #f6a623; }
+.tag-3 { background: rgba(224,82,82,0.12);   border: 1px solid rgba(224,82,82,0.3);   color: #e05252; }
+.tag-4 { background: rgba(56,189,248,0.12);  border: 1px solid rgba(56,189,248,0.3);  color: #38bdf8; }
+.tag-5 { background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.3); color: #f472b6; }
+
+/* Tag filter bar */
+.tag-filter-bar {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  padding: 2px 0;
+}
+.tag-filter-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; font-weight: 600; padding: 4px 12px;
+  border-radius: 20px; cursor: pointer; border: 1px solid var(--border);
+  background: transparent; color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.tag-filter-chip:hover { border-color: var(--border-hi); color: var(--text); }
+.tag-filter-chip.active { color: var(--text); border-color: var(--border-hi); background: var(--surface2); }
+.tag-filter-chip.tf-all { color: var(--muted); }
+.tag-filter-clear {
+  font-size: 0.68rem; color: var(--muted); cursor: pointer;
+  background: none; border: none; font-family: 'DM Sans', sans-serif;
+  padding: 4px 8px; border-radius: 8px; transition: color 0.15s;
+}
+.tag-filter-clear:hover { color: var(--text); }
+
+/* Card tag chips (small, display only) */
+.card-tags { display: flex; gap: 5px; flex-wrap: wrap; padding: 0 16px 10px; }
+.card-tag-chip {
+  font-size: 0.62rem; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px; white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════
+   PUBLIC SHARE
+════════════════════════════════════════════ */
+.share-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.share-modal-overlay.open { display: flex; }
+.share-modal {
+  background: var(--surface); border: 1px solid var(--border-hi);
+  border-radius: 20px; padding: 28px; width: 100%; max-width: 440px;
+  animation: up 0.3s cubic-bezier(0.16,1,0.3,1); position: relative;
+}
+.share-modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+.share-modal-sub   { font-size: 0.78rem; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+.share-toggle-row  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.share-toggle-label { font-size: 0.84rem; font-weight: 600; }
+.share-toggle-sub   { font-size: 0.72rem; color: var(--muted); }
+.share-link-box {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+}
+.share-link-url {
+  flex: 1; font-size: 0.78rem; color: var(--muted);
+  font-family: 'DM Mono', monospace; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.share-link-copy {
+  background: var(--accent); border: none; color: #fff;
+  border-radius: 8px; padding: 6px 14px; font-size: 0.78rem;
+  font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0; transition: opacity 0.15s;
+}
+.share-link-copy:hover { opacity: 0.84; }
+.share-modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 8px; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; transition: color 0.15s, border-color 0.15s;
+}
+.share-modal-close:hover { color: var(--text); border-color: var(--border-hi); }
+.share-public-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em;
+  background: rgba(61,186,112,0.12); border: 1px solid rgba(61,186,112,0.3);
+  color: var(--success); padding: 2px 8px; border-radius: 20px;
+  text-transform: uppercase;
+}
+
+/* Public view screen */
+#publicViewScreen {
+  position: fixed; inset: 0; background: var(--bg);
+  z-index: 200; display: none; flex-direction: column;
+  align-items: center; overflow-y: auto;
+}
+#publicViewScreen.active { display: flex; }
+.pub-header {
+  width: 100%; padding: 20px 32px; border-bottom: 1px solid var(--border);
+  background: var(--surface); display: flex; align-items: center;
+  justify-content: space-between; flex-shrink: 0;
+}
+.pub-header-logo { display: flex; align-items: center; gap: 10px; }
+.pub-badge {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+  background: rgba(61,186,112,0.12); border: 1px solid rgba(61,186,112,0.3);
+  color: var(--success); padding: 3px 10px; border-radius: 20px; text-transform: uppercase;
+}
+.pub-body { width: 100%; max-width: 760px; padding: 40px 24px; }
+.pub-snippet-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+.pub-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.pub-meta-chip {
+  font-size: 0.7rem; font-weight: 600; padding: 4px 11px;
+  border-radius: 20px; background: var(--surface2);
+  border: 1px solid var(--border); color: var(--muted);
+}
+.pub-code {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; font-family: 'DM Mono', monospace;
+  font-size: 0.82rem; line-height: 1.8; color: var(--text);
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+}
+.pub-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.pub-btn-copy {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--text); color: #0a0a0a;
+  border: none; border-radius: 10px; padding: 10px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.84rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.pub-btn-copy:hover { opacity: 0.84; }
+.pub-btn-home {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 10px; padding: 10px 18px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.84rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.pub-btn-home:hover { background: var(--surface2); color: var(--text); }
+
+/* ════════════════════════════════════════════
+   CLIPBOARD QR CODE
+════════════════════════════════════════════ */
+.cb-qr-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px;
+}
+.cb-qr-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.cb-qr-box {
+  background: #fff; border-radius: 12px; padding: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cb-qr-hint { font-size: 0.7rem; color: var(--muted); }
+
+/* ════════════════════════════════════════════
    ONLINE CLIPBOARD — STYLES
 ════════════════════════════════════════════ */
 
@@ -1159,6 +1359,65 @@ select.field-input option { background: var(--surface2); }
   </div>
 </div>
 
+<!-- ═══════════ PUBLIC SNIPPET VIEW ═══════════ -->
+<div id="publicViewScreen">
+  <div class="pub-header">
+    <div class="pub-header-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
+        </svg>
+      </div>
+      <div class="logo-wordmark">
+        <div class="lw-name">CodeStash</div>
+        <div class="lw-sub">Snippet Library</div>
+      </div>
+    </div>
+    <span class="pub-badge">🔗 Public Snippet</span>
+  </div>
+  <div class="pub-body">
+    <div class="pub-snippet-name" id="pubName">Loading...</div>
+    <div class="pub-meta" id="pubMeta"></div>
+    <pre class="pub-code" id="pubCode"></pre>
+    <div class="pub-actions">
+      <button class="pub-btn-copy" id="pubCopyBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Code
+      </button>
+      <a class="pub-btn-home" href="/">← Back to CodeStash</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SHARE MODAL ═══════════ -->
+<div class="share-modal-overlay" id="shareModalOverlay">
+  <div class="share-modal">
+    <button class="share-modal-close" onclick="closeShareModal()">✕</button>
+    <div class="share-modal-title">🔗 Share Snippet</div>
+    <p class="share-modal-sub">Make this snippet publicly accessible — anyone with the link can view and copy the code. No account required.</p>
+
+    <div class="share-toggle-row">
+      <div>
+        <div class="share-toggle-label">Public Link</div>
+        <div class="share-toggle-sub" id="shareToggleSub">Toggle on to generate a shareable link</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="sharePublicToggle" onchange="handleShareToggle()" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div id="shareLinkRow" style="display:none">
+      <div class="share-link-box">
+        <span class="share-link-url" id="shareLinkUrl">—</span>
+        <button class="share-link-copy" id="shareLinkCopyBtn" onclick="copyShareLink()">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ APP LAYOUT ═══════════ -->
 <div id="appContainer">
 
@@ -1255,6 +1514,13 @@ select.field-input option { background: var(--surface2); }
           style="display:none; margin-top:7px;"
           aria-label="Custom language name" />
       </div>
+
+      <!-- Tag input -->
+      <div class="tag-input-wrap" id="tagInputWrap" onclick="document.getElementById('tagTextField').focus()">
+        <div id="tagChipsContainer"></div>
+        <input class="tag-input-field" type="text" id="tagTextField" placeholder="Add tags…" maxlength="24" autocomplete="off" />
+      </div>
+      <div class="tag-input-hint">Press Enter or comma to add a tag · max 6 tags</div>
       <textarea class="code-area" id="snippetCode"
         placeholder="Paste your code here...
 Line 2 will stay on line 2.
@@ -1290,6 +1556,9 @@ Indentation is preserved."
       <span class="search-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
       <input class="field-input" type="text" id="searchInput" placeholder="Search snippets..." style="width:100%;" aria-label="Search snippets" />
     </div>
+
+    <!-- Tag filter bar (rendered by JS) -->
+    <div class="tag-filter-bar" id="tagFilterBar" style="display:none"></div>
 
     <!-- Snippets grid (rendered by JS) -->
     <div class="snippets-grid" id="snippetsList"></div>
@@ -1354,6 +1623,12 @@ Indentation is preserved."
           <div class="cb-otp-label">Your Clipboard Code</div>
           <div class="cb-otp-digits" id="cbOtpDigits"></div>
           <div class="cb-otp-expiry" id="cbOtpExpiry">⏱ Expires in 24 hours</div>
+          <!-- QR Code -->
+          <div class="cb-qr-wrap">
+            <div class="cb-qr-label">or scan QR code</div>
+            <div class="cb-qr-box" id="cbQrBox"></div>
+            <div class="cb-qr-hint">Scan to retrieve on another device</div>
+          </div>
           <div class="cb-otp-copy-row">
             <button class="cb-btn-copy-otp" onclick="cbCopyOtp()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -1555,6 +1830,10 @@ function showScreen(id) {
    INIT — check site lock on load
 ════════════════════════════════════════════ */
 async function init() {
+  // Check if this is a public snippet URL first
+  const isPublic = await checkPublicView();
+  if (isPublic) return;
+
   showScreen('authScreen');
   document.getElementById('authFixedLogo').classList.add('visible');
   updateRateLimitUI();
@@ -1986,13 +2265,13 @@ async function saveSnippet() {
       const res = await fetch(_c + '/rest/v1/snippets?id=eq.' + _editingId, {
         method: 'PATCH',
         headers: _headers(_session.access_token),
-        body: JSON.stringify({ name, language, code })
+        body: JSON.stringify({ name, language, code, tags: _currentTags })
       });
       if (!res.ok) throw new Error();
       // Update the in-memory record so the grid reflects changes instantly.
       const idx = snippets.findIndex(s => s.id === _editingId);
       if (idx !== -1) {
-        snippets[idx] = { ...snippets[idx], name, language, code,
+        snippets[idx] = { ...snippets[idx], name, language, code, tags: _currentTags,
                           lineCount: code.split('\n').length };
       }
       renderSnippets();
@@ -2012,7 +2291,7 @@ async function saveSnippet() {
     const res = await fetch(_c + '/rest/v1/snippets', {
       method: 'POST',
       headers: _headers(_session.access_token),
-      body: JSON.stringify({ name, language, code, user_id: _session.user.id })
+      body: JSON.stringify({ name, language, code, user_id: _session.user.id, tags: _currentTags })
     });
     if (!res.ok) throw new Error();
     const [saved] = await res.json();
@@ -2024,6 +2303,8 @@ async function saveSnippet() {
     renderSnippets();
     document.getElementById('snippetName').value = '';
     document.getElementById('snippetCode').value = '';
+    _currentTags = [];
+    renderTagChips();
     showToast('✓ Snippet saved!', 'success');
   } catch { showToast('✗ Failed to save', 'error'); }
   finally {
@@ -2056,7 +2337,9 @@ function editSnippet(id) {
   const opt = [...langSelect.options].find(o => o.value === s.language);
   langSelect.value = opt ? s.language : 'other';
 
-  // Switch the panel into edit mode visually.
+  // Populate tags
+  _currentTags = Array.isArray(s.tags) ? [...s.tags] : [];
+  renderTagChips();
   _editingId = id;
   const panel = document.getElementById('addPanel');
   panel.classList.add('editing');
@@ -2071,6 +2354,8 @@ function editSnippet(id) {
 
 function cancelEdit() {
   _editingId = null;
+  _currentTags = [];
+  renderTagChips();
   document.getElementById('addPanel').classList.remove('editing');
   document.getElementById('panelLabel').textContent = 'New Snippet';
   document.getElementById('snippetName').value = '';
@@ -2085,13 +2370,220 @@ function cancelEdit() {
 }
 
 /* ════════════════════════════════════════════
-   SNIPPETS — RENDER (new card grid format)
+   TAG SYSTEM
+════════════════════════════════════════════ */
+let _currentTags   = [];   // tags being typed in the add/edit panel
+let _activeTagFilter = null; // currently filtered tag
+
+const TAG_COLORS = ['tag-0','tag-1','tag-2','tag-3','tag-4','tag-5'];
+function tagColor(tag) {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) & 0xffff;
+  return TAG_COLORS[h % TAG_COLORS.length];
+}
+
+function renderTagChips() {
+  const container = document.getElementById('tagChipsContainer');
+  container.innerHTML = '';
+  _currentTags.forEach((t, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip ' + tagColor(t);
+    chip.innerHTML = t + '<button class="tag-chip-remove" onclick="removeTag(' + i + ')">×</button>';
+    container.appendChild(chip);
+  });
+}
+
+window.removeTag = function(idx) {
+  _currentTags.splice(idx, 1);
+  renderTagChips();
+};
+
+function addTag(val) {
+  const t = val.trim().toLowerCase().replace(/[^a-z0-9\-_]/g, '').slice(0, 20);
+  if (!t || _currentTags.includes(t) || _currentTags.length >= 6) return;
+  _currentTags.push(t);
+  renderTagChips();
+}
+
+// Tag input key handling
+document.getElementById('tagTextField').addEventListener('keydown', e => {
+  const v = e.target.value;
+  if ((e.key === 'Enter' || e.key === ',') && v.trim()) {
+    e.preventDefault();
+    addTag(v);
+    e.target.value = '';
+  }
+  if (e.key === 'Backspace' && !v && _currentTags.length) {
+    _currentTags.pop();
+    renderTagChips();
+  }
+});
+document.getElementById('tagTextField').addEventListener('blur', e => {
+  if (e.target.value.trim()) { addTag(e.target.value); e.target.value = ''; }
+});
+
+function renderTagFilterBar() {
+  // Collect all unique tags across all snippets
+  const allTags = [...new Set(snippets.flatMap(s => s.tags || []))];
+  const bar = document.getElementById('tagFilterBar');
+  if (!allTags.length) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = '';
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'tag-filter-chip tf-all' + (_activeTagFilter ? '' : ' active');
+  allBtn.textContent = 'All';
+  allBtn.onclick = () => { _activeTagFilter = null; renderTagFilterBar(); renderSnippets(); };
+  bar.appendChild(allBtn);
+
+  allTags.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-filter-chip ' + tagColor(t) + (_activeTagFilter === t ? ' active' : '');
+    btn.textContent = t;
+    btn.onclick = () => { _activeTagFilter = t; renderTagFilterBar(); renderSnippets(); };
+    bar.appendChild(btn);
+  });
+
+  if (_activeTagFilter) {
+    const clr = document.createElement('button');
+    clr.className = 'tag-filter-clear';
+    clr.textContent = '✕ Clear filter';
+    clr.onclick = () => { _activeTagFilter = null; renderTagFilterBar(); renderSnippets(); };
+    bar.appendChild(clr);
+  }
+}
+
+/* ════════════════════════════════════════════
+   SHARE MODAL
+════════════════════════════════════════════ */
+let _shareSnippetId = null;
+
+window.openShareModal = function(id) {
+  _shareSnippetId = id;
+  const s = snippets.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('sharePublicToggle').checked = !!s.is_public;
+  updateShareUI(s);
+  document.getElementById('shareModalOverlay').classList.add('open');
+};
+
+window.closeShareModal = function() {
+  document.getElementById('shareModalOverlay').classList.remove('open');
+  _shareSnippetId = null;
+};
+
+function updateShareUI(s) {
+  const isPublic = !!s.is_public;
+  document.getElementById('shareToggleSub').textContent = isPublic
+    ? 'Public — anyone with the link can view this snippet'
+    : 'Toggle on to generate a shareable link';
+  const linkRow = document.getElementById('shareLinkRow');
+  if (isPublic && s.public_id) {
+    linkRow.style.display = '';
+    document.getElementById('shareLinkUrl').textContent = location.origin + location.pathname + '?s=' + s.public_id;
+  } else {
+    linkRow.style.display = 'none';
+  }
+}
+
+window.handleShareToggle = async function() {
+  const s = snippets.find(x => x.id === _shareSnippetId);
+  if (!s || !_session) return;
+  const isPublic = document.getElementById('sharePublicToggle').checked;
+  try {
+    const res = await fetch(_c + '/rest/v1/snippets?id=eq.' + s.id, {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify({ is_public: isPublic })
+    });
+    if (!res.ok) throw new Error();
+    s.is_public = isPublic;
+    updateShareUI(s);
+    renderSnippets();
+    showToast(isPublic ? '🔗 Snippet is now public' : '🔒 Snippet is now private', 'success');
+  } catch { showToast('✗ Failed to update sharing', 'error'); }
+};
+
+window.copyShareLink = function() {
+  const url = document.getElementById('shareLinkUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('shareLinkCopyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+};
+
+// Close share modal on overlay click
+document.getElementById('shareModalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeShareModal();
+});
+
+/* ════════════════════════════════════════════
+   PUBLIC VIEW — check URL on load
+════════════════════════════════════════════ */
+async function checkPublicView() {
+  const params = new URLSearchParams(location.search);
+  const publicId = params.get('s');
+  if (!publicId) return false;
+
+  document.getElementById('publicViewScreen').classList.add('active');
+  try {
+    const res = await fetch(
+      _c + '/rest/v1/snippets?public_id=eq.' + encodeURIComponent(publicId) + '&is_public=eq.true&limit=1',
+      { headers: { 'apikey': _k, 'Authorization': 'Bearer ' + _k } }
+    );
+    const rows = await res.json();
+    if (!rows.length) {
+      document.getElementById('pubName').textContent = 'Snippet not found';
+      document.getElementById('pubCode').textContent = 'This snippet may have been made private or does not exist.';
+      return true;
+    }
+    const s = rows[0];
+    document.getElementById('pubName').textContent = s.name;
+    document.getElementById('pubCode').textContent  = s.code;
+
+    const meta = document.getElementById('pubMeta');
+    meta.innerHTML = '';
+    [s.language, relTime(s.created_at)].forEach(t => {
+      const chip = document.createElement('span');
+      chip.className = 'pub-meta-chip'; chip.textContent = t;
+      meta.appendChild(chip);
+    });
+    if (s.tags && s.tags.length) {
+      s.tags.forEach(t => {
+        const chip = document.createElement('span');
+        chip.className = 'pub-meta-chip card-tag-chip ' + tagColor(t);
+        chip.textContent = t; meta.appendChild(chip);
+      });
+    }
+    document.getElementById('pubCopyBtn').onclick = () => {
+      navigator.clipboard.writeText(s.code).then(() => {
+        document.getElementById('pubCopyBtn').textContent = '✓ Copied!';
+        setTimeout(() => {
+          document.getElementById('pubCopyBtn').innerHTML =
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Code';
+        }, 2000);
+      });
+    };
+  } catch {
+    document.getElementById('pubName').textContent = 'Error loading snippet';
+  }
+  return true;
+}
+
+/* ════════════════════════════════════════════
+   SNIPPETS — RENDER (pins, tags, share)
 ════════════════════════════════════════════ */
 function renderSnippets() {
-  const query    = (document.getElementById('searchInput').value || '').toLowerCase();
-  const filtered = snippets.filter(s =>
-    s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query)
+  const query = (document.getElementById('searchInput').value || '').toLowerCase();
+  let filtered = snippets.filter(s =>
+    (s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query) ||
+    (s.tags || []).some(t => t.includes(query)))
   );
+  if (_activeTagFilter) filtered = filtered.filter(s => (s.tags || []).includes(_activeTagFilter));
+
+  // Pinned first
+  filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
 
   document.getElementById('countBadge').textContent = snippets.length + (snippets.length === 1 ? ' snippet' : ' snippets');
   const list = document.getElementById('snippetsList');
@@ -2104,31 +2596,44 @@ function renderSnippets() {
     return;
   }
 
-  // FIX 3: Use a DocumentFragment + textContent for code blocks instead of
-  // innerHTML + regex escaping. The browser's native C++ text node engine
-  // handles escaping instantly and eliminates all XSS risk by construction —
-  // textContent can never be interpreted as markup regardless of content.
   const frag = document.createDocumentFragment();
 
   filtered.forEach(s => {
     const card = document.createElement('div');
-    card.className = 'snippet-card';
+    card.className = 'snippet-card' + (s.is_pinned ? ' pinned' : '');
     card.dataset.id = s.id;
 
     // --- Card header ---
     const header = document.createElement('div');
     header.className = 'card-header';
 
+    const nameWrap = document.createElement('div');
+    nameWrap.style.cssText = 'display:flex;align-items:center;gap:7px;overflow:hidden;';
+    if (s.is_pinned) {
+      const dot = document.createElement('div');
+      dot.className = 'pin-indicator';
+      nameWrap.appendChild(dot);
+    }
     const nameEl = document.createElement('div');
     nameEl.className = 'snippet-name';
-    nameEl.textContent = s.name;                    // ← native escaping
+    nameEl.textContent = s.name;
+    nameWrap.appendChild(nameEl);
 
     const headerRight = document.createElement('div');
     headerRight.className = 'card-header-right';
 
     const langBadge = document.createElement('div');
     langBadge.className = 'lang-badge';
-    langBadge.textContent = s.language;             // ← native escaping
+    langBadge.textContent = s.language;
+
+    // Public badge
+    if (s.is_public) {
+      const pubBadge = document.createElement('span');
+      pubBadge.className = 'share-public-badge';
+      pubBadge.textContent = '🔗';
+      pubBadge.title = 'Publicly shared';
+      headerRight.appendChild(pubBadge);
+    }
 
     const expandBtn = document.createElement('button');
     expandBtn.className = 'expand-btn js-expand';
@@ -2136,24 +2641,36 @@ function renderSnippets() {
     expandBtn.innerHTML = '<svg><use href="#icon-chevron"/></svg>';
 
     headerRight.append(langBadge, expandBtn);
-    header.append(nameEl, headerRight);
+    header.append(nameWrap, headerRight);
 
-    // --- Code preview (highest XSS risk — textContent is mandatory here) ---
+    // --- Tags row ---
+    const tagsRow = document.createElement('div');
+    tagsRow.className = 'card-tags';
+    if (s.tags && s.tags.length) {
+      s.tags.forEach(t => {
+        const chip = document.createElement('span');
+        chip.className = 'card-tag-chip ' + tagColor(t);
+        chip.textContent = t;
+        chip.onclick = (e) => { e.stopPropagation(); _activeTagFilter = t; renderTagFilterBar(); renderSnippets(); };
+        chip.style.cursor = 'pointer';
+        tagsRow.appendChild(chip);
+      });
+    }
+
+    // --- Code preview ---
     const codePreview = document.createElement('div');
     codePreview.className = 'code-preview';
-    codePreview.textContent = s.code;               // ← native, zero XSS risk
+    codePreview.textContent = s.code;
 
-    // --- Expanded meta (FIX 1: use pre-cached s.lineCount, not split()) ---
+    // --- Expanded meta ---
     const expandedBody = document.createElement('div');
     expandedBody.className = 'card-expanded-body';
-
     const expandedMeta = document.createElement('div');
     expandedMeta.className = 'expanded-meta';
-
     [s.language, s.lineCount + ' lines', relTime(s.created_at)].forEach(txt => {
       const chip = document.createElement('div');
       chip.className = 'meta-chip';
-      chip.textContent = txt;                       // ← native escaping
+      chip.textContent = txt;
       expandedMeta.appendChild(chip);
     });
     expandedBody.appendChild(expandedMeta);
@@ -2169,6 +2686,7 @@ function renderSnippets() {
     const actions = document.createElement('div');
     actions.className = 'card-actions';
 
+    // Copy
     const copyBtn = document.createElement('button');
     copyBtn.className = 'btn-icon js-copy';
     copyBtn.dataset.id = s.id;
@@ -2177,6 +2695,23 @@ function renderSnippets() {
     actions.appendChild(copyBtn);
 
     if (_session) {
+      // Pin
+      const pinBtn = document.createElement('button');
+      pinBtn.className = 'btn-icon js-pin' + (s.is_pinned ? ' pinned' : '');
+      pinBtn.dataset.id = s.id;
+      pinBtn.setAttribute('aria-label', s.is_pinned ? 'Unpin snippet' : 'Pin snippet');
+      pinBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v3.76z"/></svg>';
+      actions.appendChild(pinBtn);
+
+      // Share
+      const shareBtn = document.createElement('button');
+      shareBtn.className = 'btn-icon js-share';
+      shareBtn.dataset.id = s.id;
+      shareBtn.setAttribute('aria-label', 'Share snippet');
+      shareBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+      actions.appendChild(shareBtn);
+
+      // Edit
       const editBtn = document.createElement('button');
       editBtn.className = 'btn-icon js-edit';
       editBtn.dataset.id = s.id;
@@ -2184,6 +2719,7 @@ function renderSnippets() {
       editBtn.innerHTML = '<svg><use href="#icon-edit"/></svg>';
       actions.appendChild(editBtn);
 
+      // Delete
       const delBtn = document.createElement('button');
       delBtn.className = 'btn-icon del js-delete';
       delBtn.dataset.id = s.id;
@@ -2193,18 +2729,18 @@ function renderSnippets() {
     }
 
     footer.append(timeEl, actions);
-    card.append(header, codePreview, expandedBody, footer);
+    card.append(header, tagsRow, codePreview, expandedBody, footer);
     frag.appendChild(card);
   });
 
   list.replaceChildren(frag);
+  renderTagFilterBar();
 }
 
 function copySnippet(id) {
   const s = snippets.find(x => x.id === id);
   if (!s) return;
   navigator.clipboard.writeText(s.code).then(() => {
-    // Find the copy btn inside this card and flash it green
     const btn = document.querySelector(`.js-copy[data-id="${id}"]`);
     if (!btn) return;
     btn.classList.add('copy-ok');
@@ -2214,6 +2750,24 @@ function copySnippet(id) {
       btn.innerHTML = '<svg><use href="#icon-copy"/></svg>';
     }, 2000);
   }).catch(() => showToast('✗ Copy failed', 'error'));
+}
+
+async function pinSnippet(id) {
+  if (!_session) return;
+  const s = snippets.find(x => x.id === id);
+  if (!s) return;
+  const newVal = !s.is_pinned;
+  try {
+    const res = await fetch(_c + '/rest/v1/snippets?id=eq.' + id, {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify({ is_pinned: newVal })
+    });
+    if (!res.ok) throw new Error();
+    s.is_pinned = newVal;
+    renderSnippets();
+    showToast(newVal ? '📌 Snippet pinned' : 'Snippet unpinned', 'success');
+  } catch { showToast('✗ Failed to pin snippet', 'error'); }
 }
 
 /* ════════════════════════════════════════════
@@ -2324,12 +2878,14 @@ document.getElementById('snippetCode').addEventListener('keydown', e => {
   }
 });
 
-// Snippet grid — expand / copy / edit / delete (event delegation)
+// Snippet grid — expand / copy / pin / share / edit / delete (event delegation)
 document.getElementById('snippetsList').addEventListener('click', e => {
   const copyBtn   = e.target.closest('.js-copy');
   const deleteBtn = e.target.closest('.js-delete');
   const editBtn   = e.target.closest('.js-edit');
   const expandBtn = e.target.closest('.js-expand');
+  const pinBtn    = e.target.closest('.js-pin');
+  const shareBtn  = e.target.closest('.js-share');
   const card      = e.target.closest('.snippet-card');
   if (!card) return;
 
@@ -2337,7 +2893,8 @@ document.getElementById('snippetsList').addEventListener('click', e => {
   if (deleteBtn) { e.stopPropagation(); deleteSnippet(deleteBtn.dataset.id); return; }
   if (editBtn)   { e.stopPropagation(); editSnippet(editBtn.dataset.id); return; }
   if (expandBtn) { e.stopPropagation(); card.classList.toggle('expanded'); return; }
-  // Click anywhere else on card → expand
+  if (pinBtn)    { e.stopPropagation(); pinSnippet(pinBtn.dataset.id); return; }
+  if (shareBtn)  { e.stopPropagation(); openShareModal(shareBtn.dataset.id); return; }
   card.classList.toggle('expanded');
 });
 
@@ -2562,7 +3119,6 @@ function cbShowProgress(pct) {
 
 function cbShowOtp(otp) {
   _cbCurrentOtp = otp;
-  // Render individual digit boxes
   const digitsEl = document.getElementById('cbOtpDigits');
   digitsEl.innerHTML = '';
   otp.split('').forEach(d => {
@@ -2571,10 +3127,24 @@ function cbShowOtp(otp) {
     box.textContent = d;
     digitsEl.appendChild(box);
   });
-  // Expiry info
   const exp = new Date(Date.now() + 24*60*60*1000);
   document.getElementById('cbOtpExpiry').textContent =
     '⏱ Expires ' + exp.toLocaleString(undefined, { hour:'2-digit', minute:'2-digit', month:'short', day:'numeric' });
+
+  // Generate QR code — encodes the retrieve page URL with the OTP prefilled
+  const qrBox = document.getElementById('cbQrBox');
+  qrBox.innerHTML = '';
+  const qrUrl = location.origin + location.pathname + '?clip=' + otp;
+  try {
+    new QRCode(qrBox, {
+      text: qrUrl,
+      width: 128, height: 128,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    qrBox.style.display = 'none';
+  }
 
   document.getElementById('cbOtpResult').classList.add('show');
   document.getElementById('cbUploadBtn').style.display = 'none';
@@ -2715,6 +3285,24 @@ function cbHideRetrieveError() {
   document.getElementById('cbRetrieveError').classList.remove('show');
 }
 
+// Auto-fill retrieve OTP from QR code URL param ?clip=XXXX
+(function() {
+  const p = new URLSearchParams(location.search).get('clip');
+  if (p && /^\d{4}$/.test(p)) {
+    // Switch to clipboard panel and fill OTP boxes
+    setTimeout(() => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById('navClipboard').classList.add('active');
+      document.getElementById('snippetsPanel').style.display = 'none';
+      document.getElementById('clipboardPanel').classList.add('visible');
+      p.split('').forEach((d, i) => {
+        const el = document.getElementById('cbIn' + i);
+        if (el) { el.value = d; el.classList.add('filled'); }
+      });
+    }, 300);
+  }
+})();
+
 })();
 </script>
 
@@ -2755,12 +3343,24 @@ CREATE TABLE IF NOT EXISTS snippets (
   language text NOT NULL DEFAULT 'text',
   code text NOT NULL,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  tags text[] DEFAULT '{}',
+  is_pinned boolean DEFAULT false,
+  is_public boolean DEFAULT false,
+  public_id uuid DEFAULT gen_random_uuid(),
   created_at timestamptz DEFAULT now()
 );
 ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "approved_select" ON snippets FOR SELECT USING (auth.uid() IS NOT NULL AND (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')));
 CREATE POLICY "approved_insert" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved'));
 CREATE POLICY "approved_delete" ON snippets FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+-- Allow public read of publicly shared snippets (no auth required)
+CREATE POLICY "public_snippet_view" ON snippets FOR SELECT USING (is_public = true);
+
+-- If you already have a snippets table, run these to add the new columns:
+-- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
+-- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_pinned boolean DEFAULT false;
+-- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_public boolean DEFAULT false;
+-- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS public_id uuid DEFAULT gen_random_uuid();
 
 -- 4. PROMOTE YOUR FIRST ADMIN (run after signing up normally)
 -- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your@email.com';
