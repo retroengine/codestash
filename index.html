@@ -979,35 +979,15 @@ select.field-input option { background: var(--surface2); }
       <div class="input-row">
         <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" />
         <select class="field-input" id="snippetLang" aria-label="Language" onchange="handleLangChange(this)">
-          <optgroup label="Common">
-            <option value="python">Python</option>
-            <option value="javascript">JavaScript</option>
-            <option value="typescript">TypeScript</option>
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-            <option value="sql">SQL</option>
-          </optgroup>
-          <optgroup label="Systems">
-            <option value="c">C</option>
-            <option value="cpp">C++</option>
-            <option value="rust">Rust</option>
-            <option value="go">Go</option>
-            <option value="java">Java</option>
-          </optgroup>
-          <optgroup label="Scripting / Shell">
-            <option value="bash">Bash</option>
-            <option value="powershell">PowerShell</option>
-          </optgroup>
-          <optgroup label="Science / Data">
-            <option value="matlab">MATLAB</option>
-            <option value="r">R</option>
-            <option value="julia">Julia</option>
-          </optgroup>
-          <optgroup label="Other">
-            <option value="note">📝 Note</option>
-            <option value="text">Plain Text</option>
-            <option value="custom">✏ Custom…</option>
-          </optgroup>
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="css">CSS</option>
+          <option value="html">HTML</option>
+          <option value="javascript">JavaScript</option>
+          <option value="cpp">C++</option>
+          <option value="sql">SQL</option>
+          <option value="note">📝 Notes</option>
+          <option value="custom">✏ Custom…</option>
         </select>
         <input class="field-input" type="text" id="customLangInput"
           placeholder="Enter language name…"
