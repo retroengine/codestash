@@ -1123,8 +1123,115 @@ select.field-input option { background: var(--surface2); }
 }
 .cb-progress-text { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
 
-/* ── TOAST ── */
-.toast {
+/* ════════════════════════════════════════════
+   MOBILE RESPONSIVE
+════════════════════════════════════════════ */
+
+/* Mobile hamburger button */
+.mob-menu-btn {
+  display: none; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--surface3); border: 1px solid var(--border-hi);
+  color: var(--text); cursor: pointer; flex-shrink: 0;
+}
+.mob-menu-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 149;
+}
+.sidebar-overlay.open { display: block; }
+
+@media (max-width: 768px) {
+  /* ── Layout ── */
+  #appContainer {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 60px 1fr !important;
+  }
+
+  /* ── Sidebar: off-canvas on mobile ── */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 260px; z-index: 150;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+    grid-column: unset; grid-row: unset;
+  }
+  .sidebar.mob-open { transform: translateX(0); }
+
+  /* ── Topbar ── */
+  .topbar {
+    grid-column: 1 !important; grid-row: 1 !important;
+    padding: 0 14px; gap: 8px;
+  }
+  .topbar-page-title { font-size: 0.84rem; }
+  .topbar-page-title span { display: none; }
+  .synced-pill { display: none; }
+  .mob-menu-btn { display: flex; }
+
+  /* ── Main content ── */
+  .main-content {
+    grid-column: 1 !important; grid-row: 2 !important;
+    padding: 16px 14px 60px;
+    gap: 16px;
+  }
+
+  /* ── Add panel ── */
+  .add-panel { padding: 16px; }
+  .input-row { grid-template-columns: 1fr; }
+  .code-area { min-height: 100px; }
+
+  /* ── Snippet cards ── */
+  .snippets-grid { grid-template-columns: 1fr; gap: 10px; }
+
+  /* ── Auth card ── */
+  .auth-card { padding: 24px 20px; margin: 16px; max-width: calc(100vw - 32px); }
+
+  /* ── Admin portal ── */
+  .admin-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+  .admin-body   { padding: 16px; }
+  .admin-stats  { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-num     { font-size: 1.4rem; }
+  .lock-card    { flex-direction: column; gap: 14px; }
+  .lock-right   { flex-direction: row; gap: 20px; }
+
+  /* ── User card ── */
+  .user-card { flex-wrap: wrap; gap: 10px; }
+  .user-actions { width: 100%; justify-content: flex-end; }
+
+  /* ── Account dropdown ── */
+  .account-dropdown { width: 260px; right: -10px; }
+
+  /* ── Tag filter bar ── */
+  .tag-filter-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+
+  /* ── Clipboard ── */
+  .cb-otp-inputs { gap: 8px; }
+  .cb-otp-input  { width: 58px; height: 68px; font-size: 1.8rem; border-radius: 12px; }
+  .cb-otp-digit  { width: 50px; height: 62px; font-size: 1.8rem; border-radius: 12px; }
+  .cb-otp-copy-row { flex-direction: column; gap: 8px; width: 100%; }
+  .cb-btn-copy-otp, .cb-btn-new { width: 100%; justify-content: center; }
+
+  /* ── Share modal ── */
+  .share-modal { margin: 16px; max-width: calc(100vw - 32px); padding: 22px 18px; }
+
+  /* ── Public view ── */
+  .pub-header { padding: 14px 16px; }
+  .pub-body   { padding: 24px 16px; }
+  .pub-snippet-name { font-size: 1.2rem; }
+
+  /* ── Toast ── */
+  .toast { left: 16px; right: 16px; bottom: 16px; text-align: center; }
+}
+
+@media (max-width: 400px) {
+  .admin-stats { grid-template-columns: 1fr; }
+  .cb-otp-inputs { gap: 6px; }
+  .cb-otp-input  { width: 52px; height: 62px; font-size: 1.6rem; }
+  .cb-otp-digit  { width: 46px; height: 56px; font-size: 1.6rem; }
+}
+
   position: fixed; bottom: 24px; right: 24px;
   background: var(--surface); border: 1px solid var(--border-hi);
   border-radius: 10px; padding: 11px 18px;
@@ -1418,6 +1525,9 @@ select.field-input option { background: var(--surface2); }
   </div>
 </div>
 
+<!-- ── SIDEBAR OVERLAY (mobile) ── -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
 <!-- ═══════════ APP LAYOUT ═══════════ -->
 <div id="appContainer">
 
@@ -1458,6 +1568,10 @@ select.field-input option { background: var(--surface2); }
 
   <!-- TOPBAR -->
   <header class="topbar">
+    <!-- Mobile menu button -->
+    <button class="mob-menu-btn" id="mobMenuBtn" aria-label="Open menu" onclick="toggleMobileSidebar()">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <div class="topbar-page-title">Snippets <span>/ Library</span></div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
@@ -2009,16 +2123,19 @@ async function createProfile(userId, email, role, status, token) {
 ════════════════════════════════════════════ */
 function showApp(session) {
   _session = session;
-  const email   = session ? session.user.email : '(public)';
-  const initials = email.slice(0, 2).toUpperCase();
+  const isGuest = !session;
+  const email    = session ? session.user.email : 'Guest';
+  const initials = session ? email.slice(0, 2).toUpperCase() : '?';
 
-  // Topbar avatar
-  document.getElementById('userAvatar').textContent   = initials;
+  document.getElementById('userAvatar').textContent    = initials;
   document.getElementById('dropdownAvatar').textContent = initials;
-  document.getElementById('dropdownEmail').textContent  = email;
-  const rawName = (email.split('@')[0] || 'there').split(/[.\d]/)[0] || 'there';
+  document.getElementById('dropdownEmail').textContent  = isGuest ? 'Not signed in' : email;
+  const rawName = isGuest ? 'Guest' : (email.split('@')[0] || 'there').split(/[.\d]/)[0] || 'there';
   const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-  document.getElementById('dropdownName').textContent   = 'Hi, ' + displayName + '!';
+  document.getElementById('dropdownName').textContent = isGuest ? 'Browsing as Guest' : 'Hi, ' + displayName + '!';
+
+  // Hide write actions from guests — they can only view public snippets
+  document.getElementById('addPanel').style.display = isGuest ? 'none' : '';
 
   showScreen('app');
   fetchSnippets();
@@ -2203,12 +2320,13 @@ async function fetchSnippets() {
   try {
     const token = _session ? _session.access_token : _k;
 
-    // FIX 2: Delta fetching — on auto-refresh, only request rows newer than
-    // the most recent snippet we already have. On first load, _lastSyncTime
-    // is null so we fetch everything normally.
-    const deltaFilter = _lastSyncTime ? `&created_at=gt.${encodeURIComponent(_lastSyncTime)}` : '';
+    // When no session (site unlocked / public mode) only fetch publicly shared snippets.
+    // Authenticated users fetch their own snippets via RLS as normal.
+    const publicFilter = !_session ? '&is_public=eq.true' : '';
+    const deltaFilter  = _lastSyncTime ? `&created_at=gt.${encodeURIComponent(_lastSyncTime)}` : '';
+
     const res = await fetch(
-      _c + '/rest/v1/snippets?order=created_at.desc' + deltaFilter,
+      _c + '/rest/v1/snippets?order=created_at.desc' + publicFilter + deltaFilter,
       { headers: _headers(token) }
     );
 
@@ -2216,27 +2334,15 @@ async function fetchSnippets() {
     if (!res.ok) throw new Error();
 
     const fresh = await res.json();
-
-    // FIX 1: Pre-calculate line counts once here, not on every render/keystroke.
-    // Without this, renderSnippets was doing O(N×M) work — splitting every
-    // snippet's code string into a new array on every search keystroke.
-    fresh.forEach(s => {
-      s.lineCount = s.code.split('\n').length;
-    });
+    fresh.forEach(s => { s.lineCount = s.code.split('\n').length; });
 
     if (_lastSyncTime && fresh.length > 0) {
-      // FIX 2 cont.: Prepend only the new rows; keep existing snippets intact.
       snippets = [...fresh, ...snippets];
     } else if (!_lastSyncTime) {
-      // Initial full load — replace the array entirely.
       snippets = fresh;
     }
-    // If _lastSyncTime is set but fresh is empty, nothing new arrived — no update needed.
 
-    // Record the timestamp of the newest snippet for the next delta fetch.
-    if (snippets.length > 0) {
-      _lastSyncTime = snippets[0].created_at;
-    }
+    if (snippets.length > 0) _lastSyncTime = snippets[0].created_at;
 
     setStatus('synced', 'connected');
     renderSnippets();
@@ -2898,6 +3004,18 @@ document.getElementById('snippetsList').addEventListener('click', e => {
   card.classList.toggle('expanded');
 });
 
+/* ════════════════════════════════════════════
+   MOBILE SIDEBAR
+════════════════════════════════════════════ */
+function toggleMobileSidebar() {
+  document.querySelector('.sidebar').classList.toggle('mob-open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeMobileSidebar() {
+  document.querySelector('.sidebar').classList.remove('mob-open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
 // Sidebar nav active state + panel switching
 document.querySelector('.sidebar').addEventListener('click', e => {
   const item = e.target.closest('.nav-item');
@@ -2905,6 +3023,7 @@ document.querySelector('.sidebar').addEventListener('click', e => {
   e.preventDefault();
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   item.classList.add('active');
+  closeMobileSidebar(); // close drawer on mobile after selection
 
   if (item.id === 'navClipboard') {
     document.getElementById('snippetsPanel').style.display   = 'none';
