@@ -679,6 +679,245 @@ select.field-input option { background: var(--surface2); }
 }
 .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
 
+/* ════════════════════════════════════════════
+   ONLINE CLIPBOARD — STYLES
+════════════════════════════════════════════ */
+
+/* Nav badge */
+.nav-badge {
+  font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em;
+  background: rgba(139,120,255,0.18); border: 1px solid rgba(139,120,255,0.35);
+  color: var(--accent); padding: 2px 7px; border-radius: 10px;
+  text-transform: uppercase; flex-shrink: 0;
+}
+
+/* Clipboard panel */
+.clipboard-panel {
+  display: none; flex-direction: column; gap: 22px;
+}
+.clipboard-panel.visible { display: flex; }
+
+/* Clipboard card */
+.cb-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px;
+}
+.cb-card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+}
+.cb-card-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(139,120,255,0.12); border: 1px solid rgba(139,120,255,0.25);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.cb-card-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; }
+.cb-card-title { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.02em; }
+.cb-card-sub   { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+
+/* Tab switcher (reuse style) */
+.cb-tabs {
+  display: flex; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 11px;
+  padding: 4px; gap: 3px; margin-bottom: 18px;
+}
+.cb-tab {
+  flex: 1; padding: 9px 6px; border: none; background: transparent;
+  color: var(--muted); font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 500; border-radius: 8px; cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.cb-tab.active { background: #2a2a2a; color: #e8e8e8; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
+
+/* Upload mode */
+.cb-upload-area {
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 22px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative; margin-bottom: 12px;
+}
+.cb-upload-area:hover,
+.cb-upload-area.dragover {
+  border-color: var(--accent); background: rgba(139,120,255,0.05);
+}
+.cb-upload-area input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.cb-upload-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.cb-upload-label { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.cb-upload-label strong { color: var(--text); }
+.cb-file-chosen {
+  display: none; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;
+}
+.cb-file-chosen.show { display: flex; }
+.cb-file-name { font-size: 0.82rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb-file-clear {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 1rem; padding: 2px 6px; border-radius: 6px;
+  transition: color 0.15s; flex-shrink: 0;
+}
+.cb-file-clear:hover { color: var(--danger); }
+
+.cb-divider {
+  display: flex; align-items: center; gap: 10px; margin: 12px 0;
+}
+.cb-divider::before, .cb-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.cb-divider span { font-size: 0.7rem; color: var(--muted); }
+
+.cb-textarea {
+  width: 100%; min-height: 120px; resize: vertical;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 11px;
+  color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 0.8rem; line-height: 1.75; padding: 13px 14px;
+  outline: none; transition: border-color 0.15s, background 0.15s;
+  margin-bottom: 13px; white-space: pre-wrap; word-break: break-word;
+}
+.cb-textarea::placeholder { color: var(--muted2); }
+.cb-textarea:focus { border-color: var(--border-hi); background: var(--surface3); }
+
+/* OTP result display */
+.cb-otp-result {
+  display: none; flex-direction: column; align-items: center;
+  background: var(--surface2); border: 1px solid rgba(139,120,255,0.3);
+  border-radius: 14px; padding: 28px 22px; text-align: center;
+  gap: 8px; animation: up 0.35s cubic-bezier(0.16,1,0.3,1);
+  margin-top: 14px;
+}
+.cb-otp-result.show { display: flex; }
+.cb-otp-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.cb-otp-digits {
+  display: flex; gap: 10px; margin: 6px 0;
+}
+.cb-otp-digit {
+  width: 58px; height: 72px; border-radius: 14px;
+  background: var(--surface3); border: 2px solid rgba(139,120,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; font-weight: 800; font-family: 'DM Mono', monospace;
+  color: var(--text); letter-spacing: 0;
+  box-shadow: 0 0 20px rgba(139,120,255,0.15);
+}
+.cb-otp-expiry { font-size: 0.75rem; color: var(--muted); }
+.cb-otp-copy-row { display: flex; gap: 8px; margin-top: 4px; }
+.cb-btn-copy-otp {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(139,120,255,0.12); border: 1px solid rgba(139,120,255,0.3);
+  color: var(--accent); border-radius: 9px; padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+}
+.cb-btn-copy-otp:hover { background: rgba(139,120,255,0.22); }
+.cb-btn-new {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 9px; padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.cb-btn-new:hover { background: var(--surface3); color: var(--text); }
+
+/* Retrieve mode */
+.cb-retrieve-label {
+  font-size: 0.75rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6;
+}
+.cb-otp-inputs {
+  display: flex; gap: 10px; justify-content: center; margin-bottom: 16px;
+}
+.cb-otp-input {
+  width: 62px; height: 74px; border-radius: 14px;
+  background: var(--surface2); border: 2px solid var(--border);
+  color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 2rem; font-weight: 800; text-align: center;
+  outline: none; transition: border-color 0.15s, background 0.15s;
+  -webkit-appearance: none; caret-color: var(--accent);
+}
+.cb-otp-input:focus { border-color: var(--accent); background: var(--surface3); }
+.cb-otp-input.filled { border-color: rgba(139,120,255,0.5); }
+
+/* Retrieved content display */
+.cb-retrieved {
+  display: none; flex-direction: column; gap: 12px; margin-top: 14px;
+  animation: up 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.cb-retrieved.show { display: flex; }
+.cb-retrieved-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cb-retrieved-type {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--success); background: rgba(61,186,112,0.1);
+  border: 1px solid rgba(61,186,112,0.25); border-radius: 8px; padding: 3px 10px;
+}
+.cb-retrieved-expiry { font-size: 0.72rem; color: var(--muted); }
+.cb-retrieved-content {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 11px; padding: 14px; font-family: 'DM Mono', monospace;
+  font-size: 0.8rem; line-height: 1.75; color: var(--text);
+  max-height: 260px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;
+  scrollbar-width: none;
+}
+.cb-retrieved-content::-webkit-scrollbar { display: none; }
+.cb-btn-dl {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(61,186,112,0.1); border: 1px solid rgba(61,186,112,0.3);
+  color: var(--success); border-radius: 9px; padding: 10px 18px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s; text-decoration: none;
+}
+.cb-btn-dl:hover { background: rgba(61,186,112,0.2); }
+.cb-btn-copy-content {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 9px; padding: 10px 18px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.cb-btn-copy-content:hover { background: var(--surface3); color: var(--text); }
+
+/* Error/info strip */
+.cb-error {
+  display: none; font-size: 0.78rem; color: var(--danger);
+  padding: 10px 14px; background: rgba(224,82,82,0.08);
+  border: 1px solid rgba(224,82,82,0.2); border-radius: 8px; margin-top: 10px;
+}
+.cb-error.show { display: block; }
+
+/* How it works info card */
+.cb-how {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 22px;
+}
+.cb-how-title {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px;
+}
+.cb-steps { display: flex; flex-direction: column; gap: 12px; }
+.cb-step { display: flex; align-items: flex-start; gap: 12px; }
+.cb-step-num {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(139,120,255,0.12); border: 1px solid rgba(139,120,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: var(--accent);
+}
+.cb-step-text { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+.cb-step-text strong { color: var(--text); }
+
+/* Upload progress */
+.cb-progress {
+  display: none; align-items: center; gap: 10px; margin-top: 10px;
+}
+.cb-progress.show { display: flex; }
+.cb-progress-bar-wrap {
+  flex: 1; height: 4px; background: var(--surface3); border-radius: 4px; overflow: hidden;
+}
+.cb-progress-bar {
+  height: 100%; background: var(--accent); border-radius: 4px;
+  transition: width 0.3s ease; width: 0%;
+}
+.cb-progress-text { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
+
 /* ── TOAST ── */
 .toast {
   position: fixed; bottom: 24px; right: 24px;
@@ -934,10 +1173,24 @@ select.field-input option { background: var(--surface2); }
       </div>
     </div>
 
-    <a class="nav-item active" href="#" aria-label="Snippets">
+    <a class="nav-item active" href="#" id="navSnippets" aria-label="Snippets">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       Snippets
     </a>
+
+    <a class="nav-item" href="#" id="navClipboard" aria-label="Online Clipboard">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="4" rx="1"/>
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <line x1="12" y1="11" x2="12" y2="17"/>
+          <line x1="9" y1="14" x2="15" y2="14"/>
+        </svg>
+      </span>
+      Online Clipboard
+      <span class="nav-badge">NEW</span>
+    </a>
+
   </aside>
 
   <!-- TOPBAR -->
@@ -973,6 +1226,9 @@ select.field-input option { background: var(--surface2); }
 
   <!-- MAIN -->
   <main class="main-content">
+
+    <!-- ══ SNIPPETS PANEL ══ -->
+    <div id="snippetsPanel">
 
     <!-- Add snippet panel -->
     <div class="add-panel" id="addPanel">
@@ -1033,6 +1289,141 @@ Indentation is preserved."
 
     <!-- Snippets grid (rendered by JS) -->
     <div class="snippets-grid" id="snippetsList"></div>
+
+    </div><!-- end #snippetsPanel -->
+
+    <!-- ══ ONLINE CLIPBOARD PANEL ══ -->
+    <div class="clipboard-panel" id="clipboardPanel">
+
+      <!-- Upload Card -->
+      <div class="cb-card" id="cbUploadCard">
+        <div class="cb-card-header">
+          <div class="cb-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div>
+            <div class="cb-card-title">Upload to Clipboard</div>
+            <div class="cb-card-sub">Share text or a file — get a 4-digit code instantly</div>
+          </div>
+        </div>
+
+        <!-- Mode tabs -->
+        <div class="cb-tabs">
+          <button class="cb-tab active" id="cbTabText" onclick="cbSwitchUploadMode('text')">📝 Paste Text</button>
+          <button class="cb-tab" id="cbTabFile" onclick="cbSwitchUploadMode('file')">📎 Upload File</button>
+        </div>
+
+        <!-- Text mode -->
+        <div id="cbTextMode">
+          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste your text, code, or notes here...&#10;It will be available for 24 hours." spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+        </div>
+
+        <!-- File mode -->
+        <div id="cbFileMode" style="display:none">
+          <div class="cb-upload-area" id="cbDropZone">
+            <input type="file" id="cbFileInput" />
+            <div class="cb-upload-icon">📂</div>
+            <div class="cb-upload-label">
+              <strong>Click to browse</strong> or drag & drop a file here<br>
+              <span style="font-size:0.72rem">Max 5 MB — any file type</span>
+            </div>
+          </div>
+          <div class="cb-file-chosen" id="cbFileChosen">
+            <span style="font-size:1.1rem">📄</span>
+            <span class="cb-file-name" id="cbFileName">—</span>
+            <button class="cb-file-clear" onclick="cbClearFile()" title="Remove file">✕</button>
+          </div>
+          <div class="cb-progress" id="cbProgress">
+            <div class="cb-progress-bar-wrap"><div class="cb-progress-bar" id="cbProgressBar"></div></div>
+            <span class="cb-progress-text" id="cbProgressText">0%</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="cbUploadBtn" onclick="cbUpload()" style="margin-top:4px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M5 19h14"/></svg>
+          Generate Code
+        </button>
+        <div class="cb-error" id="cbUploadError"></div>
+
+        <!-- OTP Result -->
+        <div class="cb-otp-result" id="cbOtpResult">
+          <div class="cb-otp-label">Your Clipboard Code</div>
+          <div class="cb-otp-digits" id="cbOtpDigits"></div>
+          <div class="cb-otp-expiry" id="cbOtpExpiry">⏱ Expires in 24 hours</div>
+          <div class="cb-otp-copy-row">
+            <button class="cb-btn-copy-otp" onclick="cbCopyOtp()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Code
+            </button>
+            <button class="cb-btn-new" onclick="cbReset()">
+              New Upload
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Retrieve Card -->
+      <div class="cb-card" id="cbRetrieveCard">
+        <div class="cb-card-header">
+          <div class="cb-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div>
+            <div class="cb-card-title">Retrieve from Clipboard</div>
+            <div class="cb-card-sub">Enter a 4-digit code to get the content</div>
+          </div>
+        </div>
+
+        <p class="cb-retrieve-label">Type each digit below — the boxes auto-advance as you type.</p>
+
+        <div class="cb-otp-inputs" id="cbOtpInputs">
+          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn0" oninput="cbOtpNext(this,0)" onkeydown="cbOtpKey(event,0)" inputmode="numeric" />
+          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn1" oninput="cbOtpNext(this,1)" onkeydown="cbOtpKey(event,1)" inputmode="numeric" />
+          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn2" oninput="cbOtpNext(this,2)" onkeydown="cbOtpKey(event,2)" inputmode="numeric" />
+          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn3" oninput="cbOtpNext(this,3)" onkeydown="cbOtpKey(event,3)" inputmode="numeric" />
+        </div>
+
+        <button class="btn-primary" id="cbRetrieveBtn" onclick="cbRetrieve()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Retrieve Content
+        </button>
+        <div class="cb-error" id="cbRetrieveError"></div>
+
+        <!-- Retrieved content -->
+        <div class="cb-retrieved" id="cbRetrievedBox">
+          <div class="cb-retrieved-header">
+            <span class="cb-retrieved-type" id="cbRetrievedType">TEXT</span>
+            <span class="cb-retrieved-expiry" id="cbRetrievedExpiry"></span>
+          </div>
+          <div class="cb-retrieved-content" id="cbRetrievedContent" style="display:none"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="cbRetrievedActions"></div>
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <div class="cb-how">
+        <div class="cb-how-title">How it works</div>
+        <div class="cb-steps">
+          <div class="cb-step">
+            <div class="cb-step-num">1</div>
+            <div class="cb-step-text"><strong>Paste text or upload a file</strong> — anything you need to move between devices or share quickly.</div>
+          </div>
+          <div class="cb-step">
+            <div class="cb-step-num">2</div>
+            <div class="cb-step-text"><strong>Get a 4-digit code</strong> — easy to remember and type, like 1221 or 3344.</div>
+          </div>
+          <div class="cb-step">
+            <div class="cb-step-num">3</div>
+            <div class="cb-step-text"><strong>Enter the code anywhere</strong> — on any device, and retrieve your content instantly.</div>
+          </div>
+          <div class="cb-step">
+            <div class="cb-step-num">4</div>
+            <div class="cb-step-text"><strong>Auto-deleted after 24 hours</strong> — nothing lingers. Your clipboard stays clean.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end #clipboardPanel -->
 
   </main>
 </div>
@@ -1967,13 +2358,25 @@ document.getElementById('snippetsList').addEventListener('click', e => {
   card.classList.toggle('expanded');
 });
 
-// Sidebar nav active state
+// Sidebar nav active state + panel switching
 document.querySelector('.sidebar').addEventListener('click', e => {
   const item = e.target.closest('.nav-item');
   if (!item) return;
   e.preventDefault();
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   item.classList.add('active');
+
+  if (item.id === 'navClipboard') {
+    document.getElementById('snippetsPanel').style.display   = 'none';
+    document.getElementById('clipboardPanel').classList.add('visible');
+    document.querySelector('.topbar-page-title').innerHTML =
+      'Online Clipboard <span>/ Share & Retrieve</span>';
+  } else {
+    document.getElementById('snippetsPanel').style.display   = '';
+    document.getElementById('clipboardPanel').classList.remove('visible');
+    document.querySelector('.topbar-page-title').innerHTML =
+      'Snippets <span>/ Library</span>';
+  }
 });
 
 // Account dropdown
@@ -2009,6 +2412,325 @@ setInterval(() => {
 setInterval(() => {
   if (document.getElementById('adminPortal').classList.contains('active')) loadAdminData();
 }, 30000);
+
+})();
+
+/* ════════════════════════════════════════════
+   ONLINE CLIPBOARD — Separate Supabase project
+════════════════════════════════════════════ */
+(function() {
+'use strict';
+
+const CB_URL = 'https://lcdawmpqybejybfetmpq.supabase.co';
+const CB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZGF3bXBxeWJlanliZmV0bXBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTc5ODEsImV4cCI6MjA4NzI5Mzk4MX0.k6gt-eEf69EIDKwtGSAZHalGWpeTf9v6k3J4rb-uvWc';
+
+function cbHeaders() {
+  return {
+    'apikey': CB_KEY,
+    'Authorization': 'Bearer ' + CB_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+}
+
+/* ── OTP Generation — easy-to-type patterns ── */
+const OTP_GENERATORS = [
+  // Sequential: 1234, 8765, 3456
+  () => { const s = Math.floor(Math.random()*6)+1; const d = Math.random()>0.5?1:-1; return [0,1,2,3].map(i=>((s+i*d+10)%10)).join(''); },
+  // Pairs: 1122, 3344, 9900
+  () => { const a=Math.floor(Math.random()*10), b=Math.floor(Math.random()*10); return `${a}${a}${b}${b}`; },
+  // Mirror: 1221, 3443, 7887
+  () => { const a=Math.floor(Math.random()*10), b=Math.floor(Math.random()*10); return `${a}${b}${b}${a}`; },
+  // Alternating odd: 1357, 9753, 3179
+  () => { const p=[1,3,5,7,9].sort(()=>Math.random()-0.5).slice(0,4); return p.join(''); },
+  // Alternating even: 2468, 8642, 0246
+  () => { const p=[0,2,4,6,8].sort(()=>Math.random()-0.5).slice(0,4); return p.join(''); },
+  // Repeated quad: 1111, 4444, 7777 (rare, very memorable)
+  () => { const d=Math.floor(Math.random()*10); return `${d}${d}${d}${d}`; },
+];
+
+async function generateOTP() {
+  let otp, tries = 0;
+  do {
+    const gen = OTP_GENERATORS[Math.floor(Math.random()*OTP_GENERATORS.length)];
+    otp = gen();
+    // Check uniqueness among active (non-expired) entries
+    try {
+      const res = await fetch(
+        CB_URL + '/rest/v1/clipboard_entries?otp=eq.' + otp +
+        '&expires_at=gt.' + encodeURIComponent(new Date().toISOString()) + '&select=otp&limit=1',
+        { headers: cbHeaders() }
+      );
+      const rows = await res.json();
+      if (!rows.length) break; // OTP is free
+    } catch { break; }
+    tries++;
+  } while (tries < 10);
+  return otp;
+}
+
+/* ── State ── */
+let _cbMode       = 'text'; // 'text' | 'file'
+let _cbFile       = null;
+let _cbCurrentOtp = null;
+
+/* ── Upload mode switching ── */
+window.cbSwitchUploadMode = function(mode) {
+  _cbMode = mode;
+  document.getElementById('cbTabText').classList.toggle('active', mode === 'text');
+  document.getElementById('cbTabFile').classList.toggle('active', mode === 'file');
+  document.getElementById('cbTextMode').style.display = mode === 'text' ? '' : 'none';
+  document.getElementById('cbFileMode').style.display = mode === 'file' ? '' : 'none';
+  cbHideUploadError();
+};
+
+/* ── File input + drag-drop ── */
+const dropZone = document.getElementById('cbDropZone');
+const fileInput = document.getElementById('cbFileInput');
+
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) cbSetFile(fileInput.files[0]); });
+
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) cbSetFile(e.dataTransfer.files[0]);
+});
+
+function cbSetFile(f) {
+  if (f.size > 5 * 1024 * 1024) { cbShowUploadError('File must be under 5 MB.'); return; }
+  _cbFile = f;
+  document.getElementById('cbFileName').textContent = f.name;
+  document.getElementById('cbFileChosen').classList.add('show');
+  cbHideUploadError();
+}
+
+window.cbClearFile = function() {
+  _cbFile = null;
+  fileInput.value = '';
+  document.getElementById('cbFileChosen').classList.remove('show');
+};
+
+/* ── Main upload handler ── */
+window.cbUpload = async function() {
+  cbHideUploadError();
+  const btn = document.getElementById('cbUploadBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Generating...';
+
+  try {
+    const otp = await generateOTP();
+
+    if (_cbMode === 'text') {
+      const text = document.getElementById('cbTextarea').value.trim();
+      if (!text) { cbShowUploadError('Please paste some text first.'); return; }
+
+      const res = await fetch(CB_URL + '/rest/v1/clipboard_entries', {
+        method: 'POST',
+        headers: cbHeaders(),
+        body: JSON.stringify({ otp, content: text, type: 'text' })
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      cbShowOtp(otp);
+
+    } else {
+      if (!_cbFile) { cbShowUploadError('Please select a file first.'); return; }
+      // Upload file to Supabase Storage
+      cbShowProgress(0);
+      const filePath = otp + '_' + Date.now() + '_' + _cbFile.name;
+      const uploadRes = await fetch(
+        CB_URL + '/storage/v1/object/clipboard-files/' + encodeURIComponent(filePath),
+        {
+          method: 'POST',
+          headers: { 'apikey': CB_KEY, 'Authorization': 'Bearer ' + CB_KEY, 'Content-Type': _cbFile.type || 'application/octet-stream' },
+          body: _cbFile
+        }
+      );
+      cbShowProgress(70);
+      if (!uploadRes.ok) throw new Error('File upload failed');
+      const fileUrl = CB_URL + '/storage/v1/object/public/clipboard-files/' + encodeURIComponent(filePath);
+      cbShowProgress(90);
+
+      const dbRes = await fetch(CB_URL + '/rest/v1/clipboard_entries', {
+        method: 'POST',
+        headers: cbHeaders(),
+        body: JSON.stringify({ otp, file_url: fileUrl, file_name: _cbFile.name, file_type: _cbFile.type, type: 'file' })
+      });
+      if (!dbRes.ok) throw new Error('DB insert failed');
+      cbShowProgress(100);
+      setTimeout(() => document.getElementById('cbProgress').classList.remove('show'), 600);
+      cbShowOtp(otp);
+    }
+  } catch(e) {
+    cbShowUploadError('Something went wrong. Please try again.');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M5 19h14"/></svg> Generate Code';
+  }
+};
+
+function cbShowProgress(pct) {
+  const bar = document.getElementById('cbProgress');
+  bar.classList.add('show');
+  document.getElementById('cbProgressBar').style.width  = pct + '%';
+  document.getElementById('cbProgressText').textContent = pct + '%';
+}
+
+function cbShowOtp(otp) {
+  _cbCurrentOtp = otp;
+  // Render individual digit boxes
+  const digitsEl = document.getElementById('cbOtpDigits');
+  digitsEl.innerHTML = '';
+  otp.split('').forEach(d => {
+    const box = document.createElement('div');
+    box.className = 'cb-otp-digit';
+    box.textContent = d;
+    digitsEl.appendChild(box);
+  });
+  // Expiry info
+  const exp = new Date(Date.now() + 24*60*60*1000);
+  document.getElementById('cbOtpExpiry').textContent =
+    '⏱ Expires ' + exp.toLocaleString(undefined, { hour:'2-digit', minute:'2-digit', month:'short', day:'numeric' });
+
+  document.getElementById('cbOtpResult').classList.add('show');
+  document.getElementById('cbUploadBtn').style.display = 'none';
+}
+
+window.cbCopyOtp = function() {
+  if (!_cbCurrentOtp) return;
+  navigator.clipboard.writeText(_cbCurrentOtp).then(() => {
+    const btn = document.querySelector('.cb-btn-copy-otp');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copied!';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  });
+};
+
+window.cbReset = function() {
+  _cbCurrentOtp = null;
+  _cbFile = null;
+  document.getElementById('cbTextarea').value = '';
+  document.getElementById('cbOtpResult').classList.remove('show');
+  document.getElementById('cbUploadBtn').style.display = '';
+  document.getElementById('cbFileChosen').classList.remove('show');
+  document.getElementById('cbProgress').classList.remove('show');
+  cbHideUploadError();
+  cbSwitchUploadMode('text');
+};
+
+function cbShowUploadError(msg) {
+  const el = document.getElementById('cbUploadError');
+  el.textContent = msg; el.classList.add('show');
+}
+function cbHideUploadError() {
+  document.getElementById('cbUploadError').classList.remove('show');
+}
+
+/* ── OTP Input boxes (retrieve side) ── */
+window.cbOtpNext = function(el, idx) {
+  // Keep only last char if multiple typed
+  const val = el.value.replace(/\D/g,'');
+  el.value  = val ? val[val.length-1] : '';
+  el.classList.toggle('filled', !!el.value);
+  cbHideRetrieveError();
+  document.getElementById('cbRetrievedBox').classList.remove('show');
+  if (el.value && idx < 3) document.getElementById('cbIn' + (idx+1)).focus();
+};
+
+window.cbOtpKey = function(e, idx) {
+  if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+    document.getElementById('cbIn' + (idx-1)).focus();
+  }
+  if (e.key === 'Enter') cbRetrieve();
+};
+
+/* ── Retrieve handler ── */
+window.cbRetrieve = async function() {
+  const digits = [0,1,2,3].map(i => document.getElementById('cbIn'+i).value).join('');
+  if (digits.length < 4) { cbShowRetrieveError('Please enter all 4 digits.'); return; }
+
+  cbHideRetrieveError();
+  document.getElementById('cbRetrievedBox').classList.remove('show');
+  const btn = document.getElementById('cbRetrieveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Retrieving...';
+
+  try {
+    const now = new Date().toISOString();
+    const res = await fetch(
+      CB_URL + '/rest/v1/clipboard_entries?otp=eq.' + digits +
+      '&expires_at=gt.' + encodeURIComponent(now) + '&limit=1',
+      { headers: cbHeaders() }
+    );
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    if (!rows.length) { cbShowRetrieveError('Code not found or expired. Double-check the digits.'); return; }
+
+    const row = rows[0];
+    const exp = new Date(row.expires_at);
+    const expiresIn = Math.max(0, Math.round((exp - Date.now()) / 60000));
+    const expiresStr = expiresIn > 60
+      ? Math.round(expiresIn/60) + 'h remaining'
+      : expiresIn + 'm remaining';
+
+    document.getElementById('cbRetrievedExpiry').textContent = '⏱ ' + expiresStr;
+    document.getElementById('cbRetrievedType').textContent   = row.type === 'file' ? 'FILE' : 'TEXT';
+
+    const contentEl  = document.getElementById('cbRetrievedContent');
+    const actionsEl  = document.getElementById('cbRetrievedActions');
+    actionsEl.innerHTML = '';
+
+    if (row.type === 'text') {
+      contentEl.style.display = '';
+      contentEl.textContent   = row.content;
+      // Copy button
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'cb-btn-copy-content';
+      copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Text';
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(row.content).then(() => {
+          copyBtn.innerHTML = '✓ Copied!';
+          setTimeout(() => copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Text', 2000);
+        });
+      };
+      actionsEl.appendChild(copyBtn);
+
+    } else {
+      contentEl.style.display = 'none';
+      // Download link
+      const dlBtn = document.createElement('a');
+      dlBtn.className = 'cb-btn-dl';
+      dlBtn.href      = row.file_url;
+      dlBtn.download  = row.file_name || 'download';
+      dlBtn.target    = '_blank';
+      dlBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download ' + (row.file_name || 'File');
+      actionsEl.appendChild(dlBtn);
+
+      // File info
+      const infoEl = document.createElement('div');
+      infoEl.style.cssText = 'font-size:0.75rem;color:var(--muted);align-self:center;';
+      infoEl.textContent = row.file_name || '';
+      actionsEl.appendChild(infoEl);
+    }
+
+    document.getElementById('cbRetrievedBox').classList.add('show');
+
+  } catch {
+    cbShowRetrieveError('Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Retrieve Content';
+  }
+};
+
+function cbShowRetrieveError(msg) {
+  const el = document.getElementById('cbRetrieveError');
+  el.textContent = msg; el.classList.add('show');
+}
+function cbHideRetrieveError() {
+  document.getElementById('cbRetrieveError').classList.remove('show');
+}
 
 })();
 </script>
