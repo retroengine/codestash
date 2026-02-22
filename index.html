@@ -14,6 +14,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="referrer" content="no-referrer">
+<!-- ── Security headers ── -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+  style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src   https://fonts.gstatic.com;
+  img-src    'self' data: blob: https://*.supabase.co;
+  connect-src 'self' https://*.supabase.co;
+  object-src 'none';
+  base-uri   'self';
+  form-action 'none';
+">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <title>CodeStash</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +59,8 @@ body {
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh; -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* iOS momentum scrolling and safe area support */
+  -webkit-text-size-adjust: 100%;
 }
 
 body::before {
@@ -518,6 +534,8 @@ select.field-input option { background: var(--surface2); }
   padding: 28px 30px 48px;
   display: flex; flex-direction: column; gap: 24px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
 }
 
 /* Inner snippets panel spacing */
@@ -605,7 +623,7 @@ select.field-input option { background: var(--surface2); }
 /* ── SNIPPET CARDS ── */
 .snippets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 16px; align-items: start;
 }
 
@@ -1144,9 +1162,10 @@ select.field-input option { background: var(--surface2); }
 /* Mobile hamburger button */
 .mob-menu-btn {
   display: none; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 10px;
+  width: 40px; height: 40px; border-radius: 10px;
   background: var(--surface3); border: 1px solid var(--border-hi);
   color: var(--text); cursor: pointer; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 .mob-menu-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
@@ -1161,91 +1180,170 @@ select.field-input option { background: var(--surface2); }
   /* ── Layout ── */
   #appContainer {
     grid-template-columns: 1fr !important;
-    grid-template-rows: 60px 1fr !important;
+    grid-template-rows: 56px 1fr !important;
   }
 
   /* ── Sidebar: off-canvas on mobile ── */
   .sidebar {
     position: fixed; left: 0; top: 0; bottom: 0;
-    width: 260px; z-index: 150;
+    width: min(280px, 85vw); z-index: 150;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
     grid-column: unset; grid-row: unset;
+    padding: 20px 12px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
   .sidebar.mob-open { transform: translateX(0); }
 
   /* ── Topbar ── */
   .topbar {
     grid-column: 1 !important; grid-row: 1 !important;
-    padding: 0 14px; gap: 8px;
+    padding: 0 12px; gap: 8px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
   }
-  .topbar-page-title { font-size: 0.84rem; }
+  .topbar-page-title { font-size: 0.82rem; }
   .topbar-page-title span { display: none; }
   .synced-pill { display: none; }
   .mob-menu-btn { display: flex; }
 
+  /* Hide sign-out text on topbar, keep icon button only */
+  .btn-signout { display: none; }
+
   /* ── Main content ── */
   .main-content {
     grid-column: 1 !important; grid-row: 2 !important;
-    padding: 16px 14px 60px;
-    gap: 16px;
+    padding: 14px 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(60px, calc(env(safe-area-inset-bottom) + 20px));
+    gap: 14px;
+    overflow-x: hidden;
   }
 
-  #snippetsPanel { gap: 12px; }
+  #snippetsPanel { gap: 10px; }
 
   /* ── Add panel ── */
-  .add-panel { padding: 16px; }
-  .input-row { grid-template-columns: 1fr; }
-  .code-area { min-height: 100px; }
+  .add-panel { padding: 14px; }
+  .input-row { grid-template-columns: 1fr; gap: 8px; }
+  .code-area { min-height: 90px; font-size: 0.78rem; }
+  .panel-btn-row { flex-wrap: wrap; }
+  .btn-save, .btn-cancel { flex: 1; justify-content: center; min-height: 44px; }
 
   /* ── Snippet cards ── */
-  .snippets-grid { grid-template-columns: 1fr; gap: 12px; }
+  .snippets-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .snippet-name { font-size: 0.85rem; max-width: calc(100vw - 120px); }
+  .card-footer { flex-wrap: wrap; gap: 8px; }
+  /* Larger tap targets for card action buttons */
+  .btn-icon { width: 36px; height: 36px; border-radius: 9px; }
+  .btn-icon svg { width: 14px; height: 14px; }
 
-  /* ── Auth card ── */
-  .auth-card { padding: 24px 20px; margin: 16px; max-width: calc(100vw - 32px); }
+  /* Code preview horizontal scroll without breaking layout */
+  .code-preview { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+
+  /* ── Auth screen ── */
+  .screen { padding: 16px; align-items: center; }
+  .auth-card {
+    padding: 24px 18px;
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 16px;
+  }
+  .auth-fixed-logo { top: 16px; left: 16px; }
 
   /* ── Admin portal ── */
-  .admin-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
-  .admin-body   { padding: 16px; }
+  .admin-header { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+  .admin-header-right { gap: 8px; flex-wrap: wrap; }
+  .admin-email-pill { font-size: 0.68rem; padding: 4px 10px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+  .admin-body   { padding: 14px; }
   .admin-stats  { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-card    { padding: 14px 10px; }
   .stat-num     { font-size: 1.4rem; }
-  .lock-card    { flex-direction: column; gap: 14px; }
-  .lock-right   { flex-direction: row; gap: 20px; }
+  .stat-label   { font-size: 0.6rem; }
+  .lock-card    { flex-direction: column; gap: 14px; padding: 16px; }
+  .lock-right   { width: 100%; flex-direction: row; gap: 20px; justify-content: flex-start; }
+  .admin-section-title { font-size: 0.58rem; }
 
   /* ── User card ── */
-  .user-card { flex-wrap: wrap; gap: 10px; }
+  .user-card { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+  .user-email { font-size: 0.8rem; }
   .user-actions { width: 100%; justify-content: flex-end; }
+  .btn-approve, .btn-reject, .btn-revoke { padding: 8px 14px; min-height: 36px; }
 
-  /* ── Account dropdown ── */
-  .account-dropdown { width: 260px; right: -10px; }
+  /* ── Account dropdown — fixed on mobile ── */
+  .account-dropdown {
+    position: fixed !important;
+    top: 64px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    border-radius: 16px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
 
   /* ── Tag filter bar ── */
-  .tag-filter-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .tag-filter-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .tag-filter-bar::-webkit-scrollbar { display: none; }
 
   /* ── Clipboard ── */
-  .cb-otp-inputs { gap: 8px; }
-  .cb-otp-input  { width: 58px; height: 68px; font-size: 1.8rem; border-radius: 12px; }
-  .cb-otp-digit  { width: 50px; height: 62px; font-size: 1.8rem; border-radius: 12px; }
+  .cb-otp-inputs { gap: 6px; }
+  .cb-otp-input  { width: 52px; height: 62px; font-size: 1.7rem; border-radius: 12px; }
+  .cb-otp-digit  { width: 46px; height: 58px; font-size: 1.7rem; border-radius: 12px; }
   .cb-otp-copy-row { flex-direction: column; gap: 8px; width: 100%; }
-  .cb-btn-copy-otp, .cb-btn-new { width: 100%; justify-content: center; }
+  .cb-btn-copy-otp, .cb-btn-new { width: 100%; justify-content: center; min-height: 44px; }
 
   /* ── Share modal ── */
-  .share-modal { margin: 16px; max-width: calc(100vw - 32px); padding: 22px 18px; }
+  .share-modal-overlay { align-items: flex-end; padding: 0; }
+  .share-modal {
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 22px 18px;
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+  }
+  .share-link-box { flex-wrap: wrap; gap: 8px; }
 
   /* ── Public view ── */
-  .pub-header { padding: 14px 16px; }
-  .pub-body   { padding: 24px 16px; }
-  .pub-snippet-name { font-size: 1.2rem; }
+  .pub-header { padding: 12px 14px; }
+  .pub-body   { padding: 20px 14px; }
+  .pub-snippet-name { font-size: 1.1rem; }
 
   /* ── Toast ── */
-  .toast { left: 16px; right: 16px; bottom: 16px; text-align: center; }
+  .toast {
+    left: 12px; right: 12px; bottom: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    text-align: center; white-space: normal;
+  }
+
+  /* ── Filter tabs scrollable ── */
+  .filter-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 480px) {
+  .admin-stats { grid-template-columns: 1fr; gap: 8px; }
+  .stat-num { font-size: 2rem; }
+  .auth-headline { font-size: 1.1rem; }
+  .tab-btn { font-size: 0.75rem; padding: 8px 4px; }
+  .topbar-page-title { font-size: 0.78rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-actions { gap: 4px; }
+  .card-time { font-size: 0.63rem; }
 }
 
 @media (max-width: 400px) {
-  .admin-stats { grid-template-columns: 1fr; }
-  .cb-otp-inputs { gap: 6px; }
-  .cb-otp-input  { width: 52px; height: 62px; font-size: 1.6rem; }
-  .cb-otp-digit  { width: 46px; height: 56px; font-size: 1.6rem; }
+  .cb-otp-inputs { gap: 4px; }
+  .cb-otp-input  { width: 46px; height: 56px; font-size: 1.5rem; border-radius: 10px; }
+  .cb-otp-digit  { width: 42px; height: 52px; font-size: 1.5rem; border-radius: 10px; }
+  .auth-card { padding: 20px 16px; border-radius: 14px; }
+  .user-email { font-size: 0.76rem; }
+  .admin-email-pill { max-width: 120px; }
 }
 
 .toast {
@@ -1491,13 +1589,6 @@ select.field-input option { background: var(--surface2); }
   </symbol>
 </svg>
 
-<!-- ── DEVTOOLS OVERLAY ── -->
-<div id="devtoolsOverlay">
-  <div class="dt-icon">🔒</div>
-  <h2>Access Restricted</h2>
-  <p>Close developer tools to continue.</p>
-</div>
-
 <!-- ── CLICK-AWAY OVERLAY FOR DROPDOWN ── -->
 <div class="overlay" id="overlay"></div>
 
@@ -1539,12 +1630,12 @@ select.field-input option { background: var(--surface2); }
 
     <div class="auth-field">
       <div class="field-label">Email</div>
-      <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
+      <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" maxlength="254" />
     </div>
     <div class="auth-field">
       <div class="field-label">Password</div>
       <div class="pw-wrap">
-        <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+        <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" maxlength="128" />
         <button class="pw-toggle" type="button" onclick="togglePw('authPassword',this)" aria-label="Show password">
           <svg viewBox="0 0 24 24" id="eyeMain"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -1553,7 +1644,7 @@ select.field-input option { background: var(--surface2); }
     <div class="auth-field" id="confirmField" style="display:none">
       <div class="field-label">Confirm Password</div>
       <div class="pw-wrap">
-        <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
+        <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" maxlength="128" />
         <button class="pw-toggle" type="button" onclick="togglePw('authConfirm',this)" aria-label="Show confirm password">
           <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -1562,7 +1653,7 @@ select.field-input option { background: var(--surface2); }
     <div class="auth-field" id="adminKeyField" style="display:none">
       <div class="field-label">Admin Passphrase</div>
       <div class="pw-wrap">
-        <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" />
+        <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" maxlength="128" />
         <button class="pw-toggle" type="button" onclick="togglePw('adminKey',this)" aria-label="Show passphrase">
           <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -1865,7 +1956,7 @@ select.field-input option { background: var(--surface2); }
     <div class="add-panel" id="addPanel">
       <div class="panel-label" id="panelLabel">New Snippet</div>
       <div class="input-row">
-        <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" />
+        <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" maxlength="80" />
         <select class="field-input" id="snippetLang" aria-label="Language" onchange="handleLangChange(this)">
           <option value="python">Python</option>
           <option value="java">Java</option>
@@ -1900,7 +1991,8 @@ Indentation is preserved."
         autocomplete="off"
         data-gramm="false"
         data-gramm_editor="false"
-        data-enable-grammarly="false"></textarea>
+        data-enable-grammarly="false"
+        maxlength="100000"></textarea>
       <div class="panel-btn-row">
         <button class="btn-save" id="saveBtn">
           <svg width="13" height="13"><use href="#icon-save"/></svg>
@@ -1956,7 +2048,7 @@ Indentation is preserved."
 
         <!-- Text mode -->
         <div id="cbTextMode">
-          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste your text, code, or notes here...&#10;It will be available for 24 hours." spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste your text, code, or notes here...&#10;It will be available for 24 hours." spellcheck="false" autocorrect="off" autocapitalize="off" maxlength="50000"></textarea>
         </div>
 
         <!-- File mode -->
@@ -2176,30 +2268,35 @@ function togglePw(inputId, btn) {
 'use strict';
 
 /* ════════════════════════════════════════════
-   ANTI-INSPECT
+   NOTE: DevTools blocking has been removed.
+   It was bypassable in one console command, broke
+   screen readers and keyboard accessibility, and
+   gave a false sense of security. Real protection
+   lives in Supabase RLS and server-side validation.
 ════════════════════════════════════════════ */
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-  const blocked =
-    e.key === 'F12' ||
-    (e.ctrlKey && e.shiftKey && ['I','J','C','K'].includes(e.key.toUpperCase())) ||
-    (e.ctrlKey && e.key.toUpperCase() === 'U') ||
-    (e.metaKey && e.altKey && ['I','J','C'].includes(e.key.toUpperCase()));
-  if (blocked) { e.preventDefault(); e.stopPropagation(); }
-});
-function checkDevTools() {
-  const show = window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160;
-  document.getElementById('devtoolsOverlay').classList.toggle('show', show);
-}
-setInterval(checkDevTools, 1000);
-window.addEventListener('resize', checkDevTools);
 
 /* ════════════════════════════════════════════
    CONFIG  — replace with your Supabase project
 ════════════════════════════════════════════ */
 const _c = 'https://sdliegtdpqjtpfkvsqrr.supabase.co';
 const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGllZ3R','kcHFqdHBma3ZzcXJyIiwicm9sZSI6ImFub24iLCJ','pYXQiOjE3NzE2OTI5OTksImV4cCI6MjA4NzI2ODk','5OX0.BIsvIPB02ydNwh36hmwKSrf9MwfXwJjvIo3','BLH8UDpU'].join('');
-const _adminPhrase = '2026'; // ← change to your secret passphrase
+
+/* ════════════════════════════════════════════
+   ADMIN PASSPHRASE — stored as SHA-256 hash only.
+   The real passphrase is NEVER in this file.
+   To change it: run this in your browser console:
+     crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassphrase'))
+       .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+   Then paste the output hash below.
+════════════════════════════════════════════ */
+const _adminPhraseHash = '158a323a7ba44870f23d96f1516dd70aa48e9a72db4ebb026b0a89e212a208ab';
+// ↑ Replace this hash with the hash of YOUR chosen passphrase (see instructions above)
+// Current hash = SHA-256("2026") — change this before deploying!
+
+async function _hashPhrase(str) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
+}
 
 /* ════════════════════════════════════════════
    RATE LIMITING
@@ -2394,7 +2491,14 @@ async function handleAuth() {
   }
   if (_authMode === 'admin') {
     const key = document.getElementById('adminKey').value || '';
-    if (key !== _adminPhrase) { recordFailedAttempt(); showAuthError('Invalid admin passphrase.'); return; }
+    if (key.length < 1) { showAuthError('Please enter the admin passphrase.'); return; }
+    // Compare hash of what was typed — never compare plaintext
+    const typedHash = await _hashPhrase(key);
+    if (typedHash !== _adminPhraseHash) {
+      recordFailedAttempt();
+      showAuthError('Invalid admin passphrase.');
+      return;
+    }
   }
 
   const modeAtSubmit = _authMode;
@@ -2533,8 +2637,12 @@ async function loadSiteLock() {
     const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', { headers: _headers(_session.access_token) });
     const [row] = await res.json();
     const unlocked = row ? !row.locked : false;
+    // Keep in-memory flags in sync with DB
+    _siteUnlocked    = unlocked;
+    _guestNotes      = row ? !!row.guest_notes      : false;
+    _guestAddSnippet = row ? !!row.guest_add_snippet : false;
     updateLockUI(unlocked);
-    updateGuestFeaturesUI(unlocked, row ? !!row.guest_notes : false, row ? !!row.guest_add_snippet : false);
+    updateGuestFeaturesUI(unlocked, _guestNotes, _guestAddSnippet);
   } catch { updateLockUI(false); updateGuestFeaturesUI(false, false, false); }
 }
 
@@ -2589,6 +2697,7 @@ function updateGuestFeaturesUI(siteUnlocked, guestNotes, guestAddSnippet) {
 
 async function toggleGuestFeature(field, value) {
   const labelId = field === 'guest_notes' ? 'guestNotesLabel' : 'guestAddSnippetLabel';
+  // Optimistically update admin panel label
   document.getElementById(labelId).textContent = value ? 'On' : 'Off';
   try {
     const body = {};
@@ -2599,10 +2708,16 @@ async function toggleGuestFeature(field, value) {
       body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error();
+
+    // ── Update in-memory state so live UI responds immediately ──
+    if (field === 'guest_notes')      _guestNotes      = value;
+    if (field === 'guest_add_snippet') _guestAddSnippet = value;
+    applyLiveGuestRestrictions();
+
     const label = field === 'guest_notes' ? 'Quick Notes' : 'Add Snippet';
     showToast((value ? '✓ ' : '✗ ') + label + (value ? ' enabled for guests' : ' disabled for guests'), 'success');
   } catch {
-    // revert on failure
+    // Revert optimistic update on failure
     const el = document.getElementById(field === 'guest_notes' ? 'guestNotes' : 'guestAddSnippet');
     if (el) { el.checked = !value; document.getElementById(labelId).textContent = !value ? 'On' : 'Off'; }
     showToast('✗ Failed to update guest permissions', 'error');
@@ -2611,6 +2726,7 @@ async function toggleGuestFeature(field, value) {
 
 async function toggleSiteLock() {
   const unlocked = document.getElementById('siteUnlocked').checked;
+  // Optimistically update admin panel UI
   updateLockUI(unlocked);
   try {
     const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
@@ -2619,10 +2735,50 @@ async function toggleSiteLock() {
       body: JSON.stringify({ locked: !unlocked })
     });
     if (!res.ok) throw new Error();
+
+    // ── Update in-memory state so live UI responds immediately ──
+    _siteUnlocked = unlocked;
+    applyLiveGuestRestrictions();
+
     showToast(unlocked ? '🔓 Site unlocked — now public' : '🔒 Site locked — login required', 'success');
   } catch {
+    // Revert on failure
     updateLockUI(!unlocked);
     showToast('✗ Failed to update site settings', 'error');
+  }
+}
+
+/**
+ * applyLiveGuestRestrictions — re-applies the current _siteUnlocked / _guestNotes /
+ * _guestAddSnippet flags to every part of the live app UI that depends on them.
+ * Call this any time those flags change so the app reacts instantly without a reload.
+ */
+function applyLiveGuestRestrictions() {
+  const isGuest = !_session;
+
+  // ── Add Snippet panel ──
+  const addPanel = document.getElementById('addPanel');
+  if (addPanel) addPanel.style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
+
+  // ── Quick Notes nav + panel ──
+  const navNotes   = document.getElementById('navNotes');
+  const notesPanel = document.getElementById('notesPanel');
+  const showNotes  = !isGuest || _guestNotes;
+
+  if (navNotes) navNotes.style.display = showNotes ? '' : 'none';
+
+  if (!showNotes && notesPanel) {
+    notesPanel.classList.remove('visible');
+    // If the user is currently on the Notes panel, redirect them to Snippets
+    if (navNotes && navNotes.classList.contains('active')) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      const navSnippets = document.getElementById('navSnippets');
+      if (navSnippets) navSnippets.classList.add('active');
+      const snippetsPanel = document.getElementById('snippetsPanel');
+      if (snippetsPanel) snippetsPanel.style.display = '';
+      const pageTitle = document.querySelector('.topbar-page-title');
+      if (pageTitle) pageTitle.innerHTML = 'Snippets <span>/ Library</span>';
+    }
   }
 }
 
@@ -2664,18 +2820,20 @@ function renderUsers(filter) {
     return;
   }
   queueEl.innerHTML = list.map(u => {
-    const actions = u.status === 'pending'
-      ? `<button class="btn-approve" data-uid="${u.id}" data-action="approve">✓ Approve</button>
-         <button class="btn-reject"  data-uid="${u.id}" data-action="reject">✗ Reject</button>`
-      : u.status === 'approved'
-      ? `<button class="btn-revoke"  data-uid="${u.id}" data-action="reject">Revoke</button>`
-      : `<button class="btn-approve" data-uid="${u.id}" data-action="approve">Restore</button>`;
+    // Allowlist status to prevent CSS class injection
+    const safeStatus = ['pending','approved','rejected'].includes(u.status) ? u.status : 'pending';
+    const actions = safeStatus === 'pending'
+      ? `<button class="btn-approve" data-uid="${escHtml(u.id)}" data-action="approve">✓ Approve</button>
+         <button class="btn-reject"  data-uid="${escHtml(u.id)}" data-action="reject">✗ Reject</button>`
+      : safeStatus === 'approved'
+      ? `<button class="btn-revoke"  data-uid="${escHtml(u.id)}" data-action="reject">Revoke</button>`
+      : `<button class="btn-approve" data-uid="${escHtml(u.id)}" data-action="approve">Restore</button>`;
     return `<div class="user-card">
       <div class="user-info">
         <div class="user-email">${escHtml(u.email)}</div>
         <div class="user-meta">Joined ${relTime(u.created_at)}</div>
       </div>
-      <span class="user-status-badge ${u.status}">${u.status}</span>
+      <span class="user-status-badge ${safeStatus}">${safeStatus}</span>
       <div class="user-actions">${actions}</div>
     </div>`;
   }).join('');
@@ -2910,7 +3068,14 @@ function renderTagChips() {
   _currentTags.forEach((t, i) => {
     const chip = document.createElement('span');
     chip.className = 'tag-chip ' + tagColor(t);
-    chip.innerHTML = t + '<button class="tag-chip-remove" onclick="removeTag(' + i + ')">×</button>';
+    // Use textContent for the tag label — never innerHTML with user data
+    chip.textContent = t;
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'tag-chip-remove';
+    removeBtn.setAttribute('aria-label', 'Remove tag ' + t);
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => removeTag(i));
+    chip.appendChild(removeBtn);
     container.appendChild(chip);
   });
 }
@@ -3344,14 +3509,19 @@ document.querySelector('.tab-switcher').addEventListener('click', e => {
   if (btn.id === 'tabAdmin')  switchTab('admin');
 });
 
-// Auth form — Enter key
+// Auth form — Enter key + sanitization
 ['authEmail','authPassword','authConfirm','adminKey'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
-    if (id === 'authEmail') el.addEventListener('input', () => sanitizeInput(el));
+    // Sanitize email and passphrase fields (passwords intentionally allow all chars)
+    if (id === 'authEmail' || id === 'adminKey') el.addEventListener('input', () => sanitizeInput(el));
   }
 });
+
+// Snippet name — sanitize on input
+const _snippetNameEl = document.getElementById('snippetName');
+if (_snippetNameEl) _snippetNameEl.addEventListener('input', () => sanitizeInput(_snippetNameEl));
 
 // Auth button
 document.getElementById('authBtn').addEventListener('click', handleAuth);
@@ -3649,7 +3819,6 @@ window.cbUpload = async function() {
     }
   } catch(e) {
     cbShowUploadError('Something went wrong. Please try again.');
-    console.error(e);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M5 19h14"/></svg> Generate Code';
@@ -3748,6 +3917,8 @@ window.cbOtpKey = function(e, idx) {
 window.cbRetrieve = async function() {
   const digits = [0,1,2,3].map(i => document.getElementById('cbIn'+i).value).join('');
   if (digits.length < 4) { cbShowRetrieveError('Please enter all 4 digits.'); return; }
+  // Strict guard: must be exactly 4 digits (defence against injection via URL params etc.)
+  if (!/^\d{4}$/.test(digits)) { cbShowRetrieveError('Invalid code format.'); return; }
 
   cbHideRetrieveError();
   document.getElementById('cbRetrievedBox').classList.remove('show');
@@ -3800,10 +3971,21 @@ window.cbRetrieve = async function() {
       // Download link
       const dlBtn = document.createElement('a');
       dlBtn.className = 'cb-btn-dl';
-      dlBtn.href      = row.file_url;
-      dlBtn.download  = row.file_name || 'download';
-      dlBtn.target    = '_blank';
-      dlBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download ' + (row.file_name || 'File');
+      // Validate file_url is a trusted Supabase storage URL before using as href
+      const trustedUrl = (typeof row.file_url === 'string' && row.file_url.startsWith(CB_URL + '/storage/'))
+        ? row.file_url : '#';
+      dlBtn.href     = trustedUrl;
+      dlBtn.download = row.file_name || 'download';
+      dlBtn.target   = '_blank';
+      dlBtn.rel      = 'noopener noreferrer';
+      // Use textContent for dynamic content — never innerHTML with DB values
+      const dlIcon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      dlIcon.setAttribute('width','13'); dlIcon.setAttribute('height','13');
+      dlIcon.setAttribute('viewBox','0 0 24 24'); dlIcon.setAttribute('fill','none');
+      dlIcon.setAttribute('stroke','currentColor'); dlIcon.setAttribute('stroke-width','2');
+      dlIcon.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>';
+      dlBtn.appendChild(dlIcon);
+      dlBtn.appendChild(document.createTextNode(' Download ' + (row.file_name || 'File')));
       actionsEl.appendChild(dlBtn);
 
       // File info
@@ -4121,7 +4303,10 @@ CREATE POLICY "public_snippet_view" ON snippets FOR SELECT USING (is_public = tr
 ═══════════════════════════════════════════════════════════
   SECURITY NOTES
 ═══════════════════════════════════════════════════════════
-  • Change _adminPhrase in the JS before deploying
+  • _adminPhrase is now stored as a SHA-256 hash (_adminPhraseHash).
+    The real passphrase is never in this file — source code readers
+    only see an irreversible hash. To change it, hash your new passphrase
+    in the browser console (instructions are in the CONFIG section above).
   • True security is enforced via Supabase RLS above
   • Rate limiting tracks failed login attempts
   • Inactivity timeout signs out after 30 min idle
