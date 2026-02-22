@@ -252,7 +252,8 @@ select.field-input option { background: var(--surface2); }
   padding: 5px 12px; border-radius: 20px;
 }
 
-.admin-body { flex: 1; overflow-y: auto; padding: 32px; max-width: 900px; width: 100%; margin: 0 auto; }
+.admin-body { flex: 1; overflow-y: auto; padding: 32px; max-width: 900px; width: 100%; margin: 0 auto; scrollbar-width: none; -ms-overflow-style: none; }
+.admin-body::-webkit-scrollbar { display: none; }
 .admin-section { margin-bottom: 36px; }
 .admin-section-title {
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
