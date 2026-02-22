@@ -507,8 +507,13 @@ select.field-input option { background: var(--surface2); }
 .main-content {
   grid-column: 2; grid-row: 2;
   padding: 28px 30px 48px;
-  display: flex; flex-direction: column; gap: 22px;
+  display: flex; flex-direction: column; gap: 24px;
   overflow-y: auto;
+}
+
+/* Inner snippets panel spacing */
+#snippetsPanel {
+  display: flex; flex-direction: column; gap: 14px;
 }
 
 /* Add panel */
@@ -592,7 +597,7 @@ select.field-input option { background: var(--surface2); }
 .snippets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px; align-items: start;
+  gap: 16px; align-items: start;
 }
 
 .snippet-card {
@@ -1177,13 +1182,15 @@ select.field-input option { background: var(--surface2); }
     gap: 16px;
   }
 
+  #snippetsPanel { gap: 12px; }
+
   /* ── Add panel ── */
   .add-panel { padding: 16px; }
   .input-row { grid-template-columns: 1fr; }
   .code-area { min-height: 100px; }
 
   /* ── Snippet cards ── */
-  .snippets-grid { grid-template-columns: 1fr; gap: 10px; }
+  .snippets-grid { grid-template-columns: 1fr; gap: 12px; }
 
   /* ── Auth card ── */
   .auth-card { padding: 24px 20px; margin: 16px; max-width: calc(100vw - 32px); }
@@ -1232,6 +1239,7 @@ select.field-input option { background: var(--surface2); }
   .cb-otp-digit  { width: 46px; height: 56px; font-size: 1.6rem; }
 }
 
+.toast {
   position: fixed; bottom: 24px; right: 24px;
   background: var(--surface); border: 1px solid var(--border-hi);
   border-radius: 10px; padding: 11px 18px;
@@ -1246,13 +1254,8 @@ select.field-input option { background: var(--surface2); }
 .toast.error   { border-color: rgba(224,82,82,0.4); }
 .toast.warning { border-color: rgba(246,166,35,0.4); }
 
-/* ── RESPONSIVE ── */
+/* ── RESPONSIVE (700px — supplements 768px block above) ── */
 @media (max-width: 700px) {
-  #appContainer { grid-template-columns: 1fr; grid-template-rows: 60px 1fr; }
-  .sidebar { display: none; }
-  .topbar  { grid-column: 1; }
-  .main-content { grid-column: 1; padding: 18px 16px 40px; }
-  .input-row { grid-template-columns: 1fr; }
   .admin-stats { grid-template-columns: 1fr; }
   .lock-card { flex-direction: column; align-items: flex-start; }
 }
