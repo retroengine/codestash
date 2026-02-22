@@ -81,7 +81,7 @@ body::before {
   transition: background 0.2s;
 }
 .logo-mark svg { display: block; width: 20px; height: 20px; }
-.logo-mark.admin-mark { background: linear-gradient(135deg, var(--admin), #a855f7); }
+.logo-mark.admin-mark { background: #111111; border: 1px solid rgba(255,255,255,0.1); }
 .logo-wordmark { display: flex; flex-direction: column; gap: 2px; }
 .lw-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
 .lw-sub  { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
@@ -100,8 +100,12 @@ body::before {
   border-radius: 8px; cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
-.tab-btn.active { background: var(--text); color: #0a0a0a; font-weight: 700; }
-.tab-btn.admin-tab.active { background: linear-gradient(135deg, var(--admin), #a855f7); color: white; }
+/* Sign In active — matte dark grey */
+#tabLogin.active  { background: #2a2a2a; color: #e8e8e8; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
+/* Sign Up active — matte black with cool blue tint */
+#tabSignup.active { background: #1a1f28; color: #c8d8f0; font-weight: 700; border: 1px solid rgba(160,200,255,0.12); }
+/* Admin active — deep matte black */
+#tabAdmin.active  { background: #111111; color: #b0b0b0; font-weight: 700; border: 1px solid rgba(255,255,255,0.07); }
 
 /* Notices & errors */
 .auth-error {
@@ -121,8 +125,8 @@ body::before {
 
 .admin-badge-pill {
   display: none; align-items: center; gap: 6px;
-  font-size: 0.72rem; color: var(--admin);
-  background: rgba(215,123,255,0.1); border: 1px solid rgba(215,123,255,0.25);
+  font-size: 0.72rem; color: rgba(200,200,200,0.7);
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 20px; padding: 3px 10px; margin-bottom: 16px;
 }
 
@@ -161,7 +165,8 @@ select.field-input option { background: var(--surface2); }
 .btn-primary:hover { opacity: 0.84; transform: translateY(-1px); }
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-primary.admin-btn { background: linear-gradient(135deg, var(--admin), #a855f7); color: white; }
+.btn-primary.admin-btn { background: #111111; color: #b0b0b0; border: 1px solid rgba(255,255,255,0.08); }
+.btn-primary.admin-btn:hover { opacity: 1; background: #191919; }
 
 /* Spinner */
 .spinner {
@@ -169,7 +174,7 @@ select.field-input option { background: var(--surface2); }
   border: 2px solid rgba(0,0,0,0.25); border-top-color: #0a0a0a;
   border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
 }
-.admin-btn .spinner { border-color: rgba(255,255,255,0.25); border-top-color: white; }
+.admin-btn .spinner { border-color: rgba(255,255,255,0.15); border-top-color: #b0b0b0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ═══════════ PENDING SCREEN ═══════════ */
@@ -214,8 +219,8 @@ select.field-input option { background: var(--surface2); }
 }
 .admin-title-badge {
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
-  background: linear-gradient(135deg, var(--admin), #a855f7);
-  color: white; padding: 3px 10px; border-radius: 20px;
+  background: #111111; border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(200,200,200,0.7); padding: 3px 10px; border-radius: 20px;
 }
 .admin-header-right { display: flex; align-items: center; gap: 16px; }
 .admin-email-pill {
@@ -228,7 +233,7 @@ select.field-input option { background: var(--surface2); }
 .admin-section { margin-bottom: 36px; }
 .admin-section-title {
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--muted2);
+  text-transform: uppercase; color: rgba(240,240,240,0.45);
   margin-bottom: 16px; padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
@@ -778,7 +783,7 @@ select.field-input option { background: var(--surface2); }
 
     <!-- Stats -->
     <div class="admin-section">
-      <div class="admin-section-title">// overview</div>
+      <div class="admin-section-title">Overview</div>
       <div class="admin-stats">
         <div class="stat-card">
           <div class="stat-num pending-color"  id="statPending">—</div>
@@ -797,7 +802,7 @@ select.field-input option { background: var(--surface2); }
 
     <!-- Site Lock -->
     <div class="admin-section">
-      <div class="admin-section-title">// site access control</div>
+      <div class="admin-section-title">Site Access Control</div>
       <div class="lock-card">
         <div class="lock-info">
           <h3 id="lockTitle">🔒 Site Locked</h3>
@@ -821,7 +826,7 @@ select.field-input option { background: var(--surface2); }
 
     <!-- User Management -->
     <div class="admin-section">
-      <div class="admin-section-title">// user management</div>
+      <div class="admin-section-title">User Management</div>
       <div class="filter-tabs" id="filterTabs">
         <button class="filter-tab active" data-filter="pending">⏳ Pending</button>
         <button class="filter-tab" data-filter="approved">✓ Approved</button>
@@ -855,24 +860,9 @@ select.field-input option { background: var(--surface2); }
       </div>
     </div>
 
-    <div class="nav-label">Library</div>
     <a class="nav-item active" href="#" aria-label="All Snippets">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       All Snippets
-    </a>
-    <a class="nav-item" href="#" aria-label="Collections">
-      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
-      Collections
-    </a>
-
-    <div class="nav-label" style="margin-top:8px;">Tools</div>
-    <a class="nav-item" href="#" aria-label="Import">
-      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
-      Import
-    </a>
-    <a class="nav-item" href="#" aria-label="Settings">
-      <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
-      Settings
     </a>
   </aside>
 
@@ -896,14 +886,6 @@ select.field-input option { background: var(--surface2); }
           <div class="dropdown-name" id="dropdownName">Hello!</div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-actions">
-            <div class="dropdown-action" role="menuitem">
-              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Profile
-            </div>
-            <div class="dropdown-action" role="menuitem">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-              Settings
-            </div>
             <div class="dropdown-action danger" role="menuitem" id="dropdownSignOut" style="grid-column:1/-1;">
               <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Sign Out
@@ -912,7 +894,6 @@ select.field-input option { background: var(--surface2); }
         </div>
       </div>
 
-      <button class="btn-signout" id="signOutBtn">Sign out</button>
     </div>
   </header>
 
@@ -1703,8 +1684,7 @@ userBtn.addEventListener('click', () => accountDropdown.classList.contains('open
 accountDropdown.addEventListener('click', e => e.stopPropagation());
 overlay.addEventListener('click', closeDropdown);
 
-// Sign out buttons
-document.getElementById('signOutBtn').addEventListener('click', signOut);
+// Sign out button (dropdown only)
 document.getElementById('dropdownSignOut').addEventListener('click', signOut);
 
 /* ════════════════════════════════════════════
