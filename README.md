@@ -1,146 +1,250 @@
-# ⚡ CodeStash
+# CodeStash
 
-A self-hosted code snippet manager. Save, search, and copy your code snippets — with admin-controlled access so only approved people can use it.
-
-Single HTML file. No install. No build step. Powered by Supabase.
+A self-hosted, private snippet library and online clipboard — built as a single HTML file powered by Supabase.
 
 ---
 
-## What you need
+## Features
 
-- A free [Supabase](https://supabase.com) account
-- A way to host a static HTML file (GitHub Pages, Netlify, anywhere)
-- 10 minutes
+### Snippet Library
+- Save, edit, and delete code snippets with syntax labels
+- Supports Python, JavaScript, Java, C++, SQL, HTML, CSS, Notes, and custom languages
+- Search snippets in real time
+- Auto-refresh every 30 seconds (delta fetch — only new rows downloaded)
+- Admin-approved user access system
+
+### Online Clipboard
+- Paste text or upload a file (up to 15 MB) and receive a 4-digit retrieval code
+- Codes are easy-to-type patterns: pairs (`1122`), mirrors (`3443`), sequences (`2345`), alternating odds/evens (`1357`), etc.
+- Retrieve content from any device using the code
+- All clipboard data auto-deletes after 24 hours
+- Uses a **separate** Supabase project from the snippet library
 
 ---
 
-## Setup
+## Tech Stack
 
-### 1. Create a Supabase project
+| Layer | Tool |
+|---|---|
+| Frontend | Vanilla HTML/CSS/JS (single file) |
+| Auth | Supabase Auth |
+| Database | Supabase Postgres (REST API) |
+| File Storage | Supabase Storage |
+| Fonts | DM Sans + DM Mono (Google Fonts) |
 
-Go to [supabase.com](https://supabase.com) → New Project → wait for it to spin up.
+---
 
-### 2. Run the database SQL
+## Project Structure
 
-In your Supabase dashboard → **SQL Editor** → paste and run the contents of `supabase_setup.sql`.
+Everything lives in **one file**: `index.html`
 
-This creates three tables (`profiles`, `site_settings`, `snippets`) with all the security rules.
+Internally it's organized as:
 
-### 3. Configure the HTML file
+```
+index.html
+├── CSS tokens & global styles
+├── Auth screen (Sign In / Sign Up / Admin)
+├── Pending approval screen
+├── Admin portal (user management, site lock)
+├── App layout
+│   ├── Sidebar (Snippets nav, Online Clipboard nav)
+│   ├── Topbar (status, user dropdown)
+│   ├── Snippets panel (add, search, grid)
+│   └── Clipboard panel (upload, retrieve)
+├── Script — CodeStash (Supabase project #1)
+└── Script — Online Clipboard (Supabase project #2)
+```
 
-Open `index.html` and find this section near the top of the `<script>`:
+---
+
+## Supabase Setup
+
+CodeStash uses **two separate Supabase projects**.
+
+### Project 1 — Snippet Library
+
+Run this SQL in your first Supabase project:
+
+```sql
+-- 1. Profiles table
+CREATE TABLE IF NOT EXISTS profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text NOT NULL,
+  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin','user')),
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_read_own"   ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "admin_read_all"  ON profiles FOR SELECT USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+CREATE POLICY "admin_update"    ON profiles FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+CREATE POLICY "user_insert_own" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- 2. Site settings table
+CREATE TABLE IF NOT EXISTS site_settings (
+  id int PRIMARY KEY DEFAULT 1,
+  locked boolean NOT NULL DEFAULT true,
+  updated_at timestamptz DEFAULT now()
+);
+INSERT INTO site_settings (id, locked) VALUES (1, true) ON CONFLICT (id) DO NOTHING;
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
+CREATE POLICY "admin_update_settings" ON site_settings FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- 3. Snippets table
+CREATE TABLE IF NOT EXISTS snippets (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  language text NOT NULL DEFAULT 'text',
+  code text NOT NULL,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "approved_select" ON snippets FOR SELECT USING (auth.uid() IS NOT NULL AND (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')));
+CREATE POLICY "approved_insert" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved'));
+CREATE POLICY "approved_delete" ON snippets FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- 4. Promote your first admin (run after signing up normally)
+-- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your@email.com';
+```
+
+---
+
+### Project 2 — Online Clipboard
+
+Run this SQL in your **second** Supabase project:
+
+```sql
+-- 1. Clipboard entries table
+CREATE TABLE IF NOT EXISTS clipboard_entries (
+  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  otp        char(4) NOT NULL UNIQUE,
+  content    text,
+  file_url   text,
+  file_name  text,
+  file_type  text,
+  type       text NOT NULL DEFAULT 'text' CHECK (type IN ('text', 'file')),
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT (now() + interval '24 hours')
+);
+
+CREATE INDEX idx_clipboard_otp     ON clipboard_entries(otp);
+CREATE INDEX idx_clipboard_expires ON clipboard_entries(expires_at);
+
+ALTER TABLE clipboard_entries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read"   ON clipboard_entries FOR SELECT USING (expires_at > now());
+CREATE POLICY "public_insert" ON clipboard_entries FOR INSERT WITH CHECK (true);
+CREATE POLICY "public_delete" ON clipboard_entries FOR DELETE USING (true);
+
+-- 2. Auto-cleanup trigger (fires on every insert, purges expired rows)
+CREATE OR REPLACE FUNCTION cleanup_expired_clipboard()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM clipboard_entries WHERE expires_at < now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_cleanup_clipboard
+  AFTER INSERT ON clipboard_entries
+  FOR EACH STATEMENT
+  EXECUTE FUNCTION cleanup_expired_clipboard();
+
+-- 3. Storage bucket for file uploads
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('clipboard-files', 'clipboard-files', true)
+ON CONFLICT DO NOTHING;
+
+CREATE POLICY "public_upload"     ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'clipboard-files');
+CREATE POLICY "public_read_files" ON storage.objects FOR SELECT USING (bucket_id = 'clipboard-files');
+```
+
+> **Optional:** If your Supabase plan supports `pg_cron`, you can also schedule an hourly cleanup:
+> ```sql
+> SELECT cron.schedule('delete-expired-clipboard', '0 * * * *', $$DELETE FROM clipboard_entries WHERE expires_at < now()$$);
+> ```
+
+---
+
+## Configuration
+
+Open `index.html` and update the two config blocks near the top of the `<script>` section:
 
 ```js
-const _c = 'https://your-project.supabase.co';   // ← your Project URL
-const _k = 'your-anon-key';                        // ← your anon public key
-const _adminPhrase = 'codestash-admin-2025';        // ← change this!
+// ── Snippet Library (Project #1)
+const _c = 'https://YOUR-PROJECT.supabase.co';
+const _k = 'YOUR-ANON-KEY';
+const _adminPhrase = 'your-secret-passphrase';
+
+// ── Online Clipboard (Project #2)
+const CB_URL = 'https://YOUR-CLIPBOARD-PROJECT.supabase.co';
+const CB_KEY = 'YOUR-CLIPBOARD-ANON-KEY';
 ```
 
-Get your URL and anon key from: Supabase → **Settings → API**.
-
-> ⚠️ Change `_adminPhrase` to something only you know before deploying.
-
-### 4. Deploy
-
-Upload `index.html` anywhere that serves static files. GitHub Pages, Netlify drag-and-drop, Vercel — all work fine.
+Both keys are the **anon/public** keys from Supabase → Settings → API. They are safe to use in frontend code because Row Level Security (RLS) enforces all access rules at the database level.
 
 ---
 
-## Creating your admin account
+## Deployment
 
-1. Open the app → **Sign Up** tab → register with your email and password
-2. Go to Supabase → **SQL Editor** → run:
+Since everything is a single HTML file, deployment is straightforward:
 
-```sql
-UPDATE profiles
-SET role = 'admin', status = 'approved'
-WHERE email = 'your-email@example.com';
-```
+- **GitHub Pages** — push `index.html` to a repo and enable Pages
+- **Netlify / Vercel** — drop the file or connect a repo
+- **Cloudflare Pages** — same as above
+- **Self-hosted** — serve it from any static file host or Nginx/Caddy
 
-3. Back in the app → click the **⚙ Admin** tab → sign in with your email, password, and your admin passphrase
-
-That's it. You're in.
-
-> If you see "User already registered" on signup, your account already exists — just go straight to the Admin tab and sign in.
-
-> If you see "Access denied", your profile row is missing or has the wrong role. Run the `UPDATE` query above (or `INSERT` if the profiles table is empty — see Troubleshooting below).
+No build step, no dependencies, no Node.js required.
 
 ---
 
-## How it works
+## User Flow
 
-| Role | What they can do |
-|------|-----------------|
-| **Admin** | Approve/reject users, lock or unlock the site, view all snippets |
-| **Approved user** | Save, search, copy, and delete their own snippets |
-| **Pending user** | Nothing — sees a waiting screen until approved |
-| **Public** (site unlocked) | Read-only view of snippets, no login needed |
+### Snippet Library
 
-New signups are always **pending** until an admin approves them from the Admin Portal.
+1. User visits the site
+2. If site is **locked** → must sign in (Sign In / Sign Up tabs)
+3. New sign-ups land in **pending** status until an admin approves them
+4. Approved users can create, edit, copy, and delete their own snippets
+5. Session expires after **30 minutes of inactivity**
 
----
+### Admin Portal
 
-## Admin Portal
+1. Sign in via the **Admin** tab using your email + secret passphrase
+2. Approve or reject pending users
+3. Toggle site lock (locked = login required, unlocked = public read access)
 
-Log in via the **⚙ Admin** tab. You'll need your email, password, and the admin passphrase.
+### Online Clipboard
 
-From the portal you can:
-- **Approve or reject** pending users
-- **Revoke** access from existing users
-- **Lock/unlock** the site — unlocked means anyone can view snippets without logging in
-
----
-
-## Customisation
-
-| What | Where |
-|------|-------|
-| Admin passphrase | `const _adminPhrase = '...'` |
-| Session timeout | `const INACTIVITY_TIMEOUT = 30 * 60 * 1000` (milliseconds) |
-| Snippet languages | `<select id="snippetLang">` in the HTML |
-| Colours / fonts | CSS variables at the top of `<style>` |
+1. Click **Online Clipboard** in the left sidebar
+2. **Upload tab** — paste text or drop a file → click Generate Code → share the 4-digit code
+3. **Retrieve tab** — type the 4-digit code in the boxes → content or download link appears instantly
+4. Entries auto-delete after 24 hours — no manual cleanup needed
 
 ---
 
-## Troubleshooting
+## Security Notes
 
-**"User already registered" on signup**
-Your account exists in Supabase Auth but has no profile row. Run this in SQL Editor:
-```sql
--- First get your user ID
-SELECT id FROM auth.users WHERE email = 'your-email@example.com';
-
--- Then insert the profile
-INSERT INTO profiles (id, email, role, status)
-VALUES ('paste-id-here', 'your-email@example.com', 'admin', 'approved');
-```
-
-**"Access denied" on admin login**
-Your profile exists but doesn't have admin role. Fix it:
-```sql
-UPDATE profiles SET role = 'admin', status = 'approved'
-WHERE email = 'your-email@example.com';
-```
-
-**Snippets not loading**
-Check that the Supabase URL and anon key in `index.html` are correct. You can verify in Supabase → Settings → API.
-
-**SQL setup failed with "relation does not exist"**
-Make sure you're running `supabase_setup.sql` in full, top to bottom, in one go. The order matters — tables must exist before the functions and policies that reference them.
+- Change `_adminPhrase` before deploying — the default is a placeholder
+- All data access is enforced by Supabase RLS policies, not just the frontend
+- The clipboard is intentionally anonymous — security relies on the OTP being unguessable (1-in-10,000 odds)
+- The app blocks DevTools (right-click, F12, Ctrl+Shift+I) to deter casual inspection
+- Failed login attempts are rate-limited (5 attempts max per session)
+- Never commit your Supabase anon key to a public repo if you've hardcoded it — use environment variables or a build step instead
 
 ---
 
-## Security notes
+## File Size Limits
 
-- The admin passphrase in `index.html` is client-side — anyone can view it in source. Change it, but don't treat it as your only security. The real protection is Supabase Row Level Security (RLS), which enforces access at the database level regardless of what the client does.
-- The anon key in the HTML is safe to expose — it's designed to be public. RLS policies control what it can actually access.
-- Sessions auto-expire after 30 minutes of inactivity.
+| Type | Limit |
+|---|---|
+| Clipboard text | Unlimited (Postgres `text` column) |
+| Clipboard file upload | 15 MB |
+| Snippet code | Unlimited (Postgres `text` column) |
 
 ---
 
-## Stack
+## License
 
-- **Frontend** — vanilla HTML, CSS, JavaScript. Zero dependencies.
-- **Backend** — [Supabase](https://supabase.com) (Postgres + Auth + REST API)
-- **Auth** — Supabase Auth with a custom approval layer on top
-- **Hosting** — any static host
+MIT — use it, fork it, self-host it.
