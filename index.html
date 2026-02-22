@@ -547,6 +547,29 @@ select.field-input option { background: var(--surface2); }
 .btn-save:active { transform: translateY(0); }
 .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+/* Edit mode — panel label turns amber, border glows */
+.add-panel.editing {
+  border-color: rgba(246,166,35,0.35);
+  box-shadow: 0 0 0 1px rgba(246,166,35,0.15);
+}
+.add-panel.editing .panel-label { color: var(--warning); }
+
+/* Cancel button — sits beside Save in edit mode */
+.btn-cancel {
+  display: none;
+  align-items: center; gap: 7px;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 18px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-cancel:hover { background: var(--surface2); color: var(--text); border-color: var(--border-hi); }
+.add-panel.editing .btn-cancel { display: inline-flex; }
+
+/* Button row — holds Save + Cancel side by side */
+.panel-btn-row { display: flex; align-items: center; gap: 9px; }
+
 .row { display: flex; align-items: center; justify-content: space-between; }
 .section-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
 .count-chip {
@@ -709,6 +732,13 @@ select.field-input option { background: var(--surface2); }
   </symbol>
   <symbol id="icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
     <path d="M5 12h14M12 5l7 7-7 7"/>
+  </symbol>
+  <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </symbol>
 </svg>
 
@@ -944,8 +974,8 @@ select.field-input option { background: var(--surface2); }
   <main class="main-content">
 
     <!-- Add snippet panel -->
-    <div class="add-panel">
-      <div class="panel-label">New Snippet</div>
+    <div class="add-panel" id="addPanel">
+      <div class="panel-label" id="panelLabel">New Snippet</div>
       <div class="input-row">
         <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" />
         <select class="field-input" id="snippetLang" aria-label="Language">
@@ -961,13 +991,28 @@ select.field-input option { background: var(--surface2); }
           <option value="other">Other</option>
         </select>
       </div>
-      <textarea class="code-area" id="snippetCode" placeholder="Paste your code here...
+      <textarea class="code-area" id="snippetCode"
+        placeholder="Paste your code here...
 Line 2 will stay on line 2.
-Indentation is preserved." aria-label="Code"></textarea>
-      <button class="btn-save" id="saveBtn">
-        <svg width="13" height="13"><use href="#icon-save"/></svg>
-        Save Snippet
-      </button>
+Indentation is preserved."
+        aria-label="Code"
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="off"
+        autocomplete="off"
+        data-gramm="false"
+        data-gramm_editor="false"
+        data-enable-grammarly="false"></textarea>
+      <div class="panel-btn-row">
+        <button class="btn-save" id="saveBtn">
+          <svg width="13" height="13"><use href="#icon-save"/></svg>
+          Save Snippet
+        </button>
+        <button class="btn-cancel" id="cancelEditBtn">
+          <svg width="13" height="13"><use href="#icon-x"/></svg>
+          Cancel
+        </button>
+      </div>
     </div>
 
     <!-- Snippets header -->
@@ -1099,6 +1144,8 @@ let snippets      = [];
 // FIX 2: Track the newest snippet's timestamp so auto-refresh only
 // downloads rows that didn't exist on the last fetch — not the full DB.
 let _lastSyncTime = null;
+// Edit mode: holds the id of the snippet currently being edited, or null.
+let _editingId    = null;
 
 /* ════════════════════════════════════════════
    SCREEN MANAGER
@@ -1453,6 +1500,9 @@ function signOut() {
   _session = _userProfile = null;
   _siteUnlocked = false;
   snippets = [];
+  // Reset delta-fetch cursor so the next login fetches all snippets from scratch,
+  // not just rows newer than the previous session's last sync.
+  _lastSyncTime = null;
   clearTimeout(_inactivityTimer);
   closeDropdown();
   document.getElementById('appContainer').classList.remove('visible');
@@ -1532,8 +1582,36 @@ async function saveSnippet() {
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Saving...';
 
+  // ── EDIT MODE — PATCH existing row ──────────────────────────────────────
+  if (_editingId) {
+    btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Updating...';
+    try {
+      const res = await fetch(_c + '/rest/v1/snippets?id=eq.' + _editingId, {
+        method: 'PATCH',
+        headers: _headers(_session.access_token),
+        body: JSON.stringify({ name, language, code })
+      });
+      if (!res.ok) throw new Error();
+      // Update the in-memory record so the grid reflects changes instantly.
+      const idx = snippets.findIndex(s => s.id === _editingId);
+      if (idx !== -1) {
+        snippets[idx] = { ...snippets[idx], name, language, code,
+                          lineCount: code.split('\n').length };
+      }
+      renderSnippets();
+      showToast('✓ Snippet updated!', 'success');
+      cancelEdit();
+    } catch { showToast('✗ Failed to update', 'error'); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="13" height="13"><use href="#icon-save"/></svg> Update Snippet';
+    }
+    return;
+  }
+
+  // ── CREATE MODE — POST new row ───────────────────────────────────────────
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Saving...';
   try {
     const res = await fetch(_c + '/rest/v1/snippets', {
       method: 'POST',
@@ -1542,10 +1620,9 @@ async function saveSnippet() {
     });
     if (!res.ok) throw new Error();
     const [saved] = await res.json();
-    // FIX 1: Pre-calculate lineCount on the new snippet so renderSnippets
-    // can reference s.lineCount without any per-render splitting.
+    // Pre-calculate lineCount so renderSnippets never has to split on keystrokes.
     saved.lineCount = saved.code.split('\n').length;
-    // Also update _lastSyncTime so the next delta fetch doesn't re-download this.
+    // Advance the delta-fetch cursor so auto-refresh won't re-download this row.
     _lastSyncTime = saved.created_at;
     snippets.unshift(saved);
     renderSnippets();
@@ -1564,9 +1641,48 @@ async function deleteSnippet(id) {
   try {
     await fetch(_c + '/rest/v1/snippets?id=eq.' + id, { method:'DELETE', headers: _headers(_session.access_token) });
     snippets = snippets.filter(s => s.id !== id);
+    // If the deleted snippet was being edited, reset the panel.
+    if (_editingId === id) cancelEdit();
     renderSnippets();
     showToast('Snippet deleted', '');
   } catch { showToast('✗ Delete failed', 'error'); }
+}
+
+function editSnippet(id) {
+  const s = snippets.find(x => x.id === id);
+  if (!s) return;
+
+  // Populate the panel fields with the snippet's current data.
+  document.getElementById('snippetName').value = s.name;
+  document.getElementById('snippetCode').value = s.code;
+  const langSelect = document.getElementById('snippetLang');
+  // Match the stored language value; fall back to 'other' if not in list.
+  const opt = [...langSelect.options].find(o => o.value === s.language);
+  langSelect.value = opt ? s.language : 'other';
+
+  // Switch the panel into edit mode visually.
+  _editingId = id;
+  const panel = document.getElementById('addPanel');
+  panel.classList.add('editing');
+  document.getElementById('panelLabel').textContent = '✏ Editing — ' + s.name;
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.innerHTML = '<svg width="13" height="13"><use href="#icon-edit"/></svg> Update Snippet';
+
+  // Scroll the panel into view and focus the name field.
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => document.getElementById('snippetName').focus(), 350);
+}
+
+function cancelEdit() {
+  _editingId = null;
+  document.getElementById('addPanel').classList.remove('editing');
+  document.getElementById('panelLabel').textContent = 'New Snippet';
+  document.getElementById('snippetName').value = '';
+  document.getElementById('snippetCode').value = '';
+  document.getElementById('snippetLang').value = 'python';
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = false;
+  saveBtn.innerHTML = '<svg width="13" height="13"><use href="#icon-save"/></svg> Save Snippet';
 }
 
 /* ════════════════════════════════════════════
@@ -1662,6 +1778,13 @@ function renderSnippets() {
     actions.appendChild(copyBtn);
 
     if (_session) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-icon js-edit';
+      editBtn.dataset.id = s.id;
+      editBtn.setAttribute('aria-label', 'Edit snippet');
+      editBtn.innerHTML = '<svg><use href="#icon-edit"/></svg>';
+      actions.appendChild(editBtn);
+
       const delBtn = document.createElement('button');
       delBtn.className = 'btn-icon del js-delete';
       delBtn.dataset.id = s.id;
@@ -1786,6 +1909,9 @@ document.getElementById('adminSignOutBtn').addEventListener('click', adminSignOu
 // Save snippet
 document.getElementById('saveBtn').addEventListener('click', saveSnippet);
 
+// Cancel edit
+document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+
 // Search
 document.getElementById('searchInput').addEventListener('input', renderSnippets);
 
@@ -1799,16 +1925,18 @@ document.getElementById('snippetCode').addEventListener('keydown', e => {
   }
 });
 
-// Snippet grid — expand / copy / delete (event delegation)
+// Snippet grid — expand / copy / edit / delete (event delegation)
 document.getElementById('snippetsList').addEventListener('click', e => {
   const copyBtn   = e.target.closest('.js-copy');
   const deleteBtn = e.target.closest('.js-delete');
+  const editBtn   = e.target.closest('.js-edit');
   const expandBtn = e.target.closest('.js-expand');
   const card      = e.target.closest('.snippet-card');
   if (!card) return;
 
   if (copyBtn)   { e.stopPropagation(); copySnippet(copyBtn.dataset.id); return; }
   if (deleteBtn) { e.stopPropagation(); deleteSnippet(deleteBtn.dataset.id); return; }
+  if (editBtn)   { e.stopPropagation(); editSnippet(editBtn.dataset.id); return; }
   if (expandBtn) { e.stopPropagation(); card.classList.toggle('expanded'); return; }
   // Click anywhere else on card → expand
   card.classList.toggle('expanded');
