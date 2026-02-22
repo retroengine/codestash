@@ -6,1131 +6,761 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="referrer" content="no-referrer">
 <title>CodeStash</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a26;
-    --border: #2a2a3d;
-    --accent: #7c6af7;
-    --accent2: #4fd1c5;
-    --text: #e8e6f0;
-    --muted: #6b6880;
-    --danger: #f56565;
-    --success: #48bb78;
-    --warning: #f6ad55;
-    --admin: #e879f9;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.6;
-  }
-
-  /* ── SCREENS ── */
-  .screen {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    background: var(--bg);
-  }
-  .screen.active { display: flex; }
-
-  /* ── AUTH SCREEN ── */
-  .auth-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px 36px;
-    width: 100%;
-    max-width: 420px;
-    animation: fadeUp 0.4s ease;
-    position: relative;
-  }
-
-  .auth-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 32px;
-  }
-
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-  }
-
-  .logo-icon.admin-icon {
-    background: linear-gradient(135deg, var(--admin), #a855f7);
-  }
-
-  .auth-logo h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-
-  .auth-logo span { color: var(--accent); }
-
-  .auth-tabs {
-    display: flex;
-    gap: 0;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 4px;
-    margin-bottom: 28px;
-  }
-
-  .auth-tab {
-    flex: 1;
-    padding: 9px 6px;
-    border: none;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .auth-tab.active {
-    background: var(--accent);
-    color: white;
-    font-weight: 600;
-  }
-
-  .auth-tab.admin-tab.active {
-    background: linear-gradient(135deg, var(--admin), #a855f7);
-  }
-
-  .auth-field {
-    margin-bottom: 14px;
-  }
-
-  .auth-field label {
-    display: block;
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 7px;
-  }
-
-  .auth-field input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    padding: 12px 16px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .auth-field input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(124,106,247,0.12);
-  }
-
-  .admin-mode .auth-field input:focus {
-    border-color: var(--admin);
-    box-shadow: 0 0 0 3px rgba(232,121,249,0.12);
-  }
-
-  .auth-error {
-    font-size: 0.78rem;
-    color: var(--danger);
-    margin-bottom: 12px;
-    display: none;
-    padding: 10px 14px;
-    background: rgba(245,101,101,0.08);
-    border: 1px solid rgba(245,101,101,0.2);
-    border-radius: 8px;
-  }
-
-  .auth-error.show { display: block; }
-
-  .auth-notice {
-    font-size: 0.78rem;
-    color: var(--warning);
-    margin-bottom: 12px;
-    padding: 10px 14px;
-    background: rgba(246,173,85,0.08);
-    border: 1px solid rgba(246,173,85,0.2);
-    border-radius: 8px;
-    line-height: 1.5;
-  }
-
-  .admin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.72rem;
-    color: var(--admin);
-    background: rgba(232,121,249,0.1);
-    border: 1px solid rgba(232,121,249,0.25);
-    border-radius: 20px;
-    padding: 3px 10px;
-    margin-bottom: 16px;
-  }
-
-  .rate-limit-bar {
-    display: none;
-    margin-bottom: 12px;
-  }
-
-  .rate-limit-bar.show { display: block; }
-  .rate-limit-bar-label {
-    font-size: 0.72rem;
-    color: var(--danger);
-    margin-bottom: 4px;
-  }
-
-  .rate-limit-dots {
-    display: flex;
-    gap: 4px;
-  }
-
-  .rate-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border);
-    transition: background 0.3s;
-  }
-
-  .rate-dot.used { background: var(--danger); }
-
-  /* ── PENDING SCREEN ── */
-  .pending-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 48px 40px;
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-    animation: fadeUp 0.4s ease;
-  }
-
-  .pending-icon {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.08); opacity: 0.8; }
-  }
-
-  .pending-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 800;
-    margin-bottom: 12px;
-    color: var(--warning);
-  }
-
-  .pending-sub {
-    font-size: 0.82rem;
-    color: var(--muted);
-    line-height: 1.7;
-    margin-bottom: 28px;
-  }
-
-  .pending-email {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.8rem;
-    color: var(--accent2);
-    margin-bottom: 24px;
-  }
-
-  /* ── ADMIN PORTAL ── */
-  #adminPortal {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 200;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  #adminPortal.active { display: flex; }
-
-  .admin-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 32px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-
-  .admin-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 1.2rem;
-  }
-
-  .admin-title-badge {
-    font-size: 0.65rem;
-    background: linear-gradient(135deg, var(--admin), #a855f7);
-    color: white;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-
-  .admin-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 32px;
-    max-width: 900px;
-    width: 100%;
-    margin: 0 auto;
-  }
-
-  .admin-section {
-    margin-bottom: 36px;
-  }
-
-  .admin-section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--muted);
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* Site lock toggle */
-  .lock-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-  }
-
-  .lock-info h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .lock-info p {
-    font-size: 0.78rem;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  .lock-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-  }
-
-  .lock-status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all 0.3s;
-  }
-
-  .lock-status-dot.locked { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-  .lock-status-dot.unlocked { background: var(--success); box-shadow: 0 0 8px var(--success); }
-
-  /* Toggle switch */
-  .toggle-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .toggle {
-    position: relative;
-    width: 56px;
-    height: 28px;
-    cursor: pointer;
-  }
-
-  .toggle input { opacity: 0; width: 0; height: 0; }
-
-  .toggle-slider {
-    position: absolute;
-    inset: 0;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 28px;
-    transition: all 0.3s;
-  }
-
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    left: 3px;
-    top: 3px;
-    background: var(--muted);
-    border-radius: 50%;
-    transition: all 0.3s;
-  }
-
-  .toggle input:checked + .toggle-slider {
-    background: rgba(72,187,120,0.15);
-    border-color: var(--success);
-  }
-
-  .toggle input:checked + .toggle-slider::before {
-    transform: translateX(28px);
-    background: var(--success);
-    box-shadow: 0 0 8px var(--success);
-  }
-
-  .toggle-label {
-    font-size: 0.68rem;
-    color: var(--muted);
-    text-align: center;
-  }
-
-  /* Pending users list */
-  .user-queue {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .user-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    animation: fadeUp 0.3s ease;
-    transition: border-color 0.2s;
-  }
-
-  .user-card:hover { border-color: var(--accent); }
-
-  .user-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .user-email {
-    font-size: 0.88rem;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-bottom: 4px;
-  }
-
-  .user-meta {
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .user-status-badge {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 3px 9px;
-    border-radius: 5px;
-    flex-shrink: 0;
-  }
-
-  .user-status-badge.pending {
-    background: rgba(246,173,85,0.12);
-    border: 1px solid rgba(246,173,85,0.3);
-    color: var(--warning);
-  }
-
-  .user-status-badge.approved {
-    background: rgba(72,187,120,0.12);
-    border: 1px solid rgba(72,187,120,0.3);
-    color: var(--success);
-  }
-
-  .user-status-badge.rejected {
-    background: rgba(245,101,101,0.12);
-    border: 1px solid rgba(245,101,101,0.3);
-    color: var(--danger);
-  }
-
-  .user-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .btn-approve {
-    padding: 6px 14px;
-    border-radius: 7px;
-    border: 1px solid rgba(72,187,120,0.4);
-    background: rgba(72,187,120,0.1);
-    color: var(--success);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 600;
-  }
-
-  .btn-approve:hover { background: rgba(72,187,120,0.2); border-color: var(--success); }
-
-  .btn-reject {
-    padding: 6px 14px;
-    border-radius: 7px;
-    border: 1px solid rgba(245,101,101,0.4);
-    background: rgba(245,101,101,0.1);
-    color: var(--danger);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 600;
-  }
-
-  .btn-reject:hover { background: rgba(245,101,101,0.2); border-color: var(--danger); }
-
-  .btn-revoke {
-    padding: 6px 14px;
-    border-radius: 7px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-revoke:hover { border-color: var(--danger); color: var(--danger); }
-
-  .empty-queue {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--muted);
-    font-size: 0.82rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-  }
-
-  .empty-queue .eq-icon { font-size: 2rem; margin-bottom: 10px; }
-
-  .admin-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-  }
-
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .stat-num.pending-color { color: var(--warning); }
-  .stat-num.approved-color { color: var(--success); }
-  .stat-num.rejected-color { color: var(--danger); }
-
-  .stat-label {
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  /* Admin filter tabs */
-  .filter-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .filter-tab {
-    padding: 6px 16px;
-    border-radius: 7px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .filter-tab.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
-
-  /* ── MAIN APP ── */
-  #appContainer {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px 24px;
-    position: relative;
-    z-index: 1;
-    display: none;
-  }
-
-  #appContainer.visible { display: block; }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 48px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-
-  .logo span { color: var(--accent); }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .status-dot {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: background 0.3s;
-  }
-
-  .dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
-  .dot.error { background: var(--danger); }
-
-  .user-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 12px 5px 8px;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .user-avatar {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: white;
-    flex-shrink: 0;
-  }
-
-  .btn-signout {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 8px;
-    padding: 7px 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
-
-  .upload-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 32px;
-    animation: fadeUp 0.4s ease;
-  }
-
-  .panel-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    margin-bottom: 20px;
-  }
-
-  .input-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 14px;
-  }
-
-  input[type="text"], select, textarea {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    padding: 12px 16px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  input[type="text"]:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(124,106,247,0.12);
-  }
-
-  select option { background: var(--surface2); }
-
-  textarea {
-    height: 180px;
-    resize: vertical;
-    line-height: 1.6;
-    tab-size: 2;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #9b8aff);
-    color: white;
-    width: 100%;
-    justify-content: center;
-    margin-top: 4px;
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(124,106,247,0.35);
-  }
-
-  .btn-primary.admin-btn {
-    background: linear-gradient(135deg, var(--admin), #a855f7);
-  }
-
-  .btn-primary.admin-btn:hover {
-    box-shadow: 0 8px 24px rgba(232,121,249,0.35);
-  }
-
-  .btn-primary:active { transform: translateY(0); }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-  .snippets-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-
-  .snippets-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-  }
-
-  .count-badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 3px 12px;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-
-  .search-bar {
-    position: relative;
-    margin-bottom: 20px;
-  }
-
-  .search-bar input { padding-left: 40px; }
-
-  .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 0.9rem;
-    pointer-events: none;
-  }
-
-  .snippets-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .snippet-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    animation: fadeUp 0.3s ease;
-    transition: border-color 0.2s;
-  }
-
-  .snippet-card:hover { border-color: var(--accent); }
-
-  .snippet-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .snippet-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .lang-badge {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 3px 8px;
-    border-radius: 5px;
-    background: rgba(124,106,247,0.15);
-    color: var(--accent);
-    white-space: nowrap;
-    border: 1px solid rgba(124,106,247,0.25);
-    flex-shrink: 0;
-  }
-
-  .snippet-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .snippet-date {
-    font-size: 0.72rem;
-    color: var(--muted);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .snippet-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-    margin-left: 12px;
-  }
-
-  .icon-btn {
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
-  .icon-btn.copy-success { border-color: var(--success); color: var(--success); }
-
-  .snippet-body {
-    display: none;
-    padding: 0;
-  }
-
-  .snippet-body.open { display: block; }
-
-  .code-block {
-    padding: 18px;
-    font-size: 0.82rem;
-    line-height: 1.7;
-    overflow-x: auto;
-    white-space: pre;
-    color: var(--accent2);
-    border-top: 1px solid var(--border);
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--muted);
-    font-size: 0.85rem;
-    line-height: 1.8;
-  }
-
-  .big-icon { font-size: 2.5rem; margin-bottom: 12px; }
-
-  .toast {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-size: 0.82rem;
-    color: var(--text);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  }
-
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { border-color: var(--success); }
-  .toast.error { border-color: var(--danger); }
-  .toast.warning { border-color: var(--warning); }
-
-  /* Devtools overlay */
-  #devtoolsOverlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Syne', sans-serif;
-  }
-
-  #devtoolsOverlay.show { display: flex; }
-  #devtoolsOverlay .big-icon { font-size: 3rem; }
-  #devtoolsOverlay h2 { font-size: 1.4rem; color: var(--danger); font-weight: 800; }
-  #devtoolsOverlay p { color: var(--muted); font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; }
-
-  /* Loading spinner */
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    vertical-align: middle;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (max-width: 600px) {
-    .input-row { grid-template-columns: 1fr; }
-    .snippet-date { display: none; }
-    .admin-stats { grid-template-columns: 1fr; }
-    .lock-card { flex-direction: column; align-items: flex-start; }
-    .auth-box, .pending-box { padding: 32px 24px; }
-    .admin-body { padding: 20px 16px; }
-  }
+/* ═══════════ TOKENS ═══════════ */
+:root {
+  --bg:        #0a0a0a;
+  --surface:   #141414;
+  --surface2:  #1c1c1c;
+  --surface3:  #242424;
+  --border:    rgba(255,255,255,0.07);
+  --border-hi: rgba(255,255,255,0.13);
+  --text:      #f0f0f0;
+  --muted:     rgba(240,240,240,0.4);
+  --muted2:    rgba(240,240,240,0.2);
+  --danger:    #e05252;
+  --success:   #3dba70;
+  --warning:   #f6a623;
+  --accent:    #8b78ff;
+  --admin:     #d77bff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh; -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  opacity: 0.6; will-change: transform;
+}
+
+/* ═══════════ SCREENS (fixed overlays) ═══════════ */
+.screen {
+  position: fixed; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  background: var(--bg); z-index: 200;
+}
+.screen.active { display: flex; }
+
+/* ═══════════ DEVTOOLS OVERLAY ═══════════ */
+#devtoolsOverlay {
+  display: none; position: fixed; inset: 0;
+  background: var(--bg); z-index: 9999;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+}
+#devtoolsOverlay.show { display: flex; }
+#devtoolsOverlay .dt-icon { font-size: 3rem; }
+#devtoolsOverlay h2 { font-size: 1.4rem; color: var(--danger); font-weight: 700; }
+#devtoolsOverlay p  { color: var(--muted); font-size: 0.82rem; }
+
+/* ═══════════ AUTH CARD ═══════════ */
+.auth-card {
+  background: var(--surface); border: 1px solid var(--border-hi);
+  border-radius: 20px; padding: 36px;
+  width: 100%; max-width: 390px;
+  animation: up 0.4s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
+}
+@keyframes up { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;} }
+
+.auth-logo-row { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
+.logo-mark {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: var(--text); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.logo-mark svg { display: block; width: 20px; height: 20px; }
+.logo-mark.admin-mark { background: linear-gradient(135deg, var(--admin), #a855f7); }
+.logo-wordmark { display: flex; flex-direction: column; gap: 2px; }
+.lw-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.lw-sub  { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+.auth-headline { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 5px; }
+.auth-sub { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 22px; }
+
+.tab-switcher {
+  display: flex; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 11px;
+  padding: 4px; gap: 3px; margin-bottom: 20px;
+}
+.tab-btn {
+  flex: 1; padding: 9px 6px; border: none; background: transparent; color: var(--muted);
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+  border-radius: 8px; cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.tab-btn.active { background: var(--text); color: #0a0a0a; font-weight: 700; }
+.tab-btn.admin-tab.active { background: linear-gradient(135deg, var(--admin), #a855f7); color: white; }
+
+/* Notices & errors */
+.auth-error {
+  display: none; margin-bottom: 12px;
+  font-size: 0.78rem; color: var(--danger);
+  padding: 10px 14px; background: rgba(224,82,82,0.08);
+  border: 1px solid rgba(224,82,82,0.2); border-radius: 8px;
+}
+.auth-error.show { display: block; }
+
+.auth-notice {
+  display: none; margin-bottom: 12px;
+  font-size: 0.78rem; color: var(--warning); line-height: 1.5;
+  padding: 10px 14px; background: rgba(246,166,35,0.08);
+  border: 1px solid rgba(246,166,35,0.2); border-radius: 8px;
+}
+
+.admin-badge-pill {
+  display: none; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: var(--admin);
+  background: rgba(215,123,255,0.1); border: 1px solid rgba(215,123,255,0.25);
+  border-radius: 20px; padding: 3px 10px; margin-bottom: 16px;
+}
+
+/* Rate limit dots */
+.rate-limit-bar { display: none; margin-bottom: 12px; }
+.rate-limit-bar.show { display: block; }
+.rate-limit-bar-label { font-size: 0.72rem; color: var(--danger); margin-bottom: 4px; }
+.rate-limit-dots { display: flex; gap: 4px; }
+.rate-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.rate-dot.used { background: var(--danger); }
+
+.field-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.auth-field { margin-bottom: 13px; }
+
+.field-input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem; padding: 11px 14px;
+  outline: none; transition: border-color 0.15s, background 0.15s;
+  -webkit-appearance: none;
+}
+.field-input::placeholder { color: var(--muted2); }
+.field-input:focus { border-color: var(--border-hi); background: var(--surface3); }
+select.field-input { cursor: pointer; }
+select.field-input option { background: var(--surface2); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; background: var(--text); color: #0a0a0a;
+  border: none; border-radius: 10px; padding: 11px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s, transform 0.13s;
+  margin-top: 4px;
+}
+.btn-primary:hover { opacity: 0.84; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary.admin-btn { background: linear-gradient(135deg, var(--admin), #a855f7); color: white; }
+
+/* Spinner */
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,0.25); border-top-color: #0a0a0a;
+  border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
+}
+.admin-btn .spinner { border-color: rgba(255,255,255,0.25); border-top-color: white; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════ PENDING SCREEN ═══════════ */
+.pending-card {
+  background: var(--surface); border: 1px solid var(--border-hi);
+  border-radius: 20px; padding: 48px 36px;
+  width: 100%; max-width: 390px; text-align: center;
+  animation: up 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.pending-icon { font-size: 3rem; margin-bottom: 20px; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.08);opacity:0.8;} }
+.pending-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; color: var(--warning); }
+.pending-sub { font-size: 0.82rem; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+.pending-email {
+  display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 14px; font-size: 0.8rem; color: var(--muted); margin-bottom: 24px;
+}
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; background: transparent; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 10px; padding: 11px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border-hi); }
+
+/* ═══════════ ADMIN PORTAL ═══════════ */
+#adminPortal {
+  position: fixed; inset: 0; background: var(--bg);
+  z-index: 200; display: none; flex-direction: column; overflow: hidden;
+}
+#adminPortal.active { display: flex; }
+
+.admin-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 32px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.admin-title {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 1rem; font-weight: 700;
+}
+.admin-title-badge {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+  background: linear-gradient(135deg, var(--admin), #a855f7);
+  color: white; padding: 3px 10px; border-radius: 20px;
+}
+.admin-header-right { display: flex; align-items: center; gap: 16px; }
+.admin-email-pill {
+  font-size: 0.75rem; color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 5px 12px; border-radius: 20px;
+}
+
+.admin-body { flex: 1; overflow-y: auto; padding: 32px; max-width: 900px; width: 100%; margin: 0 auto; }
+.admin-section { margin-bottom: 36px; }
+.admin-section-title {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted2);
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Stats */
+.admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; text-align: center;
+}
+.stat-num { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.stat-num.pending-color  { color: var(--warning); }
+.stat-num.approved-color { color: var(--success); }
+.stat-num.rejected-color { color: var(--danger); }
+.stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* Lock card */
+.lock-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 22px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+}
+.lock-info h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 5px; }
+.lock-info p  { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+.lock-right   { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.lock-status  { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--muted); }
+.lock-status-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--muted); transition: background 0.3s, box-shadow 0.3s;
+}
+.lock-status-dot.locked   { background: var(--danger);  box-shadow: 0 0 7px var(--danger); }
+.lock-status-dot.unlocked { background: var(--success); box-shadow: 0 0 7px var(--success); }
+
+/* Toggle switch */
+.toggle-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.toggle { position: relative; width: 52px; height: 26px; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 26px; transition: background 0.3s, border-color 0.3s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; left: 3px; top: 3px;
+  background: var(--muted); border-radius: 50%;
+  transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+}
+.toggle input:checked + .toggle-slider { background: rgba(61,186,112,0.15); border-color: var(--success); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(26px); background: var(--success); box-shadow: 0 0 8px var(--success); }
+.toggle-label { font-size: 0.65rem; color: var(--muted); }
+
+/* User queue */
+.filter-tabs { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-tab {
+  padding: 6px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem; font-weight: 500; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.filter-tab.active { background: var(--surface2); border-color: var(--border-hi); color: var(--text); }
+
+.user-queue { display: flex; flex-direction: column; gap: 9px; }
+.user-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  animation: up 0.3s ease; transition: border-color 0.15s;
+}
+.user-card:hover { border-color: var(--border-hi); }
+.user-info { flex: 1; min-width: 0; }
+.user-email { font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px; }
+.user-meta  { font-size: 0.7rem; color: var(--muted); }
+.user-status-badge {
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 3px 9px; border-radius: 6px; flex-shrink: 0;
+}
+.user-status-badge.pending  { background: rgba(246,166,35,0.1);  border: 1px solid rgba(246,166,35,0.3);  color: var(--warning); }
+.user-status-badge.approved { background: rgba(61,186,112,0.1);  border: 1px solid rgba(61,186,112,0.3);  color: var(--success); }
+.user-status-badge.rejected { background: rgba(224,82,82,0.1);   border: 1px solid rgba(224,82,82,0.3);   color: var(--danger);  }
+.user-actions { display: flex; gap: 7px; flex-shrink: 0; }
+
+.btn-approve {
+  padding: 5px 12px; border-radius: 7px;
+  border: 1px solid rgba(61,186,112,0.35); background: rgba(61,186,112,0.08);
+  color: var(--success); font-family: 'DM Sans', sans-serif;
+  font-size: 0.74rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-approve:hover { background: rgba(61,186,112,0.18); border-color: var(--success); }
+.btn-reject {
+  padding: 5px 12px; border-radius: 7px;
+  border: 1px solid rgba(224,82,82,0.35); background: rgba(224,82,82,0.08);
+  color: var(--danger); font-family: 'DM Sans', sans-serif;
+  font-size: 0.74rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-reject:hover { background: rgba(224,82,82,0.18); border-color: var(--danger); }
+.btn-revoke {
+  padding: 5px 12px; border-radius: 7px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: 'DM Sans', sans-serif;
+  font-size: 0.74rem; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-revoke:hover { border-color: rgba(224,82,82,0.4); color: var(--danger); }
+
+.empty-queue {
+  text-align: center; padding: 40px 20px; color: var(--muted);
+  font-size: 0.82rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px;
+}
+.eq-icon { font-size: 2rem; margin-bottom: 10px; }
+
+/* ═══════════ APP LAYOUT ═══════════ */
+#appContainer {
+  display: none;
+  grid-template-columns: 252px 1fr;
+  grid-template-rows: 70px 1fr;
+  min-height: 100vh;
+}
+#appContainer.visible { display: grid; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  grid-column: 1; grid-row: 1 / -1;
+  background: var(--surface); border-right: 1px solid var(--border);
+  padding: 24px 14px;
+  display: flex; flex-direction: column; gap: 2px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 11px;
+  padding: 8px 10px; margin-bottom: 24px;
+}
+.logo-wordmark { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+
+.nav-label {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--muted2); padding: 0 10px; margin: 10px 0 3px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  color: var(--muted); font-size: 0.875rem; font-weight: 500;
+  border: 1px solid transparent; text-decoration: none;
+}
+.nav-item:hover  { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--surface2); border-color: var(--border-hi); color: var(--text); }
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.nav-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+/* ── TOPBAR ── */
+.topbar {
+  grid-column: 2; grid-row: 1;
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky; top: 0; z-index: 100; min-width: 0;
+}
+.topbar-page-title {
+  font-size: 0.95rem; font-weight: 700; letter-spacing: -0.02em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.topbar-page-title span { font-weight: 400; color: var(--muted); font-size: 0.86rem; margin-left: 5px; }
+.topbar-spacer { flex: 1; }
+.topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.synced-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 13px; border-radius: 100px;
+  background: var(--surface2); border: 1px solid var(--border); white-space: nowrap;
+}
+.synced-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--muted); transition: background 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+.synced-dot.connected { background: var(--success); box-shadow: 0 0 6px var(--success); animation: blink 2.5s ease infinite; }
+.synced-dot.error     { background: var(--danger); }
+@keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.35;} }
+.synced-label { font-size: 0.74rem; font-weight: 500; color: var(--muted); }
+#statusText { font-size: 0.74rem; font-weight: 500; color: var(--muted); }
+
+.user-btn {
+  position: relative;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--surface3); border: 1px solid var(--border-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: var(--text);
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0; user-select: none;
+}
+.user-btn:hover { border-color: rgba(255,255,255,0.25); background: var(--surface2); }
+
+.btn-signout {
+  padding: 8px 14px; border-radius: 9px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: 'DM Sans', sans-serif;
+  font-size: 0.76rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.btn-signout:hover { background: var(--surface2); color: var(--text); border-color: var(--border-hi); }
+
+/* ── ACCOUNT DROPDOWN ── */
+.account-dropdown {
+  position: absolute; top: calc(100% + 10px); right: 0; width: 280px;
+  background: var(--surface); border: 1px solid var(--border-hi);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
+  opacity: 0; pointer-events: none;
+  transform: translateY(-6px) scale(0.97); transform-origin: top right;
+  transition: opacity 0.18s, transform 0.18s; z-index: 300;
+}
+.account-dropdown.open { opacity: 1; pointer-events: all; transform: none; }
+.dropdown-email  { text-align: center; padding: 18px 18px 0; font-size: 0.78rem; color: var(--muted); font-weight: 500; word-break: break-all; }
+.dropdown-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--surface3); border: 1px solid var(--border-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; font-weight: 700; color: var(--text);
+  margin: 14px auto 10px;
+}
+.dropdown-name    { text-align: center; font-size: 1.1rem; font-weight: 700; padding-bottom: 16px; }
+.dropdown-divider { height: 1px; background: var(--border); }
+.dropdown-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+.dropdown-action {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 12px; background: var(--surface);
+  font-size: 0.82rem; font-weight: 500; color: var(--muted);
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.dropdown-action:hover { background: var(--surface2); color: var(--text); }
+.dropdown-action svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+.dropdown-action.danger:hover { color: var(--danger); }
+
+/* ── OVERLAY (click-away) ── */
+.overlay { display: none; position: fixed; inset: 0; z-index: 299; }
+.overlay.active { display: block; }
+
+/* ── MAIN CONTENT ── */
+.main-content {
+  grid-column: 2; grid-row: 2;
+  padding: 28px 30px 48px;
+  display: flex; flex-direction: column; gap: 22px;
+  overflow-y: auto;
+}
+
+/* Add panel */
+.add-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px;
+}
+.panel-label {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+.input-row { display: grid; grid-template-columns: 1fr 148px; gap: 9px; margin-bottom: 9px; }
+
+.code-area {
+  width: 100%; min-height: 120px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 11px;
+  color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 0.8rem; line-height: 1.75; padding: 13px 14px;
+  outline: none; resize: vertical;
+  transition: border-color 0.15s, background 0.15s;
+  margin-bottom: 13px; white-space: pre-wrap; word-break: break-word; tab-size: 2;
+}
+.code-area::placeholder { color: var(--muted2); }
+.code-area:focus { border-color: var(--border-hi); background: var(--surface3); }
+
+.btn-save {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--text); color: #0a0a0a;
+  border: none; border-radius: 10px; padding: 11px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s, transform 0.13s;
+}
+.btn-save:hover { opacity: 0.84; transform: translateY(-1px); }
+.btn-save:active { transform: translateY(0); }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.row { display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
+.count-chip {
+  font-size: 0.7rem; font-weight: 600; padding: 4px 12px;
+  border-radius: 100px; background: var(--surface);
+  border: 1px solid var(--border-hi); color: var(--muted);
+}
+
+.search-wrap { position: relative; }
+.search-ico {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; color: var(--muted2); pointer-events: none;
+}
+.search-ico svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.search-wrap .field-input { padding-left: 38px; }
+
+/* ── SNIPPET CARDS ── */
+.snippets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px; align-items: start;
+}
+
+.snippet-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  transition: border-color 0.18s, background 0.16s;
+  cursor: pointer;
+}
+.snippet-card:hover:not(.expanded) { border-color: var(--border-hi); background: var(--surface2); }
+.snippet-card.expanded { background: var(--surface2); border-color: var(--border-hi); }
+
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 0;
+}
+.snippet-name { font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.lang-badge {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px;
+  background: var(--surface3); color: var(--muted); border: 1px solid var(--border);
+}
+.expand-btn {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s; flex-shrink: 0;
+}
+.expand-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; transition: transform 0.25s; }
+.snippet-card.expanded .expand-btn svg { transform: rotate(180deg); }
+.expand-btn:hover { border-color: var(--border-hi); color: var(--text); }
+
+.code-preview {
+  margin: 12px 16px 0;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem; line-height: 1.65; color: var(--muted);
+  overflow: hidden; max-height: 70px; position: relative;
+  white-space: pre; overflow-x: auto;
+  transition: max-height 0.35s ease;
+}
+.code-preview::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 24px;
+  background: linear-gradient(transparent, var(--surface2));
+  border-radius: 0 0 8px 8px; transition: opacity 0.25s;
+}
+.snippet-card.expanded .code-preview { max-height: 320px; overflow-y: auto; }
+.snippet-card.expanded .code-preview::after { opacity: 0; }
+
+.card-expanded-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.32s ease, opacity 0.22s; opacity: 0;
+}
+.snippet-card.expanded .card-expanded-body { max-height: 120px; opacity: 1; }
+.expanded-meta { margin: 10px 16px 0; display: flex; gap: 7px; flex-wrap: wrap; }
+.meta-chip {
+  font-size: 0.69rem; font-weight: 500; color: var(--muted);
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 7px; padding: 4px 10px;
+}
+
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 14px; margin-top: 4px;
+}
+.card-time { font-size: 0.68rem; color: var(--muted2); }
+.card-actions { display: flex; gap: 5px; }
+
+.btn-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface3);
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color 0.13s, color 0.13s, background 0.13s;
+}
+.btn-icon svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+.btn-icon:hover { border-color: var(--border-hi); color: var(--text); }
+.btn-icon.del:hover { border-color: rgba(224,82,82,0.35); color: var(--danger); background: rgba(224,82,82,0.06); }
+.btn-icon.copy-ok  { border-color: rgba(61,186,112,0.4); color: var(--success); }
+
+/* Empty state */
+.empty-state {
+  grid-column: 1 / -1; text-align: center;
+  padding: 60px 20px; color: var(--muted); font-size: 0.85rem; line-height: 1.8;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface); border: 1px solid var(--border-hi);
+  border-radius: 10px; padding: 11px 18px;
+  font-size: 0.78rem; font-weight: 500; color: var(--muted);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(80px); opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+  z-index: 9000; white-space: nowrap; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(61,186,112,0.4); }
+.toast.error   { border-color: rgba(224,82,82,0.4); }
+.toast.warning { border-color: rgba(246,166,35,0.4); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  #appContainer { grid-template-columns: 1fr; grid-template-rows: 60px 1fr; }
+  .sidebar { display: none; }
+  .topbar  { grid-column: 1; }
+  .main-content { grid-column: 1; padding: 18px 16px 40px; }
+  .input-row { grid-template-columns: 1fr; }
+  .admin-stats { grid-template-columns: 1fr; }
+  .lock-card { flex-direction: column; align-items: flex-start; }
+}
 </style>
 </head>
 <body>
 
-<!-- DevTools Overlay -->
+<!-- ── SVG SYMBOL DEFS (icons defined once, referenced everywhere) ── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="9" y="9" width="13" height="13" rx="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </symbol>
+  <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    <path d="M10 11v6M14 11v6"/>
+  </symbol>
+  <symbol id="icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="6 9 12 15 18 9"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+  <symbol id="icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="17 8 12 3 7 8"/>
+    <line x1="12" y1="3" x2="12" y2="15"/>
+  </symbol>
+  <symbol id="icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M5 12h14M12 5l7 7-7 7"/>
+  </symbol>
+</svg>
+
+<!-- ── DEVTOOLS OVERLAY ── -->
 <div id="devtoolsOverlay">
-  <div class="big-icon">🔒</div>
+  <div class="dt-icon">🔒</div>
   <h2>Access Restricted</h2>
   <p>Close developer tools to continue.</p>
 </div>
 
-<!-- ── AUTH SCREEN ── -->
+<!-- ── CLICK-AWAY OVERLAY FOR DROPDOWN ── -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ═══════════ AUTH SCREEN ═══════════ -->
 <div class="screen" id="authScreen">
-  <div class="auth-box" id="authBox">
-    <div class="auth-logo">
-      <div class="logo-icon" id="authLogoIcon">⚡</div>
-      <h1>Code<span>Stash</span></h1>
-    </div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
-      <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
-      <button class="auth-tab admin-tab" onclick="switchTab('admin')">⚙ Admin</button>
+  <div class="auth-card">
+    <div class="auth-logo-row">
+      <div class="logo-mark" id="authLogoMark">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
+        </svg>
+      </div>
+      <div class="logo-wordmark">
+        <div class="lw-name">CodeStash</div>
+        <div class="lw-sub">Snippet Library</div>
+      </div>
     </div>
 
-    <!-- Rate limit indicator -->
+    <div class="auth-headline" id="authHeadline">Welcome back.</div>
+    <p class="auth-sub" id="authSubline">Sign in to access your personal snippet library.</p>
+
+    <div class="tab-switcher">
+      <button class="tab-btn active" id="tabLogin">Sign In</button>
+      <button class="tab-btn" id="tabSignup">Sign Up</button>
+      <button class="tab-btn admin-tab" id="tabAdmin">Admin</button>
+    </div>
+
     <div class="rate-limit-bar" id="rateLimitBar">
       <div class="rate-limit-bar-label" id="rateLimitLabel">⚠ Failed attempts</div>
       <div class="rate-limit-dots" id="rateLimitDots"></div>
     </div>
 
-    <div id="authAdminBadge" style="display:none">
-      <div class="admin-badge">🛡 Administrator Access</div>
-    </div>
-
-    <div id="authNotice" class="auth-notice" style="display:none"></div>
+    <div id="authAdminBadge" class="admin-badge-pill">🛡 Administrator Access</div>
+    <div class="auth-notice" id="authNotice"></div>
     <div class="auth-error" id="authError"></div>
 
     <div class="auth-field">
-      <label>Email</label>
-      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email"
-        oninput="sanitizeInput(this)" />
+      <div class="field-label">Email</div>
+      <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
     </div>
     <div class="auth-field">
-      <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+      <div class="field-label">Password</div>
+      <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
     </div>
-    <!-- Confirm password for signup -->
     <div class="auth-field" id="confirmField" style="display:none">
-      <label>Confirm Password</label>
-      <input type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
+      <div class="field-label">Confirm Password</div>
+      <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
     </div>
-    <!-- Admin passphrase -->
     <div class="auth-field" id="adminKeyField" style="display:none">
-      <label>Admin Passphrase</label>
-      <input type="password" id="adminKey" placeholder="Enter admin passphrase" autocomplete="off" />
+      <div class="field-label">Admin Passphrase</div>
+      <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" />
     </div>
 
-    <button class="btn btn-primary" id="authBtn" onclick="handleAuth()">Sign In</button>
-  </div>
-</div>
-
-<!-- ── PENDING SCREEN ── -->
-<div class="screen" id="pendingScreen">
-  <div class="pending-box">
-    <div class="pending-icon">⏳</div>
-    <div class="pending-title">Awaiting Approval</div>
-    <p class="pending-sub">
-      Your account is pending admin review.<br>
-      You'll be able to sign in once approved.
-    </p>
-    <div class="pending-email" id="pendingEmail">—</div>
-    <button class="btn btn-primary" onclick="signOut()" style="background: transparent; border: 1px solid var(--border); color: var(--muted);">
-      Back to Sign In
+    <button class="btn-primary" id="authBtn">
+      Sign In
+      <svg width="13" height="13"><use href="#icon-arrow"/></svg>
     </button>
   </div>
 </div>
 
-<!-- ── ADMIN PORTAL ── -->
+<!-- ═══════════ PENDING SCREEN ═══════════ -->
+<div class="screen" id="pendingScreen">
+  <div class="pending-card">
+    <div class="pending-icon">⏳</div>
+    <div class="pending-title">Awaiting Approval</div>
+    <p class="pending-sub">Your account is pending admin review.<br>You can sign in once approved.</p>
+    <div class="pending-email" id="pendingEmail">—</div>
+    <button class="btn-ghost" id="pendingBack">Back to Sign In</button>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN PORTAL ═══════════ -->
 <div id="adminPortal">
   <div class="admin-header">
     <div class="admin-title">
@@ -1138,12 +768,9 @@
       <span>Admin Portal</span>
       <span class="admin-title-badge">SECURE</span>
     </div>
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="status-dot">
-        <div class="dot connected"></div>
-        <span id="adminEmail" style="font-size:0.75rem;color:var(--muted)">admin</span>
-      </div>
-      <button class="btn-signout" onclick="adminSignOut()">sign out</button>
+    <div class="admin-header-right">
+      <div class="admin-email-pill" id="adminEmail">admin</div>
+      <button class="btn-signout" id="adminSignOutBtn">Sign out</button>
     </div>
   </div>
 
@@ -1154,7 +781,7 @@
       <div class="admin-section-title">// overview</div>
       <div class="admin-stats">
         <div class="stat-card">
-          <div class="stat-num pending-color" id="statPending">—</div>
+          <div class="stat-num pending-color"  id="statPending">—</div>
           <div class="stat-label">Pending</div>
         </div>
         <div class="stat-card">
@@ -1168,22 +795,22 @@
       </div>
     </div>
 
-    <!-- Site Lock Control -->
+    <!-- Site Lock -->
     <div class="admin-section">
       <div class="admin-section-title">// site access control</div>
       <div class="lock-card">
         <div class="lock-info">
-          <h3 id="lockTitle">Site Lock</h3>
-          <p id="lockDesc">Control whether the site requires login to access.</p>
+          <h3 id="lockTitle">🔒 Site Locked</h3>
+          <p id="lockDesc">The site requires login. Only approved users can access it.</p>
         </div>
-        <div style="display:flex; align-items:center; gap:24px;">
+        <div class="lock-right">
           <div class="lock-status">
             <div class="lock-status-dot" id="lockStatusDot"></div>
-            <span id="lockStatusText" style="font-size:0.8rem;color:var(--muted)">Loading...</span>
+            <span id="lockStatusText">Loading...</span>
           </div>
           <div class="toggle-wrap">
             <label class="toggle">
-              <input type="checkbox" id="siteUnlocked" onchange="toggleSiteLock()" />
+              <input type="checkbox" id="siteUnlocked" />
               <span class="toggle-slider"></span>
             </label>
             <div class="toggle-label" id="toggleLabel">—</div>
@@ -1195,234 +822,258 @@
     <!-- User Management -->
     <div class="admin-section">
       <div class="admin-section-title">// user management</div>
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="filterUsers('pending')">⏳ Pending</button>
-        <button class="filter-tab" onclick="filterUsers('approved')">✓ Approved</button>
-        <button class="filter-tab" onclick="filterUsers('rejected')">✗ Rejected</button>
-        <button class="filter-tab" onclick="filterUsers('all')">All</button>
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="pending">⏳ Pending</button>
+        <button class="filter-tab" data-filter="approved">✓ Approved</button>
+        <button class="filter-tab" data-filter="rejected">✗ Rejected</button>
+        <button class="filter-tab" data-filter="all">All</button>
       </div>
       <div class="user-queue" id="userQueue">
-        <div class="empty-queue">
-          <div class="eq-icon">👥</div>
-          <p>Loading users...</p>
-        </div>
+        <div class="empty-queue"><div class="eq-icon">👥</div><p>Loading users...</p></div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- ── MAIN APP ── -->
+<!-- ═══════════ APP LAYOUT ═══════════ -->
 <div id="appContainer">
-  <header>
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-      <h1>Code<span>Stash</span></h1>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
+        </svg>
+      </div>
+      <div class="logo-wordmark">
+        <div class="lw-name">CodeStash</div>
+        <div class="lw-sub">Snippet Library</div>
+      </div>
     </div>
-    <div class="header-right">
-      <div class="status-dot">
-        <div class="dot" id="statusDot"></div>
+
+    <div class="nav-label">Library</div>
+    <a class="nav-item active" href="#" aria-label="All Snippets">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+      All Snippets
+    </a>
+    <a class="nav-item" href="#" aria-label="Collections">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+      Collections
+    </a>
+
+    <div class="nav-label" style="margin-top:8px;">Tools</div>
+    <a class="nav-item" href="#" aria-label="Import">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+      Import
+    </a>
+    <a class="nav-item" href="#" aria-label="Settings">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
+      Settings
+    </a>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-page-title">All Snippets <span>/ Library</span></div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-right">
+
+      <div class="synced-pill">
+        <div class="synced-dot" id="statusDot"></div>
         <span id="statusText">connecting...</span>
       </div>
-      <div class="user-pill">
-        <div class="user-avatar" id="userAvatar">?</div>
-        <span id="userEmailDisplay">—</span>
+
+      <!-- User avatar + dropdown -->
+      <div class="user-btn" id="userBtn" role="button" aria-label="Account menu" aria-expanded="false">
+        <span id="userAvatar">?</span>
+        <div class="account-dropdown" id="accountDropdown" role="menu">
+          <div class="dropdown-email" id="dropdownEmail">—</div>
+          <div class="dropdown-avatar" id="dropdownAvatar">?</div>
+          <div class="dropdown-name" id="dropdownName">Hello!</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-actions">
+            <div class="dropdown-action" role="menuitem">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Profile
+            </div>
+            <div class="dropdown-action" role="menuitem">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              Settings
+            </div>
+            <div class="dropdown-action danger" role="menuitem" id="dropdownSignOut" style="grid-column:1/-1;">
+              <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign Out
+            </div>
+          </div>
+        </div>
       </div>
-      <button class="btn-signout" onclick="signOut()">sign out</button>
+
+      <button class="btn-signout" id="signOutBtn">Sign out</button>
     </div>
   </header>
 
-  <div class="upload-panel">
-    <div class="panel-title">// new snippet</div>
-    <div class="input-row">
-      <input type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" />
-      <select id="snippetLang">
-        <option value="python">Python</option>
-        <option value="c">C</option>
-        <option value="cpp">C++</option>
-        <option value="matlab">MATLAB</option>
-        <option value="javascript">JavaScript</option>
-        <option value="bash">Bash</option>
-        <option value="r">R</option>
-        <option value="julia">Julia</option>
-        <option value="text">Plain text</option>
-        <option value="other">Other</option>
-      </select>
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- Add snippet panel -->
+    <div class="add-panel">
+      <div class="panel-label">New Snippet</div>
+      <div class="input-row">
+        <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" />
+        <select class="field-input" id="snippetLang" aria-label="Language">
+          <option value="python">Python</option>
+          <option value="c">C</option>
+          <option value="cpp">C++</option>
+          <option value="matlab">MATLAB</option>
+          <option value="javascript">JavaScript</option>
+          <option value="bash">Bash</option>
+          <option value="r">R</option>
+          <option value="julia">Julia</option>
+          <option value="text">Plain Text</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <textarea class="code-area" id="snippetCode" placeholder="Paste your code here...
+Line 2 will stay on line 2.
+Indentation is preserved." aria-label="Code"></textarea>
+      <button class="btn-save" id="saveBtn">
+        <svg width="13" height="13"><use href="#icon-save"/></svg>
+        Save Snippet
+      </button>
     </div>
-    <textarea id="snippetCode" placeholder="Paste your code here..."></textarea>
-    <button class="btn btn-primary" onclick="saveSnippet()">⬆ Save Snippet</button>
-  </div>
 
-  <div class="snippets-header">
-    <div class="snippets-title">Saved Snippets</div>
-    <div class="count-badge" id="countBadge">0</div>
-  </div>
-
-  <div class="search-bar">
-    <span class="search-icon">⌕</span>
-    <input type="text" id="searchInput" placeholder="Search snippets..." oninput="renderSnippets()" />
-  </div>
-
-  <div class="snippets-list" id="snippetsList">
-    <div class="empty-state">
-      <div class="big-icon">📋</div>
-      <p>No snippets yet.<br>Save your first code above.</p>
+    <!-- Snippets header -->
+    <div class="row">
+      <div class="section-title">Saved Snippets</div>
+      <div class="count-chip" id="countBadge">0</div>
     </div>
-  </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+      <input class="field-input" type="text" id="searchInput" placeholder="Search snippets..." style="width:100%;" aria-label="Search snippets" />
+    </div>
+
+    <!-- Snippets grid (rendered by JS) -->
+    <div class="snippets-grid" id="snippetsList"></div>
+
+  </main>
 </div>
 
+<!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
 <script>
-(function() {
+(function () {
 'use strict';
 
-// ── ANTI-INSPECT ─────────────────────────────────────
-document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-
-document.addEventListener('keydown', function(e) {
-  const blocked = (
+/* ════════════════════════════════════════════
+   ANTI-INSPECT
+════════════════════════════════════════════ */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  const blocked =
     e.key === 'F12' ||
     (e.ctrlKey && e.shiftKey && ['I','J','C','K'].includes(e.key.toUpperCase())) ||
     (e.ctrlKey && e.key.toUpperCase() === 'U') ||
-    (e.metaKey && e.altKey && ['I','J','C'].includes(e.key.toUpperCase()))
-  );
-  if (blocked) { e.preventDefault(); e.stopPropagation(); return false; }
+    (e.metaKey && e.altKey && ['I','J','C'].includes(e.key.toUpperCase()));
+  if (blocked) { e.preventDefault(); e.stopPropagation(); }
 });
-
-const _dt = { threshold: 160 };
 function checkDevTools() {
-  const widthDiff  = window.outerWidth  - window.innerWidth  > _dt.threshold;
-  const heightDiff = window.outerHeight - window.innerHeight > _dt.threshold;
-  const overlay = document.getElementById('devtoolsOverlay');
-  if (overlay) overlay.classList.toggle('show', widthDiff || heightDiff);
+  const show = window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160;
+  document.getElementById('devtoolsOverlay').classList.toggle('show', show);
 }
 setInterval(checkDevTools, 1000);
 window.addEventListener('resize', checkDevTools);
 
-// ── CONFIG ─────────────────────────────────────────
+/* ════════════════════════════════════════════
+   CONFIG  — replace with your Supabase project
+════════════════════════════════════════════ */
 const _c = 'https://sdliegtdpqjtpfkvsqrr.supabase.co';
 const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGllZ3R','kcHFqdHBma3ZzcXJyIiwicm9sZSI6ImFub24iLCJ','pYXQiOjE3NzE2OTI5OTksImV4cCI6MjA4NzI2ODk','5OX0.BIsvIPB02ydNwh36hmwKSrf9MwfXwJjvIo3','BLH8UDpU'].join('');
+const _adminPhrase = '2026'; // ← change to your secret passphrase
 
-// Admin passphrase — change this to your secret value
-// Note: stored in client; real security comes from Supabase RLS + role check
-const _adminPhrase = '2026';
-
-// ── SECURITY: RATE LIMITING ─────────────────────────
-const RATE_LIMIT = { max: 5, window: 0 }; // track attempts, no lockout freeze
+/* ════════════════════════════════════════════
+   RATE LIMITING
+════════════════════════════════════════════ */
+const RATE_LIMIT = { max: 5 };
 
 function getRateData() {
-  try {
-    const raw = sessionStorage.getItem('_rl');
-    return raw ? JSON.parse(raw) : { attempts: 0, lockedUntil: 0 };
-  } catch { return { attempts: 0, lockedUntil: 0 }; }
+  try { const r = sessionStorage.getItem('_rl'); return r ? JSON.parse(r) : { attempts: 0, lockedUntil: 0 }; }
+  catch { return { attempts: 0, lockedUntil: 0 }; }
 }
-
-function saveRateData(d) {
-  try { sessionStorage.setItem('_rl', JSON.stringify(d)); } catch {}
-}
-
-function recordFailedAttempt() {
-  const d = getRateData();
-  d.attempts = (d.attempts || 0) + 1;
-  // No lockout — just track attempt count for the UI indicator
-  saveRateData(d);
-  updateRateLimitUI();
-}
-
-function resetRateLimit() {
-  saveRateData({ attempts: 0, lockedUntil: 0 });
-  updateRateLimitUI();
-}
-
-function isRateLimited() {
-  const d = getRateData();
-  if (d.lockedUntil && Date.now() < d.lockedUntil) return d.lockedUntil;
-  return false;
-}
+function saveRateData(d) { try { sessionStorage.setItem('_rl', JSON.stringify(d)); } catch {} }
+function recordFailedAttempt() { const d = getRateData(); d.attempts = (d.attempts || 0) + 1; saveRateData(d); updateRateLimitUI(); }
+function resetRateLimit()      { saveRateData({ attempts: 0, lockedUntil: 0 }); updateRateLimitUI(); }
+function isRateLimited()       { const d = getRateData(); return d.lockedUntil && Date.now() < d.lockedUntil ? d.lockedUntil : false; }
 
 function updateRateLimitUI() {
   const d = getRateData();
   const bar = document.getElementById('rateLimitBar');
   const label = document.getElementById('rateLimitLabel');
-  const dots = document.getElementById('rateLimitDots');
+  const dots  = document.getElementById('rateLimitDots');
   if (!bar) return;
-
-  const locked = isRateLimited();
-  if (locked) {
-    bar.classList.add('show');
-    const mins = Math.ceil((locked - Date.now()) / 60000);
-    label.textContent = '⛔ Locked out — try again in ' + mins + ' min';
-    dots.innerHTML = Array(RATE_LIMIT.max).fill('<div class="rate-dot used"></div>').join('');
-    return;
-  }
-
   const attempts = d.attempts || 0;
   if (attempts > 0) {
     bar.classList.add('show');
     label.textContent = '⚠ Failed attempts: ' + attempts + '/' + RATE_LIMIT.max;
-    dots.innerHTML = Array(RATE_LIMIT.max).fill(0).map((_,i) =>
-      '<div class="rate-dot ' + (i < attempts ? 'used' : '') + '"></div>'
-    ).join('');
+    dots.innerHTML = Array(RATE_LIMIT.max).fill(0).map((_,i) => '<div class="rate-dot' + (i < attempts ? ' used' : '') + '"></div>').join('');
   } else {
     bar.classList.remove('show');
   }
 }
 
-// ── SECURITY: INPUT SANITIZATION ───────────────────
-function sanitizeInput(el) {
-  // Strip dangerous characters from email field
-  el.value = el.value.replace(/[<>"'`]/g, '');
-}
+/* ════════════════════════════════════════════
+   INPUT SECURITY
+════════════════════════════════════════════ */
+function sanitizeInput(el) { el.value = el.value.replace(/[<>"'`]/g, ''); }
+function validateEmail(e)   { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function validatePassword(p){ return p.length >= 8; }
 
-function validateEmail(e) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-}
-
-function validatePassword(p) {
-  return p.length >= 8;
-}
-
-// ── SECURITY: INACTIVITY TIMEOUT ────────────────────
+/* ════════════════════════════════════════════
+   INACTIVITY TIMEOUT
+════════════════════════════════════════════ */
 let _inactivityTimer = null;
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-
+const INACTIVITY_MS = 30 * 60 * 1000;
 function resetInactivityTimer() {
   clearTimeout(_inactivityTimer);
-  _inactivityTimer = setTimeout(function() {
-    if (_session) {
-      showToast('⏱ Session expired due to inactivity', 'warning');
-      signOut();
-    }
-  }, INACTIVITY_TIMEOUT);
+  _inactivityTimer = setTimeout(() => {
+    if (_session) { showToast('⏱ Session expired', 'warning'); signOut(); }
+  }, INACTIVITY_MS);
 }
+['click','keydown','mousemove','touchstart'].forEach(ev =>
+  document.addEventListener(ev, resetInactivityTimer, { passive: true })
+);
 
-['click','keydown','mousemove','touchstart'].forEach(function(ev) {
-  document.addEventListener(ev, resetInactivityTimer, { passive: true });
-});
-
-// ── STATE ──────────────────────────────────────────
-let _session = null;
-let _userProfile = null;
-let _authMode = 'login';
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+let _session      = null;
+let _userProfile  = null;
+let _authMode     = 'login';
 let _siteUnlocked = false;
-let _allUsers = [];
-let _currentFilter = 'pending';
-let snippets = [];
+let _allUsers     = [];
+let _currentFilter= 'pending';
+let snippets      = [];
 
-// ── SCREEN MANAGER ─────────────────────────────────
+/* ════════════════════════════════════════════
+   SCREEN MANAGER
+════════════════════════════════════════════ */
 function showScreen(id) {
-  ['authScreen','pendingScreen'].forEach(function(sid) {
-    const el = document.getElementById(sid);
-    if (el) el.classList.toggle('active', sid === id);
+  ['authScreen','pendingScreen'].forEach(sid => {
+    document.getElementById(sid).classList.toggle('active', sid === id);
   });
-  const adminPortal = document.getElementById('adminPortal');
-  const appContainer = document.getElementById('appContainer');
-  if (adminPortal) adminPortal.classList.toggle('active', id === 'adminPortal');
-  if (appContainer) appContainer.classList.toggle('visible', id === 'app');
+  document.getElementById('adminPortal').classList.toggle('active',   id === 'adminPortal');
+  document.getElementById('appContainer').classList.toggle('visible', id === 'app');
 }
 
-// ── INIT ───────────────────────────────────────────
+/* ════════════════════════════════════════════
+   INIT — check site lock on load
+════════════════════════════════════════════ */
 async function init() {
   showScreen('authScreen');
   updateRateLimitUI();
@@ -1432,21 +1083,16 @@ async function init() {
     });
     if (res.ok) {
       const [row] = await res.json();
-      if (row && row.locked === false) {
-        // Site is open to all
-        _siteUnlocked = true;
-        showApp(null);
-        return;
-      }
+      if (row && row.locked === false) { _siteUnlocked = true; showApp(null); return; }
     }
   } catch {}
-  // Default: show auth
   showScreen('authScreen');
 }
-
 init();
 
-// ── HELPERS ─────────────────────────────────────────
+/* ════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════ */
 function _headers(token) {
   return {
     'apikey': _k,
@@ -1456,61 +1102,58 @@ function _headers(token) {
   };
 }
 
-// ── AUTH MODE ──────────────────────────────────────
+/* ════════════════════════════════════════════
+   AUTH TAB SWITCHING
+════════════════════════════════════════════ */
 function switchTab(mode) {
   _authMode = mode;
-  const tabs = document.querySelectorAll('.auth-tab');
-  tabs[0].classList.toggle('active', mode === 'login');
-  tabs[1].classList.toggle('active', mode === 'signup');
-  tabs[2].classList.toggle('active', mode === 'admin');
+  document.getElementById('tabLogin').classList.toggle('active',  mode === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+  document.getElementById('tabAdmin').classList.toggle('active',  mode === 'admin');
 
-  const btn = document.getElementById('authBtn');
-  const confirmField = document.getElementById('confirmField');
+  const authBtn       = document.getElementById('authBtn');
+  const confirmField  = document.getElementById('confirmField');
   const adminKeyField = document.getElementById('adminKeyField');
-  const adminBadge = document.getElementById('authAdminBadge');
-  const notice = document.getElementById('authNotice');
-  const authBox = document.getElementById('authBox');
-  const logoIcon = document.getElementById('authLogoIcon');
+  const adminBadge    = document.getElementById('authAdminBadge');
+  const notice        = document.getElementById('authNotice');
+  const logoMark      = document.getElementById('authLogoMark');
+  const headline      = document.getElementById('authHeadline');
+  const subline       = document.getElementById('authSubline');
 
-  // Clear errors
   document.getElementById('authError').classList.remove('show');
   notice.style.display = 'none';
+  confirmField.style.display  = 'none';
+  adminKeyField.style.display = 'none';
+  adminBadge.style.display    = 'none';
+  logoMark.classList.remove('admin-mark');
+  authBtn.classList.remove('admin-btn');
 
   if (mode === 'login') {
-    btn.textContent = 'Sign In';
-    btn.className = 'btn btn-primary';
-    confirmField.style.display = 'none';
-    adminKeyField.style.display = 'none';
-    adminBadge.style.display = 'none';
-    authBox.classList.remove('admin-mode');
-    logoIcon.style.background = 'linear-gradient(135deg, var(--accent), var(--accent2))';
-    logoIcon.textContent = '⚡';
+    headline.textContent = 'Welcome back.';
+    subline.textContent  = 'Sign in to access your personal snippet library.';
+    authBtn.innerHTML    = 'Sign In <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
   } else if (mode === 'signup') {
-    btn.textContent = 'Request Access';
-    btn.className = 'btn btn-primary';
+    headline.textContent   = 'Create an account.';
+    subline.textContent    = 'New accounts require admin approval before you can log in.';
+    authBtn.innerHTML      = 'Request Access <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
     confirmField.style.display = 'block';
-    adminKeyField.style.display = 'none';
-    adminBadge.style.display = 'none';
-    authBox.classList.remove('admin-mode');
-    logoIcon.style.background = 'linear-gradient(135deg, var(--accent), var(--accent2))';
-    logoIcon.textContent = '⚡';
-    notice.style.display = 'block';
-    notice.textContent = '⚠ New accounts require admin approval before you can log in.';
+    notice.style.display  = 'block';
+    notice.textContent    = '⚠ Your account will need admin approval before access is granted.';
   } else if (mode === 'admin') {
-    btn.textContent = 'Admin Sign In';
-    btn.className = 'btn btn-primary admin-btn';
-    confirmField.style.display = 'none';
+    headline.textContent       = 'Admin access.';
+    subline.textContent        = 'Sign in with your admin credentials and passphrase.';
+    authBtn.innerHTML          = 'Admin Sign In <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
+    authBtn.classList.add('admin-btn');
     adminKeyField.style.display = 'block';
-    adminBadge.style.display = 'block';
-    authBox.classList.add('admin-mode');
-    logoIcon.style.background = 'linear-gradient(135deg, var(--admin), #a855f7)';
-    logoIcon.textContent = '🛡';
+    adminBadge.style.display    = 'flex';
+    logoMark.classList.add('admin-mark');
   }
 }
 
-// ── HANDLE AUTH ─────────────────────────────────────
+/* ════════════════════════════════════════════
+   AUTH HANDLER
+════════════════════════════════════════════ */
 async function handleAuth() {
-  // Rate limit check
   const lockUntil = isRateLimited();
   if (lockUntil) {
     const mins = Math.ceil((lockUntil - Date.now()) / 60000);
@@ -1522,137 +1165,81 @@ async function handleAuth() {
   const password = document.getElementById('authPassword').value || '';
   const btn      = document.getElementById('authBtn');
 
-  // Validation
   if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
-  if (!validateEmail(email)) { showAuthError('Please enter a valid email address.'); return; }
-
+  if (!validateEmail(email)) { showAuthError('Please enter a valid email.'); return; }
 
   if (_authMode === 'signup') {
     const confirm = document.getElementById('authConfirm').value || '';
     if (!validatePassword(password)) { showAuthError('Password must be at least 8 characters.'); return; }
     if (password !== confirm) { showAuthError('Passwords do not match.'); return; }
   }
-
   if (_authMode === 'admin') {
     const key = document.getElementById('adminKey').value || '';
-    if (key !== _adminPhrase) {
-      recordFailedAttempt();
-      showAuthError('Invalid admin passphrase.');
-      return;
-    }
+    if (key !== _adminPhrase) { recordFailedAttempt(); showAuthError('Invalid admin passphrase.'); return; }
   }
 
-  const _modeAtSubmit = _authMode; // capture before any async ops or tab switches
-
+  const modeAtSubmit = _authMode;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> ' + (
-    _authMode === 'signup' ? 'Requesting...' :
-    _authMode === 'admin'  ? 'Authenticating...' : 'Signing in...'
-  );
+  btn.innerHTML = '<span class="spinner"></span> ' +
+    (modeAtSubmit === 'signup' ? 'Requesting...' : modeAtSubmit === 'admin' ? 'Authenticating...' : 'Signing in...');
 
   try {
-    let url, body;
-    if (_authMode === 'signup') {
-      url  = _c + '/auth/v1/signup';
-      body = JSON.stringify({ email, password });
-    } else {
-      url  = _c + '/auth/v1/token?grant_type=password';
-      body = JSON.stringify({ email, password });
-    }
-
-    const res  = await fetch(url, {
-      method: 'POST',
-      headers: { 'apikey': _k, 'Content-Type': 'application/json' },
-      body
-    });
+    const url  = modeAtSubmit === 'signup' ? _c + '/auth/v1/signup' : _c + '/auth/v1/token?grant_type=password';
+    const res  = await fetch(url, { method:'POST', headers:{'apikey':_k,'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
     const data = await res.json();
 
-    if (!res.ok) {
-      recordFailedAttempt();
-      showAuthError(data.error_description || data.msg || 'Authentication failed.');
-      return;
-    }
+    if (!res.ok) { recordFailedAttempt(); showAuthError(data.error_description || data.msg || 'Authentication failed.'); return; }
 
-    if (_authMode === 'signup') {
-      // Create pending profile.
-      // If email confirmation is ON in Supabase, access_token will be null here —
-      // we use the anon key as a fallback. The INSERT will still work because the
-      // RLS policy checks auth.uid() = id, and Supabase sets uid from the signup
-      // even before confirmation on certain project settings.
-      // If it silently fails, the admin can still manually approve from the dashboard.
-      if (data.user && data.user.id) {
-        await createProfile(data.user.id, email, 'user', 'pending', data.access_token || null);
-      }
+    if (modeAtSubmit === 'signup') {
+      if (data.user && data.user.id) await createProfile(data.user.id, email, 'user', 'pending', data.access_token || null);
       switchTab('login');
-      document.getElementById('authNotice').style.display = 'block';
-      document.getElementById('authNotice').textContent = '✓ Account created! Awaiting admin approval.';
-      document.getElementById('authEmail').value = email;
+      const notice = document.getElementById('authNotice');
+      notice.style.display = 'block';
+      notice.textContent   = '✓ Account created! Awaiting admin approval.';
+      document.getElementById('authEmail').value   = email;
       document.getElementById('authConfirm').value = '';
       resetRateLimit();
       return;
     }
 
-    // Login success
     _session = data;
     resetRateLimit();
-
-    // Fetch profile
     const profile = await fetchProfile(data.user.id, data.access_token);
 
-    if (_authMode === 'admin') {
+    if (modeAtSubmit === 'admin') {
       if (!profile || profile.role !== 'admin') {
-        recordFailedAttempt();
-        _session = null;
+        recordFailedAttempt(); _session = null;
         showAuthError('Access denied. This account does not have admin privileges.');
         return;
       }
       _userProfile = profile;
       showAdminPortal();
     } else {
-      // Regular user
-      if (!profile) {
-        // Profile missing, create pending
-        await createProfile(data.user.id, email, 'user', 'pending', data.access_token);
-        showPendingScreen(email);
-        return;
-      }
-      if (profile.status === 'pending') {
-        showPendingScreen(email);
-        return;
-      }
-      if (profile.status === 'rejected') {
-        _session = null;
-        showAuthError('Your account access has been rejected. Contact the administrator.');
-        return;
-      }
-      if (profile.status === 'approved') {
-        _userProfile = profile;
-        showApp(data);
-      }
+      if (!profile) { await createProfile(data.user.id, email, 'user', 'pending', data.access_token); showPendingScreen(email); return; }
+      if (profile.status === 'pending')  { showPendingScreen(email); return; }
+      if (profile.status === 'rejected') { _session = null; showAuthError('Your account access has been rejected. Contact the administrator.'); return; }
+      if (profile.status === 'approved') { _userProfile = profile; showApp(data); }
     }
-
-  } catch (err) {
+  } catch {
     showAuthError('Network error. Check your connection.');
   } finally {
     btn.disabled = false;
-    btn.textContent = _modeAtSubmit === 'login' ? 'Sign In' :
-                      _modeAtSubmit === 'signup' ? 'Request Access' : 'Admin Sign In';
+    btn.innerHTML = (modeAtSubmit === 'login' ? 'Sign In' : modeAtSubmit === 'signup' ? 'Request Access' : 'Admin Sign In') +
+      ' <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
   }
 }
 
-// ── PROFILE ─────────────────────────────────────────
+/* ════════════════════════════════════════════
+   PROFILE HELPERS
+════════════════════════════════════════════ */
 async function fetchProfile(userId, token) {
   try {
-    const res = await fetch(
-      _c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId) + '&limit=1',
-      { headers: _headers(token) }
-    );
+    const res = await fetch(_c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId) + '&limit=1', { headers: _headers(token) });
     if (!res.ok) return null;
     const rows = await res.json();
     return rows[0] || null;
   } catch { return null; }
 }
-
 async function createProfile(userId, email, role, status, token) {
   try {
     await fetch(_c + '/rest/v1/profiles', {
@@ -1663,27 +1250,31 @@ async function createProfile(userId, email, role, status, token) {
   } catch {}
 }
 
-// ── SCREENS ─────────────────────────────────────────
+/* ════════════════════════════════════════════
+   SCREENS: APP / PENDING / ADMIN
+════════════════════════════════════════════ */
+function showApp(session) {
+  _session = session;
+  const email   = session ? session.user.email : '(public)';
+  const initials = email.slice(0, 2).toUpperCase();
+
+  // Topbar avatar
+  document.getElementById('userAvatar').textContent   = initials;
+  document.getElementById('dropdownAvatar').textContent = initials;
+  document.getElementById('dropdownEmail').textContent  = email;
+  document.getElementById('dropdownName').textContent   = 'Hi, ' + (email.split('@')[0] || 'there') + '!';
+
+  showScreen('app');
+  fetchSnippets();
+  resetInactivityTimer();
+}
+
 function showPendingScreen(email) {
   document.getElementById('pendingEmail').textContent = email || '';
   showScreen('pendingScreen');
   resetInactivityTimer();
 }
 
-function showApp(session) {
-  _session = session;
-  const email = session ? session.user.email : '(public)';
-  const initial = session ? email[0].toUpperCase() : '👤';
-  const avatarEl = document.getElementById('userAvatar');
-  const emailEl = document.getElementById('userEmailDisplay');
-  if (avatarEl) avatarEl.textContent = initial;
-  if (emailEl) emailEl.textContent = email.length > 20 ? email.slice(0,18)+'…' : email;
-  showScreen('app');
-  fetchSnippets();
-  resetInactivityTimer();
-}
-
-// ── ADMIN PORTAL ─────────────────────────────────────
 async function showAdminPortal() {
   document.getElementById('adminEmail').textContent = _session.user.email;
   showScreen('adminPortal');
@@ -1691,52 +1282,47 @@ async function showAdminPortal() {
   resetInactivityTimer();
 }
 
+/* ════════════════════════════════════════════
+   ADMIN — LOCK / UNLOCK
+════════════════════════════════════════════ */
 async function loadAdminData() {
   await Promise.all([loadSiteLock(), loadAllUsers()]);
 }
 
 async function loadSiteLock() {
   try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', {
-      headers: _headers(_session.access_token)
-    });
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', { headers: _headers(_session.access_token) });
     const [row] = await res.json();
-    const locked = row ? row.locked : true;
-    updateLockUI(!locked); // toggle is "unlocked"
-  } catch {
-    updateLockUI(false);
-  }
+    updateLockUI(row ? !row.locked : false);
+  } catch { updateLockUI(false); }
 }
 
 function updateLockUI(unlocked) {
   const toggle = document.getElementById('siteUnlocked');
-  const dot = document.getElementById('lockStatusDot');
-  const text = document.getElementById('lockStatusText');
-  const label = document.getElementById('toggleLabel');
-  const title = document.getElementById('lockTitle');
-  const desc = document.getElementById('lockDesc');
-
+  const dot    = document.getElementById('lockStatusDot');
+  const text   = document.getElementById('lockStatusText');
+  const label  = document.getElementById('toggleLabel');
+  const title  = document.getElementById('lockTitle');
+  const desc   = document.getElementById('lockDesc');
   toggle.checked = unlocked;
-
   if (unlocked) {
-    dot.className = 'lock-status-dot unlocked';
-    text.textContent = 'Public Access';
+    dot.className     = 'lock-status-dot unlocked';
+    text.textContent  = 'Public Access';
     label.textContent = 'Open';
     title.textContent = '🔓 Site Unlocked';
-    desc.textContent = 'The site is publicly accessible — no login required.';
+    desc.textContent  = 'The site is publicly accessible — no login required.';
   } else {
-    dot.className = 'lock-status-dot locked';
-    text.textContent = 'Login Required';
+    dot.className     = 'lock-status-dot locked';
+    text.textContent  = 'Login Required';
     label.textContent = 'Locked';
     title.textContent = '🔒 Site Locked';
-    desc.textContent = 'The site requires login. Only approved users can access it.';
+    desc.textContent  = 'The site requires login. Only approved users can access it.';
   }
 }
 
 async function toggleSiteLock() {
   const unlocked = document.getElementById('siteUnlocked').checked;
-  updateLockUI(unlocked); // optimistic
-
+  updateLockUI(unlocked);
   try {
     const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
       method: 'PATCH',
@@ -1746,20 +1332,19 @@ async function toggleSiteLock() {
     if (!res.ok) throw new Error();
     showToast(unlocked ? '🔓 Site unlocked — now public' : '🔒 Site locked — login required', 'success');
   } catch {
-    updateLockUI(!unlocked); // revert
+    updateLockUI(!unlocked);
     showToast('✗ Failed to update site settings', 'error');
   }
 }
 
+/* ════════════════════════════════════════════
+   ADMIN — USER MANAGEMENT
+════════════════════════════════════════════ */
 async function loadAllUsers() {
   const queueEl = document.getElementById('userQueue');
   queueEl.innerHTML = '<div class="empty-queue"><div class="eq-icon">⏳</div><p>Loading users...</p></div>';
-
   try {
-    const res = await fetch(
-      _c + '/rest/v1/profiles?role=eq.user&order=created_at.asc',
-      { headers: _headers(_session.access_token) }
-    );
+    const res = await fetch(_c + '/rest/v1/profiles?role=eq.user&order=created_at.asc', { headers: _headers(_session.access_token) });
     if (!res.ok) throw new Error();
     _allUsers = await res.json();
     updateStats();
@@ -1777,108 +1362,89 @@ function updateStats() {
 
 function filterUsers(f) {
   _currentFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(function(t, i) {
-    t.classList.toggle('active', ['pending','approved','rejected','all'][i] === f);
-  });
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === f));
   renderUsers(f);
 }
 
 function renderUsers(filter) {
   const list = filter === 'all' ? _allUsers : _allUsers.filter(u => u.status === filter);
   const queueEl = document.getElementById('userQueue');
-
   if (!list.length) {
-    const msgs = { pending: 'No pending approvals.', approved: 'No approved users.', rejected: 'No rejected users.', all: 'No users found.' };
+    const msgs = { pending:'No pending approvals.', approved:'No approved users.', rejected:'No rejected users.', all:'No users found.' };
     queueEl.innerHTML = '<div class="empty-queue"><div class="eq-icon">✓</div><p>' + (msgs[filter]||'No users.') + '</p></div>';
     return;
   }
-
-  queueEl.innerHTML = list.map(function(u) {
+  queueEl.innerHTML = list.map(u => {
     const actions = u.status === 'pending'
-      ? '<button class="btn-approve" onclick="approveUser(\'' + u.id + '\')">✓ Approve</button>' +
-        '<button class="btn-reject" onclick="rejectUser(\'' + u.id + '\')">✗ Reject</button>'
+      ? `<button class="btn-approve" data-uid="${u.id}" data-action="approve">✓ Approve</button>
+         <button class="btn-reject"  data-uid="${u.id}" data-action="reject">✗ Reject</button>`
       : u.status === 'approved'
-      ? '<button class="btn-revoke" onclick="rejectUser(\'' + u.id + '\')">Revoke</button>'
-      : '<button class="btn-approve" onclick="approveUser(\'' + u.id + '\')">Restore</button>';
-
-    return '<div class="user-card" id="uc-' + u.id + '">' +
-      '<div class="user-info">' +
-        '<div class="user-email">' + escHtml(u.email) + '</div>' +
-        '<div class="user-meta">Joined ' + relTime(u.created_at) + '</div>' +
-      '</div>' +
-      '<span class="user-status-badge ' + u.status + '">' + u.status + '</span>' +
-      '<div class="user-actions">' + actions + '</div>' +
-    '</div>';
+      ? `<button class="btn-revoke"  data-uid="${u.id}" data-action="reject">Revoke</button>`
+      : `<button class="btn-approve" data-uid="${u.id}" data-action="approve">Restore</button>`;
+    return `<div class="user-card">
+      <div class="user-info">
+        <div class="user-email">${escHtml(u.email)}</div>
+        <div class="user-meta">Joined ${relTime(u.created_at)}</div>
+      </div>
+      <span class="user-status-badge ${u.status}">${u.status}</span>
+      <div class="user-actions">${actions}</div>
+    </div>`;
   }).join('');
 }
 
 async function updateUserStatus(userId, status) {
   try {
-    const res = await fetch(
-      _c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId),
-      {
-        method: 'PATCH',
-        headers: _headers(_session.access_token),
-        body: JSON.stringify({ status })
-      }
-    );
+    const res = await fetch(_c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId), {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify({ status })
+    });
     if (!res.ok) throw new Error();
-
-    // Update local state
-    const u = _allUsers.find(function(x) { return x.id === userId; });
+    const u = _allUsers.find(x => x.id === userId);
     if (u) u.status = status;
     updateStats();
     renderUsers(_currentFilter);
     showToast(status === 'approved' ? '✓ User approved' : '✗ User ' + status, status === 'approved' ? 'success' : '');
-  } catch {
-    showToast('✗ Failed to update user', 'error');
-  }
+  } catch { showToast('✗ Failed to update user', 'error'); }
 }
 
-function approveUser(id) { updateUserStatus(id, 'approved'); }
-function rejectUser(id)  { updateUserStatus(id, 'rejected'); }
+/* ════════════════════════════════════════════
+   SIGN OUT
+════════════════════════════════════════════ */
+function signOut() {
+  _session = _userProfile = null;
+  _siteUnlocked = false;
+  snippets = [];
+  clearTimeout(_inactivityTimer);
+  document.getElementById('appContainer').classList.remove('visible');
+  document.getElementById('adminPortal').classList.remove('active');
+  document.getElementById('authEmail').value    = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authNotice').style.display = 'none';
+  switchTab('login');
+  showScreen('authScreen');
+}
 
 function adminSignOut() {
-  _session = null;
-  _userProfile = null;
+  _session = _userProfile = null;
   _allUsers = [];
   document.getElementById('adminPortal').classList.remove('active');
   showScreen('authScreen');
   switchTab('admin');
 }
 
-// ── SIGN OUT ─────────────────────────────────────────
-function signOut() {
-  _session = null;
-  _userProfile = null;
-  _siteUnlocked = false; // reset so init() re-checks on next load if needed
-  snippets = [];
-  clearTimeout(_inactivityTimer);
-  document.getElementById('appContainer').classList.remove('visible');
-  document.getElementById('adminPortal').classList.remove('active');
-  document.getElementById('authEmail').value = '';
-  document.getElementById('authPassword').value = '';
-  document.getElementById('authError').classList.remove('show');
-  document.getElementById('authNotice').style.display = 'none';
-  switchTab('login');
-  showScreen('authScreen');
-  // NOTE: intentionally do NOT re-enter the app here.
-  // The user explicitly signed out, so always show the auth screen.
-}
-
-// ── SNIPPETS ─────────────────────────────────────────
+/* ════════════════════════════════════════════
+   SNIPPETS — FETCH / SAVE / DELETE
+════════════════════════════════════════════ */
 async function fetchSnippets() {
   try {
     const token = _session ? _session.access_token : _k;
-    const url = _session
-      ? _c + '/rest/v1/snippets?order=created_at.desc'
-      : _c + '/rest/v1/snippets?order=created_at.desc'; // public read if RLS allows
-
-    const res = await fetch(url, { headers: _headers(token) });
+    const res   = await fetch(_c + '/rest/v1/snippets?order=created_at.desc', { headers: _headers(token) });
     if (_session && res.status === 401) { signOut(); return; }
     if (!res.ok) throw new Error();
     snippets = await res.json();
-    setStatus('connected', 'connected');
+    setStatus('synced', 'connected');
     renderSnippets();
   } catch { setStatus('connection error', 'error'); }
 }
@@ -1887,10 +1453,13 @@ async function saveSnippet() {
   const name     = document.getElementById('snippetName').value.trim();
   const language = document.getElementById('snippetLang').value;
   const code     = document.getElementById('snippetCode').value.trim();
+  if (!name)    { showToast('⚠ Give your snippet a name', 'error'); return; }
+  if (!code)    { showToast('⚠ Code cannot be empty', 'error'); return; }
+  if (!_session){ showToast('⚠ Sign in to save snippets', 'error'); return; }
 
-  if (!name) { showToast('⚠ Give your snippet a name', 'error'); return; }
-  if (!code) { showToast('⚠ Code cannot be empty', 'error'); return; }
-  if (!_session) { showToast('⚠ Sign in to save snippets', 'error'); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Saving...';
 
   try {
     const res = await fetch(_c + '/rest/v1/snippets', {
@@ -1906,87 +1475,108 @@ async function saveSnippet() {
     document.getElementById('snippetCode').value = '';
     showToast('✓ Snippet saved!', 'success');
   } catch { showToast('✗ Failed to save', 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13"><use href="#icon-save"/></svg> Save Snippet';
+  }
 }
 
-async function deleteSnippet(id, el) {
+async function deleteSnippet(id) {
   if (!_session) { showToast('⚠ Sign in to delete snippets', 'error'); return; }
-  el.textContent = '...';
   try {
-    await fetch(_c + '/rest/v1/snippets?id=eq.' + id, {
-      method: 'DELETE',
-      headers: _headers(_session.access_token)
-    });
-    snippets = snippets.filter(function(s) { return s.id !== id; });
+    await fetch(_c + '/rest/v1/snippets?id=eq.' + id, { method:'DELETE', headers: _headers(_session.access_token) });
+    snippets = snippets.filter(s => s.id !== id);
     renderSnippets();
     showToast('Snippet deleted', '');
-  } catch { showToast('✗ Delete failed', 'error'); el.textContent = 'del'; }
+  } catch { showToast('✗ Delete failed', 'error'); }
 }
 
+/* ════════════════════════════════════════════
+   SNIPPETS — RENDER (new card grid format)
+════════════════════════════════════════════ */
 function renderSnippets() {
-  const query    = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = snippets.filter(function(s) {
-    return s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query);
-  });
+  const query    = (document.getElementById('searchInput').value || '').toLowerCase();
+  const filtered = snippets.filter(s =>
+    s.name.toLowerCase().includes(query) || s.language.toLowerCase().includes(query)
+  );
 
-  document.getElementById('countBadge').textContent = snippets.length;
+  document.getElementById('countBadge').textContent = snippets.length + (snippets.length === 1 ? ' snippet' : ' snippets');
   const list = document.getElementById('snippetsList');
 
   if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="big-icon">📋</div><p>' +
-      (snippets.length ? 'No matches found.' : 'No snippets yet.<br>Save your first code above.') +
-      '</p></div>';
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>${snippets.length ? 'No matches found.' : 'No snippets yet.<br>Save your first code snippet above.'}</p>
+    </div>`;
     return;
   }
 
-  list.innerHTML = filtered.map(function(s) {
-    const canDelete = _session !== null;
-    return '<div class="snippet-card">' +
-      '<div class="snippet-header" onclick="toggleCard(\'' + s.id + '\')">' +
-        '<div class="snippet-meta">' +
-          '<span class="lang-badge">' + escHtml(s.language) + '</span>' +
-          '<span class="snippet-name">' + escHtml(s.name) + '</span>' +
-          '<span class="snippet-date">' + relTime(s.created_at) + '</span>' +
-        '</div>' +
-        '<div class="snippet-actions">' +
-          '<button class="icon-btn" id="copy-' + s.id + '" onclick="event.stopPropagation(); copySnippet(\'' + s.id + '\')">copy</button>' +
-          (canDelete ? '<button class="icon-btn danger" onclick="event.stopPropagation(); deleteSnippet(\'' + s.id + '\', this)">del</button>' : '') +
-        '</div>' +
-      '</div>' +
-      '<div class="snippet-body" id="body-' + s.id + '">' +
-        '<div class="code-block">' + escHtml(s.code) + '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
+  const linesCount = code => code.split('\n').length;
 
-function toggleCard(id) {
-  document.getElementById('body-' + id).classList.toggle('open');
+  list.innerHTML = filtered.map(s => `
+    <div class="snippet-card" data-id="${s.id}">
+      <div class="card-header">
+        <div class="snippet-name">${escHtml(s.name)}</div>
+        <div class="card-header-right">
+          <div class="lang-badge">${escHtml(s.language)}</div>
+          <button class="expand-btn js-expand" aria-label="Expand snippet">
+            <svg><use href="#icon-chevron"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="code-preview">${escHtml(s.code)}</div>
+      <div class="card-expanded-body">
+        <div class="expanded-meta">
+          <div class="meta-chip">${escHtml(s.language)}</div>
+          <div class="meta-chip">${linesCount(s.code)} lines</div>
+          <div class="meta-chip">${relTime(s.created_at)}</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-time">${relTime(s.created_at)}</span>
+        <div class="card-actions">
+          <button class="btn-icon js-copy" data-id="${s.id}" aria-label="Copy snippet">
+            <svg><use href="#icon-copy"/></svg>
+          </button>
+          ${_session ? `<button class="btn-icon del js-delete" data-id="${s.id}" aria-label="Delete snippet">
+            <svg><use href="#icon-trash"/></svg>
+          </button>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
 }
 
 function copySnippet(id) {
-  const s = snippets.find(function(x) { return x.id === id; });
+  const s = snippets.find(x => x.id === id);
   if (!s) return;
-  navigator.clipboard.writeText(s.code).then(function() {
-    const btn = document.getElementById('copy-' + id);
-    btn.textContent = 'copied!';
-    btn.classList.add('copy-success');
-    setTimeout(function() { btn.textContent = 'copy'; btn.classList.remove('copy-success'); }, 2000);
-  });
+  navigator.clipboard.writeText(s.code).then(() => {
+    // Find the copy btn inside this card and flash it green
+    const btn = document.querySelector(`.js-copy[data-id="${id}"]`);
+    if (!btn) return;
+    btn.classList.add('copy-ok');
+    btn.innerHTML = '<svg><use href="#icon-check"/></svg>';
+    setTimeout(() => {
+      btn.classList.remove('copy-ok');
+      btn.innerHTML = '<svg><use href="#icon-copy"/></svg>';
+    }, 2000);
+  }).catch(() => showToast('✗ Copy failed', 'error'));
 }
 
-// ── UTILS ─────────────────────────────────────────
+/* ════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════ */
 function setStatus(text, type) {
-  const el = document.getElementById('statusText');
+  const el  = document.getElementById('statusText');
   const dot = document.getElementById('statusDot');
-  if (el) el.textContent = text;
-  if (dot) dot.className = 'dot ' + (type || '');
+  if (el)  el.textContent = text;
+  if (dot) dot.className  = 'synced-dot ' + (type || '');
 }
 
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
+  t.className = 'toast ' + (type || '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function showAuthError(msg) {
@@ -1998,24 +1588,77 @@ function showAuthError(msg) {
 function escHtml(s) {
   if (!s) return '';
   return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
 function relTime(iso) {
-  const d = new Date(iso), now = new Date();
-  const diff = Math.floor((now - d) / 1000);
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
   if (diff < 60)    return 'just now';
   if (diff < 3600)  return Math.floor(diff/60)   + 'm ago';
   if (diff < 86400) return Math.floor(diff/3600)  + 'h ago';
-  return d.toLocaleDateString();
+  if (diff < 604800)return Math.floor(diff/86400) + 'd ago';
+  return new Date(iso).toLocaleDateString();
 }
 
-// ── EVENT LISTENERS ─────────────────────────────────
-document.getElementById('snippetCode').addEventListener('keydown', function(e) {
+/* ════════════════════════════════════════════
+   EVENT DELEGATION — all interactions
+════════════════════════════════════════════ */
+
+// Auth tabs
+document.querySelector('.tab-switcher').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  if (btn.id === 'tabLogin')  switchTab('login');
+  if (btn.id === 'tabSignup') switchTab('signup');
+  if (btn.id === 'tabAdmin')  switchTab('admin');
+});
+
+// Auth form — Enter key
+['authEmail','authPassword','authConfirm','adminKey'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+    if (id === 'authEmail') el.addEventListener('input', () => sanitizeInput(el));
+  }
+});
+
+// Auth button
+document.getElementById('authBtn').addEventListener('click', handleAuth);
+
+// Pending back
+document.getElementById('pendingBack').addEventListener('click', signOut);
+
+// Admin toggle lock
+document.getElementById('siteUnlocked').addEventListener('change', toggleSiteLock);
+
+// Admin filter tabs (event delegation)
+document.getElementById('filterTabs').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-tab');
+  if (btn) filterUsers(btn.dataset.filter);
+});
+
+// Admin user queue — approve / reject / revoke (event delegation)
+document.getElementById('userQueue').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const uid    = btn.dataset.uid;
+  const action = btn.dataset.action;
+  if (action === 'approve') updateUserStatus(uid, 'approved');
+  if (action === 'reject')  updateUserStatus(uid, 'rejected');
+});
+
+// Admin sign out
+document.getElementById('adminSignOutBtn').addEventListener('click', adminSignOut);
+
+// Save snippet
+document.getElementById('saveBtn').addEventListener('click', saveSnippet);
+
+// Search
+document.getElementById('searchInput').addEventListener('input', renderSnippets);
+
+// Tab key in code area → insert spaces
+document.getElementById('snippetCode').addEventListener('keydown', e => {
   if (e.key === 'Tab') {
     e.preventDefault();
     const ta = e.target, s = ta.selectionStart;
@@ -2024,71 +1667,77 @@ document.getElementById('snippetCode').addEventListener('keydown', function(e) {
   }
 });
 
-['authEmail','authPassword','authConfirm','adminKey'].forEach(function(id) {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleAuth();
-  });
+// Snippet grid — expand / copy / delete (event delegation)
+document.getElementById('snippetsList').addEventListener('click', e => {
+  const copyBtn   = e.target.closest('.js-copy');
+  const deleteBtn = e.target.closest('.js-delete');
+  const expandBtn = e.target.closest('.js-expand');
+  const card      = e.target.closest('.snippet-card');
+  if (!card) return;
+
+  if (copyBtn)   { e.stopPropagation(); copySnippet(copyBtn.dataset.id); return; }
+  if (deleteBtn) { e.stopPropagation(); deleteSnippet(deleteBtn.dataset.id); return; }
+  if (expandBtn) { e.stopPropagation(); card.classList.toggle('expanded'); return; }
+  // Click anywhere else on card → expand
+  card.classList.toggle('expanded');
 });
 
-// ── GLOBALS ─────────────────────────────────────────
-window.switchTab      = switchTab;
-window.handleAuth     = handleAuth;
-window.signOut        = signOut;
-window.adminSignOut   = adminSignOut;
-window.saveSnippet    = saveSnippet;
-window.deleteSnippet  = deleteSnippet;
-window.toggleCard     = toggleCard;
-window.copySnippet    = copySnippet;
-window.renderSnippets = renderSnippets;
-window.filterUsers    = filterUsers;
-window.approveUser    = approveUser;
-window.rejectUser     = rejectUser;
-window.toggleSiteLock = toggleSiteLock;
-window.sanitizeInput  = sanitizeInput;
+// Sidebar nav active state
+document.querySelector('.sidebar').addEventListener('click', e => {
+  const item = e.target.closest('.nav-item');
+  if (!item) return;
+  e.preventDefault();
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  item.classList.add('active');
+});
 
-setInterval(function() { if (_session) fetchSnippets(); }, 30000);
-setInterval(function() { if (document.getElementById('adminPortal').classList.contains('active')) loadAdminData(); }, 30000);
+// Account dropdown
+const userBtn         = document.getElementById('userBtn');
+const accountDropdown = document.getElementById('accountDropdown');
+const overlay         = document.getElementById('overlay');
+
+function openDropdown()  { accountDropdown.classList.add('open'); overlay.classList.add('active'); userBtn.setAttribute('aria-expanded','true'); }
+function closeDropdown() { accountDropdown.classList.remove('open'); overlay.classList.remove('active'); userBtn.setAttribute('aria-expanded','false'); }
+
+userBtn.addEventListener('click', () => accountDropdown.classList.contains('open') ? closeDropdown() : openDropdown());
+accountDropdown.addEventListener('click', e => e.stopPropagation());
+overlay.addEventListener('click', closeDropdown);
+
+// Sign out buttons
+document.getElementById('signOutBtn').addEventListener('click', signOut);
+document.getElementById('dropdownSignOut').addEventListener('click', signOut);
+
+/* ════════════════════════════════════════════
+   AUTO-REFRESH (every 30s while logged in)
+════════════════════════════════════════════ */
+setInterval(() => {
+  if (_session && document.getElementById('appContainer').classList.contains('visible')) fetchSnippets();
+}, 30000);
+setInterval(() => {
+  if (document.getElementById('adminPortal').classList.contains('active')) loadAdminData();
+}, 30000);
 
 })();
 </script>
 
 <!--
-═══════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
   SUPABASE SETUP — run this SQL in your Supabase SQL editor
-═══════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
 
--- 1. PROFILES TABLE (stores role + approval status)
+-- 1. PROFILES TABLE
 CREATE TABLE IF NOT EXISTS profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email text NOT NULL,
-  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin','user')),
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
   created_at timestamptz DEFAULT now()
 );
-
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Users can read their own profile
-CREATE POLICY "user_read_own_profile" ON profiles
-  FOR SELECT USING (auth.uid() = id);
-
--- Admins can read ALL profiles
-CREATE POLICY "admin_read_all_profiles" ON profiles
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-  );
-
--- Admins can update ANY profile (approvals)
-CREATE POLICY "admin_update_profiles" ON profiles
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-  );
-
--- Anyone can insert their own profile on signup
-CREATE POLICY "user_insert_own_profile" ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
+CREATE POLICY "user_read_own"    ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "admin_read_all"   ON profiles FOR SELECT USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+CREATE POLICY "admin_update"     ON profiles FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+CREATE POLICY "user_insert_own"  ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- 2. SITE SETTINGS TABLE
 CREATE TABLE IF NOT EXISTS site_settings (
@@ -2096,24 +1745,12 @@ CREATE TABLE IF NOT EXISTS site_settings (
   locked boolean NOT NULL DEFAULT true,
   updated_at timestamptz DEFAULT now()
 );
-
-INSERT INTO site_settings (id, locked) VALUES (1, true)
-  ON CONFLICT (id) DO NOTHING;
-
+INSERT INTO site_settings (id, locked) VALUES (1, true) ON CONFLICT (id) DO NOTHING;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
+CREATE POLICY "admin_update_settings" ON site_settings FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- Anyone can read site settings (needed for lock check on page load)
-CREATE POLICY "public_read_settings" ON site_settings
-  FOR SELECT USING (true);
-
--- Only admins can update site settings
-CREATE POLICY "admin_update_settings" ON site_settings
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-  );
-
-
--- 3. SNIPPETS TABLE (if not already created)
+-- 3. SNIPPETS TABLE
 CREATE TABLE IF NOT EXISTS snippets (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   name text NOT NULL,
@@ -2122,48 +1759,25 @@ CREATE TABLE IF NOT EXISTS snippets (
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now()
 );
-
 ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "approved_select" ON snippets FOR SELECT USING (auth.uid() IS NOT NULL AND (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')));
+CREATE POLICY "approved_insert" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved'));
+CREATE POLICY "approved_delete" ON snippets FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- Only approved users can view snippets (or all if site is unlocked — handle in app logic)
-CREATE POLICY "approved_user_select" ON snippets
-  FOR SELECT USING (
-    auth.uid() IS NOT NULL AND (
-      auth.uid() = user_id OR
-      EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    )
-  );
+-- 4. PROMOTE YOUR FIRST ADMIN (run after signing up normally)
+-- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your@email.com';
 
-CREATE POLICY "approved_user_insert" ON snippets
-  FOR INSERT WITH CHECK (
-    auth.uid() = user_id AND
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
-  );
-
-CREATE POLICY "approved_user_delete" ON snippets
-  FOR DELETE USING (
-    auth.uid() = user_id OR
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-  );
-
-
--- 4. CREATE YOUR FIRST ADMIN USER
--- After signing up normally via the app, run this to promote to admin:
--- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your-admin@email.com';
-
-═══════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
   SECURITY NOTES
-═══════════════════════════════════════════════════════════════
-
-  • Admin passphrase (_adminPhrase) is a client-side gate only.
-    True security is enforced via Supabase RLS policies above.
-  • Change _adminPhrase in the JS to your own secret string.
-  • Rate limiting (5 attempts / 15 min) blocks brute force.
-  • Inactivity timeout auto-signs out after 30 minutes idle.
-  • All user inputs are sanitized before use (escHtml, sanitizeInput).
-  • Never commit your Supabase anon key to public repos.
-
-═══════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
+  • Change _adminPhrase in the JS before deploying
+  • True security is enforced via Supabase RLS above
+  • Rate limiting tracks failed login attempts
+  • Inactivity timeout signs out after 30 min idle
+  • Never commit your Supabase anon key to public repos
+    (consider using environment variables or a build step)
+═══════════════════════════════════════════════════════════
 -->
+
 </body>
 </html>
