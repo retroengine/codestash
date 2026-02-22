@@ -820,20 +820,25 @@ select.field-input option { background: var(--surface2); }
 
 /* Retrieve mode */
 .cb-retrieve-label {
-  font-size: 0.75rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6;
+  font-size: 0.75rem; color: var(--muted); margin-bottom: 20px; line-height: 1.6; text-align: center;
 }
 .cb-otp-inputs {
-  display: flex; gap: 10px; justify-content: center; margin-bottom: 16px;
+  display: flex; gap: 12px; justify-content: center; margin-bottom: 20px;
 }
 .cb-otp-input {
-  width: 62px; height: 74px; border-radius: 14px;
+  width: 68px; height: 80px; border-radius: 16px;
   background: var(--surface2); border: 2px solid var(--border);
   color: var(--text); font-family: 'DM Mono', monospace;
-  font-size: 2rem; font-weight: 800; text-align: center;
+  font-size: 2.2rem; font-weight: 800; text-align: center;
   outline: none; transition: border-color 0.15s, background 0.15s;
-  -webkit-appearance: none; caret-color: var(--accent);
+  -webkit-appearance: none; appearance: none;
+  caret-color: transparent;
+  -moz-appearance: textfield;
 }
-.cb-otp-input:focus { border-color: var(--accent); background: var(--surface3); }
+/* Hide spinners on all browsers */
+.cb-otp-input::-webkit-outer-spin-button,
+.cb-otp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.cb-otp-input:focus { border-color: var(--accent); background: var(--surface3); box-shadow: 0 0 0 3px rgba(139,120,255,0.12); }
 .cb-otp-input.filled { border-color: rgba(139,120,255,0.5); }
 
 /* Retrieved content display */
@@ -1325,7 +1330,7 @@ Indentation is preserved."
             <div class="cb-upload-icon">📂</div>
             <div class="cb-upload-label">
               <strong>Click to browse</strong> or drag & drop a file here<br>
-              <span style="font-size:0.72rem">Max 5 MB — any file type</span>
+              <span style="font-size:0.72rem">Max 15 MB — any file type</span>
             </div>
           </div>
           <div class="cb-file-chosen" id="cbFileChosen">
@@ -1363,8 +1368,8 @@ Indentation is preserved."
       </div>
 
       <!-- Retrieve Card -->
-      <div class="cb-card" id="cbRetrieveCard">
-        <div class="cb-card-header">
+      <div class="cb-card" id="cbRetrieveCard" style="text-align:center;">
+        <div class="cb-card-header" style="justify-content:center;">
           <div class="cb-card-icon">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </div>
@@ -1377,10 +1382,10 @@ Indentation is preserved."
         <p class="cb-retrieve-label">Type each digit below — the boxes auto-advance as you type.</p>
 
         <div class="cb-otp-inputs" id="cbOtpInputs">
-          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn0" oninput="cbOtpNext(this,0)" onkeydown="cbOtpKey(event,0)" inputmode="numeric" />
-          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn1" oninput="cbOtpNext(this,1)" onkeydown="cbOtpKey(event,1)" inputmode="numeric" />
-          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn2" oninput="cbOtpNext(this,2)" onkeydown="cbOtpKey(event,2)" inputmode="numeric" />
-          <input class="cb-otp-input" type="number" min="0" max="9" maxlength="1" id="cbIn3" oninput="cbOtpNext(this,3)" onkeydown="cbOtpKey(event,3)" inputmode="numeric" />
+          <input class="cb-otp-input" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" id="cbIn0" oninput="cbOtpNext(this,0)" onkeydown="cbOtpKey(event,0)" autocomplete="off" />
+          <input class="cb-otp-input" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" id="cbIn1" oninput="cbOtpNext(this,1)" onkeydown="cbOtpKey(event,1)" autocomplete="off" />
+          <input class="cb-otp-input" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" id="cbIn2" oninput="cbOtpNext(this,2)" onkeydown="cbOtpKey(event,2)" autocomplete="off" />
+          <input class="cb-otp-input" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" id="cbIn3" oninput="cbOtpNext(this,3)" onkeydown="cbOtpKey(event,3)" autocomplete="off" />
         </div>
 
         <button class="btn-primary" id="cbRetrieveBtn" onclick="cbRetrieve()">
@@ -2498,7 +2503,7 @@ dropZone.addEventListener('drop', e => {
 });
 
 function cbSetFile(f) {
-  if (f.size > 5 * 1024 * 1024) { cbShowUploadError('File must be under 5 MB.'); return; }
+  if (f.size > 15 * 1024 * 1024) { cbShowUploadError('File must be under 15 MB.'); return; }
   _cbFile = f;
   document.getElementById('cbFileName').textContent = f.name;
   document.getElementById('cbFileChosen').classList.add('show');
@@ -2629,7 +2634,7 @@ function cbHideUploadError() {
 
 /* ── OTP Input boxes (retrieve side) ── */
 window.cbOtpNext = function(el, idx) {
-  // Keep only last char if multiple typed
+  // Keep only digits
   const val = el.value.replace(/\D/g,'');
   el.value  = val ? val[val.length-1] : '';
   el.classList.toggle('filled', !!el.value);
