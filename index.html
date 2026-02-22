@@ -3892,14 +3892,15 @@ document.getElementById('snippetsList').addEventListener('click', e => {
 /* ════════════════════════════════════════════
    MOBILE SIDEBAR
 ════════════════════════════════════════════ */
-function toggleMobileSidebar() {
+window.toggleMobileSidebar = function() {
   document.querySelector('.sidebar').classList.toggle('mob-open');
   document.getElementById('sidebarOverlay').classList.toggle('open');
-}
-function closeMobileSidebar() {
+};
+
+window.closeMobileSidebar = function() {
   document.querySelector('.sidebar').classList.remove('mob-open');
   document.getElementById('sidebarOverlay').classList.remove('open');
-}
+};
 
 // Sidebar nav active state + panel switching
 document.querySelector('.sidebar').addEventListener('click', e => {
