@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="google-site-verification" content="3Yj-QJFRQAIYSNWXaJ74yngM4xu7paqmz8TMny9dMHs" />
+<meta name="description" content="CodeStash — save, search and share code snippets. Online clipboard for developers." />
+<meta name="keywords" content="code snippets, snippet manager, online clipboard, developer tools" />
+<link rel="canonical" href="https://yoursite.com" />
+
+<!-- Open Graph (shows a preview card when shared on Slack, WhatsApp etc) -->
+<meta property="og:title" content="CodeStash" />
+<meta property="og:description" content="Save and share code snippets instantly." />
+<meta property="og:url" content="https://yoursite.com" />
+<meta property="og:type" content="website" />
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -2396,6 +2405,21 @@ function showApp(session) {
 
   // Hide write actions from guests — they can only view public snippets
   document.getElementById('addPanel').style.display = isGuest ? 'none' : '';
+
+  // Hide Quick Notes entirely from guests (no account = no notes)
+  const navNotes   = document.getElementById('navNotes');
+  const notesPanel = document.getElementById('notesPanel');
+  if (navNotes) navNotes.style.display = isGuest ? 'none' : '';
+  if (notesPanel && isGuest) {
+    notesPanel.classList.remove('visible');
+    // If they were on the notes panel, redirect to snippets
+    if (navNotes && navNotes.classList.contains('active')) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById('navSnippets').classList.add('active');
+      document.getElementById('snippetsPanel').style.display = '';
+      document.querySelector('.topbar-page-title').innerHTML = 'Snippets <span>/ Library</span>';
+    }
+  }
 
   showScreen('app');
   fetchSnippets();
