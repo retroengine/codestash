@@ -933,15 +933,15 @@ select.field-input option { background: var(--surface2); }
       </div>
     </div>
 
-    <a class="nav-item active" href="#" aria-label="All Snippets">
+    <a class="nav-item active" href="#" aria-label="Snippets">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
-      All Snippets
+      Snippets
     </a>
   </aside>
 
   <!-- TOPBAR -->
   <header class="topbar">
-    <div class="topbar-page-title">All Snippets <span>/ Library</span></div>
+    <div class="topbar-page-title">Snippets <span>/ Library</span></div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
 
@@ -978,18 +978,41 @@ select.field-input option { background: var(--surface2); }
       <div class="panel-label" id="panelLabel">New Snippet</div>
       <div class="input-row">
         <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" />
-        <select class="field-input" id="snippetLang" aria-label="Language">
-          <option value="python">Python</option>
-          <option value="c">C</option>
-          <option value="cpp">C++</option>
-          <option value="matlab">MATLAB</option>
-          <option value="javascript">JavaScript</option>
-          <option value="bash">Bash</option>
-          <option value="r">R</option>
-          <option value="julia">Julia</option>
-          <option value="text">Plain Text</option>
-          <option value="other">Other</option>
+        <select class="field-input" id="snippetLang" aria-label="Language" onchange="handleLangChange(this)">
+          <optgroup label="Common">
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="sql">SQL</option>
+          </optgroup>
+          <optgroup label="Systems">
+            <option value="c">C</option>
+            <option value="cpp">C++</option>
+            <option value="rust">Rust</option>
+            <option value="go">Go</option>
+            <option value="java">Java</option>
+          </optgroup>
+          <optgroup label="Scripting / Shell">
+            <option value="bash">Bash</option>
+            <option value="powershell">PowerShell</option>
+          </optgroup>
+          <optgroup label="Science / Data">
+            <option value="matlab">MATLAB</option>
+            <option value="r">R</option>
+            <option value="julia">Julia</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="note">📝 Note</option>
+            <option value="text">Plain Text</option>
+            <option value="custom">✏ Custom…</option>
+          </optgroup>
         </select>
+        <input class="field-input" type="text" id="customLangInput"
+          placeholder="Enter language name…"
+          style="display:none; margin-top:7px;"
+          aria-label="Custom language name" />
       </div>
       <textarea class="code-area" id="snippetCode"
         placeholder="Paste your code here...
@@ -1037,6 +1060,18 @@ Indentation is preserved."
 <div class="toast" id="toast"></div>
 
 <script>
+/* ── Language select — show custom input when "custom" chosen ── */
+function handleLangChange(sel) {
+  const customInput = document.getElementById('customLangInput');
+  if (sel.value === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+    customInput.value = '';
+  }
+}
+
 /* ── Password visibility toggle (global, called from inline onclick) ── */
 function togglePw(inputId, btn) {
   const input = document.getElementById(inputId);
@@ -1576,7 +1611,11 @@ async function fetchSnippets() {
 
 async function saveSnippet() {
   const name     = document.getElementById('snippetName').value.trim();
-  const language = document.getElementById('snippetLang').value;
+  const langSelect = document.getElementById('snippetLang');
+  const customLangInput = document.getElementById('customLangInput');
+  const language = langSelect.value === 'custom'
+    ? (customLangInput.value.trim() || 'Custom')
+    : langSelect.value;
   const code     = document.getElementById('snippetCode').value.trim();
   if (!name)    { showToast('⚠ Give your snippet a name', 'error'); return; }
   if (!code)    { showToast('⚠ Code cannot be empty', 'error'); return; }
@@ -1682,6 +1721,9 @@ function cancelEdit() {
   document.getElementById('snippetName').value = '';
   document.getElementById('snippetCode').value = '';
   document.getElementById('snippetLang').value = 'python';
+  const customLangInput = document.getElementById('customLangInput');
+  customLangInput.value = '';
+  customLangInput.style.display = 'none';
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.disabled = false;
   saveBtn.innerHTML = '<svg width="13" height="13"><use href="#icon-save"/></svg> Save Snippet';
