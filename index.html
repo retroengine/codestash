@@ -51,6 +51,29 @@ body::before {
 }
 .screen.active { display: flex; }
 
+/* Fixed auth logo — top-left, never moves */
+.auth-fixed-logo {
+  position: fixed; top: 28px; left: 32px;
+  display: none; align-items: center; gap: 11px;
+  z-index: 9999; pointer-events: none;
+}
+.auth-fixed-logo.visible { display: flex; }
+
+/* Red subtitle variant */
+.auth-sub.red { color: var(--danger); }
+
+/* Password toggle wrapper */
+.pw-wrap { position: relative; }
+.pw-wrap .field-input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  display: flex; align-items: center; padding: 4px;
+  transition: color 0.15s;
+}
+.pw-toggle:hover { color: var(--text); }
+.pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
 /* ═══════════ DEVTOOLS OVERLAY ═══════════ */
 #devtoolsOverlay {
   display: none; position: fixed; inset: 0;
@@ -102,8 +125,8 @@ body::before {
 }
 /* Sign In active — matte dark grey */
 #tabLogin.active  { background: #2a2a2a; color: #e8e8e8; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
-/* Sign Up active — matte black with cool blue tint */
-#tabSignup.active { background: #1a1f28; color: #c8d8f0; font-weight: 700; border: 1px solid rgba(160,200,255,0.12); }
+/* Sign Up active — neutral dark between signin and admin */
+#tabSignup.active { background: #1e1e1e; color: #cccccc; font-weight: 700; border: 1px solid rgba(255,255,255,0.08); }
 /* Admin active — deep matte black */
 #tabAdmin.active  { background: #111111; color: #b0b0b0; font-weight: 700; border: 1px solid rgba(255,255,255,0.07); }
 
@@ -165,8 +188,8 @@ select.field-input option { background: var(--surface2); }
 .btn-primary:hover { opacity: 0.84; transform: translateY(-1px); }
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-primary.admin-btn { background: #111111; color: #b0b0b0; border: 1px solid rgba(255,255,255,0.08); }
-.btn-primary.admin-btn:hover { opacity: 1; background: #191919; }
+.btn-primary.admin-btn { background: var(--text); color: #0a0a0a; border-color: transparent; }
+.btn-primary.admin-btn:hover { opacity: 0.84; background: var(--text); }
 
 /* Spinner */
 .spinner {
@@ -174,7 +197,7 @@ select.field-input option { background: var(--surface2); }
   border: 2px solid rgba(0,0,0,0.25); border-top-color: #0a0a0a;
   border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
 }
-.admin-btn .spinner { border-color: rgba(255,255,255,0.15); border-top-color: #b0b0b0; }
+.admin-btn .spinner { border-color: rgba(0,0,0,0.2); border-top-color: #0a0a0a; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ═══════════ PENDING SCREEN ═══════════ */
@@ -490,6 +513,10 @@ select.field-input option { background: var(--surface2); }
 .add-panel {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 16px; padding: 22px;
+  /* FIX 4: Scopes layout recalculations to this panel only.
+     When the textarea is resized, the browser won't reflow
+     the entire snippet grid below — only this panel. */
+  contain: layout;
 }
 .panel-label {
   font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em;
@@ -695,22 +722,24 @@ select.field-input option { background: var(--surface2); }
 <!-- ── CLICK-AWAY OVERLAY FOR DROPDOWN ── -->
 <div class="overlay" id="overlay"></div>
 
+<!-- ── FIXED LOGO (shows only on auth screens) ── -->
+<div class="auth-fixed-logo" id="authFixedLogo">
+  <div class="logo-mark">
+    <svg viewBox="0 0 20 20" fill="none">
+      <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
+    </svg>
+  </div>
+  <div class="logo-wordmark">
+    <div class="lw-name">CodeStash</div>
+    <div class="lw-sub">Snippet Library</div>
+  </div>
+</div>
+
 <!-- ═══════════ AUTH SCREEN ═══════════ -->
 <div class="screen" id="authScreen">
   <div class="auth-card">
-    <div class="auth-logo-row">
-      <div class="logo-mark" id="authLogoMark">
-        <svg viewBox="0 0 20 20" fill="none">
-          <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
-        </svg>
-      </div>
-      <div class="logo-wordmark">
-        <div class="lw-name">CodeStash</div>
-        <div class="lw-sub">Snippet Library</div>
-      </div>
-    </div>
 
     <div class="auth-headline" id="authHeadline">Welcome back.</div>
     <p class="auth-sub" id="authSubline">Sign in to access your personal snippet library.</p>
@@ -726,8 +755,7 @@ select.field-input option { background: var(--surface2); }
       <div class="rate-limit-dots" id="rateLimitDots"></div>
     </div>
 
-    <div id="authAdminBadge" class="admin-badge-pill">🛡 Administrator Access</div>
-    <div class="auth-notice" id="authNotice"></div>
+    <div class="auth-notice" id="authNotice" style="display:none"></div>
     <div class="auth-error" id="authError"></div>
 
     <div class="auth-field">
@@ -736,15 +764,30 @@ select.field-input option { background: var(--surface2); }
     </div>
     <div class="auth-field">
       <div class="field-label">Password</div>
-      <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+      <div class="pw-wrap">
+        <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
+        <button class="pw-toggle" type="button" onclick="togglePw('authPassword',this)" aria-label="Show password">
+          <svg viewBox="0 0 24 24" id="eyeMain"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div class="auth-field" id="confirmField" style="display:none">
       <div class="field-label">Confirm Password</div>
-      <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
+      <div class="pw-wrap">
+        <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
+        <button class="pw-toggle" type="button" onclick="togglePw('authConfirm',this)" aria-label="Show confirm password">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div class="auth-field" id="adminKeyField" style="display:none">
       <div class="field-label">Admin Passphrase</div>
-      <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" />
+      <div class="pw-wrap">
+        <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" />
+        <button class="pw-toggle" type="button" onclick="togglePw('adminKey',this)" aria-label="Show passphrase">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
 
     <button class="btn-primary" id="authBtn">
@@ -949,6 +992,19 @@ Indentation is preserved." aria-label="Code"></textarea>
 <div class="toast" id="toast"></div>
 
 <script>
+/* ── Password visibility toggle (global, called from inline onclick) ── */
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const show  = input.type === 'password';
+  input.type  = show ? 'text' : 'password';
+  btn.querySelector('svg').innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+}
+</script>
+
+<script>
 (function () {
 'use strict';
 
@@ -1040,6 +1096,9 @@ let _siteUnlocked = false;
 let _allUsers     = [];
 let _currentFilter= 'pending';
 let snippets      = [];
+// FIX 2: Track the newest snippet's timestamp so auto-refresh only
+// downloads rows that didn't exist on the last fetch — not the full DB.
+let _lastSyncTime = null;
 
 /* ════════════════════════════════════════════
    SCREEN MANAGER
@@ -1050,6 +1109,9 @@ function showScreen(id) {
   });
   document.getElementById('adminPortal').classList.toggle('active',   id === 'adminPortal');
   document.getElementById('appContainer').classList.toggle('visible', id === 'app');
+  // Show fixed logo only on auth/pending screens
+  const isAuthScreen = (id === 'authScreen' || id === 'pendingScreen');
+  document.getElementById('authFixedLogo').classList.toggle('visible', isAuthScreen);
 }
 
 /* ════════════════════════════════════════════
@@ -1057,6 +1119,7 @@ function showScreen(id) {
 ════════════════════════════════════════════ */
 async function init() {
   showScreen('authScreen');
+  document.getElementById('authFixedLogo').classList.add('visible');
   updateRateLimitUI();
   try {
     const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', {
@@ -1095,9 +1158,7 @@ function switchTab(mode) {
   const authBtn       = document.getElementById('authBtn');
   const confirmField  = document.getElementById('confirmField');
   const adminKeyField = document.getElementById('adminKeyField');
-  const adminBadge    = document.getElementById('authAdminBadge');
   const notice        = document.getElementById('authNotice');
-  const logoMark      = document.getElementById('authLogoMark');
   const headline      = document.getElementById('authHeadline');
   const subline       = document.getElementById('authSubline');
 
@@ -1105,9 +1166,8 @@ function switchTab(mode) {
   notice.style.display = 'none';
   confirmField.style.display  = 'none';
   adminKeyField.style.display = 'none';
-  adminBadge.style.display    = 'none';
-  logoMark.classList.remove('admin-mark');
   authBtn.classList.remove('admin-btn');
+  subline.className = 'auth-sub';
 
   if (mode === 'login') {
     headline.textContent = 'Welcome back.';
@@ -1116,18 +1176,15 @@ function switchTab(mode) {
   } else if (mode === 'signup') {
     headline.textContent   = 'Create an account.';
     subline.textContent    = 'New accounts require admin approval before you can log in.';
-    authBtn.innerHTML      = 'Request Access <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
+    subline.className      = 'auth-sub red';
     confirmField.style.display = 'block';
-    notice.style.display  = 'block';
-    notice.textContent    = '⚠ Your account will need admin approval before access is granted.';
+    authBtn.innerHTML      = 'Request Access <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
   } else if (mode === 'admin') {
-    headline.textContent       = 'Admin access.';
-    subline.textContent        = 'Sign in with your admin credentials and passphrase.';
-    authBtn.innerHTML          = 'Admin Sign In <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
+    headline.textContent        = 'Admin access.';
+    subline.textContent         = 'Sign in with your admin credentials and passphrase.';
     authBtn.classList.add('admin-btn');
+    authBtn.innerHTML           = 'Admin Sign In <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
     adminKeyField.style.display = 'block';
-    adminBadge.style.display    = 'flex';
-    logoMark.classList.add('admin-mark');
   }
 }
 
@@ -1397,10 +1454,13 @@ function signOut() {
   _siteUnlocked = false;
   snippets = [];
   clearTimeout(_inactivityTimer);
+  closeDropdown();
   document.getElementById('appContainer').classList.remove('visible');
   document.getElementById('adminPortal').classList.remove('active');
   document.getElementById('authEmail').value    = '';
   document.getElementById('authPassword').value = '';
+  document.getElementById('authConfirm').value  = '';
+  document.getElementById('adminKey').value     = '';
   document.getElementById('authError').classList.remove('show');
   document.getElementById('authNotice').style.display = 'none';
   switchTab('login');
@@ -1421,10 +1481,42 @@ function adminSignOut() {
 async function fetchSnippets() {
   try {
     const token = _session ? _session.access_token : _k;
-    const res   = await fetch(_c + '/rest/v1/snippets?order=created_at.desc', { headers: _headers(token) });
+
+    // FIX 2: Delta fetching — on auto-refresh, only request rows newer than
+    // the most recent snippet we already have. On first load, _lastSyncTime
+    // is null so we fetch everything normally.
+    const deltaFilter = _lastSyncTime ? `&created_at=gt.${encodeURIComponent(_lastSyncTime)}` : '';
+    const res = await fetch(
+      _c + '/rest/v1/snippets?order=created_at.desc' + deltaFilter,
+      { headers: _headers(token) }
+    );
+
     if (_session && res.status === 401) { signOut(); return; }
     if (!res.ok) throw new Error();
-    snippets = await res.json();
+
+    const fresh = await res.json();
+
+    // FIX 1: Pre-calculate line counts once here, not on every render/keystroke.
+    // Without this, renderSnippets was doing O(N×M) work — splitting every
+    // snippet's code string into a new array on every search keystroke.
+    fresh.forEach(s => {
+      s.lineCount = s.code.split('\n').length;
+    });
+
+    if (_lastSyncTime && fresh.length > 0) {
+      // FIX 2 cont.: Prepend only the new rows; keep existing snippets intact.
+      snippets = [...fresh, ...snippets];
+    } else if (!_lastSyncTime) {
+      // Initial full load — replace the array entirely.
+      snippets = fresh;
+    }
+    // If _lastSyncTime is set but fresh is empty, nothing new arrived — no update needed.
+
+    // Record the timestamp of the newest snippet for the next delta fetch.
+    if (snippets.length > 0) {
+      _lastSyncTime = snippets[0].created_at;
+    }
+
     setStatus('synced', 'connected');
     renderSnippets();
   } catch { setStatus('connection error', 'error'); }
@@ -1450,6 +1542,11 @@ async function saveSnippet() {
     });
     if (!res.ok) throw new Error();
     const [saved] = await res.json();
+    // FIX 1: Pre-calculate lineCount on the new snippet so renderSnippets
+    // can reference s.lineCount without any per-render splitting.
+    saved.lineCount = saved.code.split('\n').length;
+    // Also update _lastSyncTime so the next delta fetch doesn't re-download this.
+    _lastSyncTime = saved.created_at;
     snippets.unshift(saved);
     renderSnippets();
     document.getElementById('snippetName').value = '';
@@ -1492,39 +1589,93 @@ function renderSnippets() {
     return;
   }
 
-  const linesCount = code => code.split('\n').length;
+  // FIX 3: Use a DocumentFragment + textContent for code blocks instead of
+  // innerHTML + regex escaping. The browser's native C++ text node engine
+  // handles escaping instantly and eliminates all XSS risk by construction —
+  // textContent can never be interpreted as markup regardless of content.
+  const frag = document.createDocumentFragment();
 
-  list.innerHTML = filtered.map(s => `
-    <div class="snippet-card" data-id="${s.id}">
-      <div class="card-header">
-        <div class="snippet-name">${escHtml(s.name)}</div>
-        <div class="card-header-right">
-          <div class="lang-badge">${escHtml(s.language)}</div>
-          <button class="expand-btn js-expand" aria-label="Expand snippet">
-            <svg><use href="#icon-chevron"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="code-preview">${escHtml(s.code)}</div>
-      <div class="card-expanded-body">
-        <div class="expanded-meta">
-          <div class="meta-chip">${escHtml(s.language)}</div>
-          <div class="meta-chip">${linesCount(s.code)} lines</div>
-          <div class="meta-chip">${relTime(s.created_at)}</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-time">${relTime(s.created_at)}</span>
-        <div class="card-actions">
-          <button class="btn-icon js-copy" data-id="${s.id}" aria-label="Copy snippet">
-            <svg><use href="#icon-copy"/></svg>
-          </button>
-          ${_session ? `<button class="btn-icon del js-delete" data-id="${s.id}" aria-label="Delete snippet">
-            <svg><use href="#icon-trash"/></svg>
-          </button>` : ''}
-        </div>
-      </div>
-    </div>`).join('');
+  filtered.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'snippet-card';
+    card.dataset.id = s.id;
+
+    // --- Card header ---
+    const header = document.createElement('div');
+    header.className = 'card-header';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'snippet-name';
+    nameEl.textContent = s.name;                    // ← native escaping
+
+    const headerRight = document.createElement('div');
+    headerRight.className = 'card-header-right';
+
+    const langBadge = document.createElement('div');
+    langBadge.className = 'lang-badge';
+    langBadge.textContent = s.language;             // ← native escaping
+
+    const expandBtn = document.createElement('button');
+    expandBtn.className = 'expand-btn js-expand';
+    expandBtn.setAttribute('aria-label', 'Expand snippet');
+    expandBtn.innerHTML = '<svg><use href="#icon-chevron"/></svg>';
+
+    headerRight.append(langBadge, expandBtn);
+    header.append(nameEl, headerRight);
+
+    // --- Code preview (highest XSS risk — textContent is mandatory here) ---
+    const codePreview = document.createElement('div');
+    codePreview.className = 'code-preview';
+    codePreview.textContent = s.code;               // ← native, zero XSS risk
+
+    // --- Expanded meta (FIX 1: use pre-cached s.lineCount, not split()) ---
+    const expandedBody = document.createElement('div');
+    expandedBody.className = 'card-expanded-body';
+
+    const expandedMeta = document.createElement('div');
+    expandedMeta.className = 'expanded-meta';
+
+    [s.language, s.lineCount + ' lines', relTime(s.created_at)].forEach(txt => {
+      const chip = document.createElement('div');
+      chip.className = 'meta-chip';
+      chip.textContent = txt;                       // ← native escaping
+      expandedMeta.appendChild(chip);
+    });
+    expandedBody.appendChild(expandedMeta);
+
+    // --- Card footer ---
+    const footer = document.createElement('div');
+    footer.className = 'card-footer';
+
+    const timeEl = document.createElement('span');
+    timeEl.className = 'card-time';
+    timeEl.textContent = relTime(s.created_at);
+
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-icon js-copy';
+    copyBtn.dataset.id = s.id;
+    copyBtn.setAttribute('aria-label', 'Copy snippet');
+    copyBtn.innerHTML = '<svg><use href="#icon-copy"/></svg>';
+    actions.appendChild(copyBtn);
+
+    if (_session) {
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-icon del js-delete';
+      delBtn.dataset.id = s.id;
+      delBtn.setAttribute('aria-label', 'Delete snippet');
+      delBtn.innerHTML = '<svg><use href="#icon-trash"/></svg>';
+      actions.appendChild(delBtn);
+    }
+
+    footer.append(timeEl, actions);
+    card.append(header, codePreview, expandedBody, footer);
+    frag.appendChild(card);
+  });
+
+  list.replaceChildren(frag);
 }
 
 function copySnippet(id) {
