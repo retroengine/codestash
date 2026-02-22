@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="description" content="CodeStash — save, search and share code snippets. Online clipboard for developers." />
-<meta name="keywords" content="code snippets, snippet manager, online clipboard, developer tools" />
-<link rel="canonical" href="https://yoursite.com" />
-
-<!-- Open Graph (shows a preview card when shared on Slack, WhatsApp etc) -->
-<meta property="og:title" content="CodeStash" />
-<meta property="og:description" content="Save and share code snippets instantly." />
-<meta property="og:url" content="https://yoursite.com" />
-<meta property="og:type" content="website" />
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -1426,6 +1416,34 @@ select.field-input option { background: var(--surface2); }
   .notes-action-btn { flex: 1; justify-content: center; }
 }
 
+/* Guest feature permission cards */
+.guest-features-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;
+}
+.guest-feature-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  transition: border-color 0.2s, opacity 0.2s;
+}
+.guest-feature-card.enabled-card  { border-color: rgba(61,186,112,0.3); }
+.guest-feature-card.disabled-card { opacity: 0.45; pointer-events: none; }
+.guest-feature-info { flex: 1; min-width: 0; }
+.guest-feature-icon { font-size: 1.3rem; margin-bottom: 6px; }
+.guest-feature-title { font-size: 0.86rem; font-weight: 700; margin-bottom: 3px; }
+.guest-feature-sub   { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+.guest-features-note {
+  font-size: 0.72rem; color: var(--muted); margin-top: 10px;
+  padding: 10px 14px; background: rgba(246,166,35,0.06);
+  border: 1px solid rgba(246,166,35,0.2); border-radius: 9px; line-height: 1.6;
+  display: none;
+}
+.guest-features-note.show { display: block; }
+
+@media (max-width: 768px) {
+  .guest-features-grid { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -1616,6 +1634,53 @@ select.field-input option { background: var(--surface2); }
             <div class="toggle-label" id="toggleLabel">—</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Guest Feature Permissions (only relevant when site is unlocked) -->
+    <div class="admin-section" id="guestFeaturesSection">
+      <div class="admin-section-title">Guest Permissions
+        <span style="font-size:0.65rem;font-weight:500;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0;">
+          — controls what public visitors can do when site is unlocked
+        </span>
+      </div>
+      <div class="guest-features-note" id="guestFeaturesNote">
+        ⚠ These settings only apply when the site is <strong>unlocked</strong>. Lock the site first if you want to restrict all access.
+      </div>
+      <div class="guest-features-grid">
+
+        <!-- Add Snippet toggle -->
+        <div class="guest-feature-card" id="gfCardSnippet">
+          <div class="guest-feature-info">
+            <div class="guest-feature-icon">✏️</div>
+            <div class="guest-feature-title">Add Snippet</div>
+            <div class="guest-feature-sub">Allow guests to create and save new snippets without an account.</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="guestAddSnippet" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="guestAddSnippetLabel">Off</div>
+          </div>
+        </div>
+
+        <!-- Quick Notes toggle -->
+        <div class="guest-feature-card" id="gfCardNotes">
+          <div class="guest-feature-info">
+            <div class="guest-feature-icon">📝</div>
+            <div class="guest-feature-title">Quick Notes</div>
+            <div class="guest-feature-sub">Allow guests to use the Quick Notes scratchpad (session only, no saving).</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="guestNotes" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="guestNotesLabel">Off</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -2189,6 +2254,8 @@ let _siteUnlocked = false;
 let _allUsers     = [];
 let _currentFilter= 'pending';
 let snippets      = [];
+let _guestNotes      = false;   // set from site_settings.guest_notes
+let _guestAddSnippet = false;   // set from site_settings.guest_add_snippet
 // FIX 2: Track the newest snippet's timestamp so auto-refresh only
 // downloads rows that didn't exist on the last fetch — not the full DB.
 let _lastSyncTime = null;
@@ -2221,12 +2288,18 @@ async function init() {
   document.getElementById('authFixedLogo').classList.add('visible');
   updateRateLimitUI();
   try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', {
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', {
       headers: { 'apikey': _k, 'Authorization': 'Bearer ' + _k }
     });
     if (res.ok) {
       const [row] = await res.json();
-      if (row && row.locked === false) { _siteUnlocked = true; showApp(null); return; }
+      if (row && row.locked === false) {
+        _siteUnlocked = true;
+        _guestNotes      = row.guest_notes      === true;
+        _guestAddSnippet = row.guest_add_snippet === true;
+        showApp(null);
+        return;
+      }
     }
   } catch {}
   showScreen('authScreen');
@@ -2403,14 +2476,14 @@ function showApp(session) {
   const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
   document.getElementById('dropdownName').textContent = isGuest ? 'Browsing as Guest' : 'Hi, ' + displayName + '!';
 
-  // Hide write actions from guests — they can only view public snippets
-  document.getElementById('addPanel').style.display = isGuest ? 'none' : '';
+  // Hide write actions from guests — respect admin guest permissions
+  document.getElementById('addPanel').style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
 
-  // Hide Quick Notes entirely from guests (no account = no notes)
+  // Hide Quick Notes from guests unless admin has enabled it
   const navNotes   = document.getElementById('navNotes');
   const notesPanel = document.getElementById('notesPanel');
-  if (navNotes) navNotes.style.display = isGuest ? 'none' : '';
-  if (notesPanel && isGuest) {
+  if (navNotes) navNotes.style.display = (isGuest && !_guestNotes) ? 'none' : '';
+  if (notesPanel && isGuest && !_guestNotes) {
     notesPanel.classList.remove('visible');
     // If they were on the notes panel, redirect to snippets
     if (navNotes && navNotes.classList.contains('active')) {
@@ -2448,10 +2521,12 @@ async function loadAdminData() {
 
 async function loadSiteLock() {
   try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', { headers: _headers(_session.access_token) });
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', { headers: _headers(_session.access_token) });
     const [row] = await res.json();
-    updateLockUI(row ? !row.locked : false);
-  } catch { updateLockUI(false); }
+    const unlocked = row ? !row.locked : false;
+    updateLockUI(unlocked);
+    updateGuestFeaturesUI(unlocked, row ? !!row.guest_notes : false, row ? !!row.guest_add_snippet : false);
+  } catch { updateLockUI(false); updateGuestFeaturesUI(false, false, false); }
 }
 
 function updateLockUI(unlocked) {
@@ -2474,6 +2549,54 @@ function updateLockUI(unlocked) {
     label.textContent = 'Locked';
     title.textContent = '🔒 Site Locked';
     desc.textContent  = 'The site requires login. Only approved users can access it.';
+  }
+  // Sync guest features section dimming
+  updateGuestFeaturesUI(unlocked,
+    document.getElementById('guestNotes')      ? document.getElementById('guestNotes').checked      : false,
+    document.getElementById('guestAddSnippet') ? document.getElementById('guestAddSnippet').checked : false
+  );
+}
+
+function updateGuestFeaturesUI(siteUnlocked, guestNotes, guestAddSnippet) {
+  const noteToggle    = document.getElementById('guestNotes');
+  const snippetToggle = document.getElementById('guestAddSnippet');
+  const noteLabel     = document.getElementById('guestNotesLabel');
+  const snippetLabel  = document.getElementById('guestAddSnippetLabel');
+  const noteCard      = document.getElementById('gfCardNotes');
+  const snippetCard   = document.getElementById('gfCardSnippet');
+  const warningNote   = document.getElementById('guestFeaturesNote');
+
+  if (noteToggle)    noteToggle.checked    = guestNotes;
+  if (snippetToggle) snippetToggle.checked = guestAddSnippet;
+  if (noteLabel)     noteLabel.textContent    = guestNotes      ? 'On'  : 'Off';
+  if (snippetLabel)  snippetLabel.textContent = guestAddSnippet ? 'On'  : 'Off';
+
+  // Dim cards and show warning if site is locked (settings are irrelevant when locked)
+  const locked = !siteUnlocked;
+  if (noteCard)    noteCard.classList.toggle('disabled-card', locked);
+  if (snippetCard) snippetCard.classList.toggle('disabled-card', locked);
+  if (warningNote) warningNote.classList.toggle('show', locked);
+}
+
+async function toggleGuestFeature(field, value) {
+  const labelId = field === 'guest_notes' ? 'guestNotesLabel' : 'guestAddSnippetLabel';
+  document.getElementById(labelId).textContent = value ? 'On' : 'Off';
+  try {
+    const body = {};
+    body[field] = value;
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error();
+    const label = field === 'guest_notes' ? 'Quick Notes' : 'Add Snippet';
+    showToast((value ? '✓ ' : '✗ ') + label + (value ? ' enabled for guests' : ' disabled for guests'), 'success');
+  } catch {
+    // revert on failure
+    const el = document.getElementById(field === 'guest_notes' ? 'guestNotes' : 'guestAddSnippet');
+    if (el) { el.checked = !value; document.getElementById(labelId).textContent = !value ? 'On' : 'Off'; }
+    showToast('✗ Failed to update guest permissions', 'error');
   }
 }
 
@@ -3229,6 +3352,8 @@ document.getElementById('pendingBack').addEventListener('click', signOut);
 
 // Admin toggle lock
 document.getElementById('siteUnlocked').addEventListener('change', toggleSiteLock);
+document.getElementById('guestNotes').addEventListener('change', e => toggleGuestFeature('guest_notes', e.target.checked));
+document.getElementById('guestAddSnippet').addEventListener('change', e => toggleGuestFeature('guest_add_snippet', e.target.checked));
 
 // Admin filter tabs (event delegation)
 document.getElementById('filterTabs').addEventListener('click', e => {
@@ -3942,9 +4067,15 @@ CREATE POLICY "user_insert_own"  ON profiles FOR INSERT WITH CHECK (auth.uid() =
 CREATE TABLE IF NOT EXISTS site_settings (
   id int PRIMARY KEY DEFAULT 1,
   locked boolean NOT NULL DEFAULT true,
+  guest_notes boolean NOT NULL DEFAULT false,
+  guest_add_snippet boolean NOT NULL DEFAULT false,
   updated_at timestamptz DEFAULT now()
 );
-INSERT INTO site_settings (id, locked) VALUES (1, true) ON CONFLICT (id) DO NOTHING;
+INSERT INTO site_settings (id, locked, guest_notes, guest_add_snippet) VALUES (1, true, false, false) ON CONFLICT (id) DO NOTHING;
+
+-- If you already have a site_settings table, run these to add the new columns:
+-- ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS guest_notes boolean NOT NULL DEFAULT false;
+-- ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS guest_add_snippet boolean NOT NULL DEFAULT false;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
 CREATE POLICY "admin_update_settings" ON site_settings FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
