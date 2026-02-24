@@ -1920,13 +1920,13 @@ select.field-input option { background: var(--surface2); }
       </div>
     </div>
 
-    <!-- Site Lock -->
+    <!-- Snippet Access Control -->
     <div class="admin-section">
-      <div class="admin-section-title">Site Access Control</div>
+      <div class="admin-section-title">Snippet Access Control</div>
       <div class="lock-card">
         <div class="lock-info">
-          <h3 id="lockTitle">🔒 Site Locked</h3>
-          <p id="lockDesc">The site requires login. Only approved users can access it.</p>
+          <h3 id="lockTitle">🔒 Snippets Locked</h3>
+          <p id="lockDesc">Snippets require login. Notes and Clipboard are always public.</p>
         </div>
         <div class="lock-right">
           <div class="lock-status">
@@ -1941,53 +1941,6 @@ select.field-input option { background: var(--surface2); }
             <div class="toggle-label" id="toggleLabel">—</div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Guest Feature Permissions (only relevant when site is unlocked) -->
-    <div class="admin-section" id="guestFeaturesSection">
-      <div class="admin-section-title">Guest Permissions
-        <span style="font-size:0.65rem;font-weight:500;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0;">
-          — controls what public visitors can do when site is unlocked
-        </span>
-      </div>
-      <div class="guest-features-note" id="guestFeaturesNote">
-        ⚠ These settings only apply when the site is <strong>unlocked</strong>. Lock the site first if you want to restrict all access.
-      </div>
-      <div class="guest-features-grid">
-
-        <!-- Add Snippet toggle -->
-        <div class="guest-feature-card" id="gfCardSnippet">
-          <div class="guest-feature-info">
-            <div class="guest-feature-icon">✏️</div>
-            <div class="guest-feature-title">Add Snippet</div>
-            <div class="guest-feature-sub">Allow guests to create and save new snippets without an account.</div>
-          </div>
-          <div class="toggle-wrap">
-            <label class="toggle">
-              <input type="checkbox" id="guestAddSnippet" />
-              <span class="toggle-slider"></span>
-            </label>
-            <div class="toggle-label" id="guestAddSnippetLabel">Off</div>
-          </div>
-        </div>
-
-        <!-- Quick Notes toggle -->
-        <div class="guest-feature-card" id="gfCardNotes">
-          <div class="guest-feature-info">
-            <div class="guest-feature-icon">📝</div>
-            <div class="guest-feature-title">Quick Notes</div>
-            <div class="guest-feature-sub">Allow guests to use the Quick Notes scratchpad (session only, no saving).</div>
-          </div>
-          <div class="toggle-wrap">
-            <label class="toggle">
-              <input type="checkbox" id="guestNotes" />
-              <span class="toggle-slider"></span>
-            </label>
-            <div class="toggle-label" id="guestNotesLabel">Off</div>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -2104,6 +2057,12 @@ select.field-input option { background: var(--surface2); }
     <a class="nav-item active" href="#" id="navSnippets" aria-label="Snippets">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       Snippets
+      <span class="nav-lock-icon" id="snippetsLockIcon" style="margin-left:auto;opacity:0.55;display:none;">
+        <!-- locked -->
+        <svg id="snippetsLockedSvg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <!-- unlocked -->
+        <svg id="snippetsUnlockedSvg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+      </span>
     </a>
 
     <a class="nav-item" href="#" id="navClipboard" aria-label="Online Clipboard">
@@ -2193,6 +2152,21 @@ select.field-input option { background: var(--surface2); }
 
     <!-- ══ SNIPPETS PANEL ══ -->
     <div id="snippetsPanel">
+
+    <!-- Auth gate — shown to guests when snippets are locked -->
+    <div id="snippetsAuthGate" style="display:none;position:absolute;inset:0;z-index:50;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:32px;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:18px;background:var(--surface2);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div>
+        <div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;">Snippets are locked</div>
+        <div style="font-size:0.82rem;color:var(--muted);max-width:280px;line-height:1.6;">Sign in or create an account to access your personal snippet library.</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn-primary" onclick="showAuthFromGate('login')" style="min-width:110px;">Sign In</button>
+        <button class="btn-ghost" onclick="showAuthFromGate('signup')" style="min-width:110px;">Create Account</button>
+      </div>
+    </div>
 
     <!-- Add snippet panel -->
     <div class="add-panel" id="addPanel">
@@ -2639,25 +2613,21 @@ async function init() {
   const isPublic = await checkPublicView();
   if (isPublic) return;
 
-  showScreen('authScreen');
-  document.getElementById('authFixedLogo').classList.add('visible');
-  updateRateLimitUI();
+  // Always boot straight into the app — Notes & Clipboard are public.
+  // Snippets will show an auth gate if the user is not signed in.
+  _siteUnlocked    = true;
+  _guestNotes      = true;
+  _guestAddSnippet = false; // guests cannot add snippets
+
+  // Check if there's an existing Supabase session (returning user)
   try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', {
+    const res = await fetch(_c + '/auth/v1/user', {
       headers: { 'apikey': _k, 'Authorization': 'Bearer ' + _k }
     });
-    if (res.ok) {
-      const [row] = await res.json();
-      if (row && row.locked === false) {
-        _siteUnlocked = true;
-        _guestNotes      = row.guest_notes      === true;
-        _guestAddSnippet = row.guest_add_snippet === true;
-        showApp(null);
-        return;
-      }
-    }
+    // No active session — load as guest
   } catch {}
-  showScreen('authScreen');
+
+  showApp(null); // always load as guest first; auth upgrades the session
 }
 init();
 
@@ -2713,6 +2683,16 @@ function switchTab(mode) {
     authBtn.innerHTML           = 'Admin Sign In <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
     adminKeyField.style.display = 'block';
   }
+}
+
+/* ════════════════════════════════════════════
+   SHOW AUTH FROM SNIPPET GATE
+════════════════════════════════════════════ */
+function showAuthFromGate(mode) {
+  showScreen('authScreen');
+  document.getElementById('authFixedLogo').classList.add('visible');
+  updateRateLimitUI();
+  switchTab(mode || 'login');
 }
 
 /* ════════════════════════════════════════════
@@ -2838,26 +2818,38 @@ function showApp(session) {
   const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
   document.getElementById('dropdownName').textContent = isGuest ? 'Browsing as Guest' : 'Hi, ' + displayName + '!';
 
-  // Hide write actions from guests — respect admin guest permissions
-  document.getElementById('addPanel').style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
-
-  // Hide Quick Notes from guests unless admin has enabled it
+  // Notes and Clipboard always visible to everyone
   const navNotes   = document.getElementById('navNotes');
   const notesPanel = document.getElementById('notesPanel');
-  if (navNotes) navNotes.style.display = (isGuest && !_guestNotes) ? 'none' : '';
-  if (notesPanel && isGuest && !_guestNotes) {
-    notesPanel.classList.remove('visible');
-    // If they were on the notes panel, redirect to snippets
-    if (navNotes && navNotes.classList.contains('active')) {
-      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-      document.getElementById('navSnippets').classList.add('active');
-      document.getElementById('snippetsPanel').style.display = '';
-      document.querySelector('.topbar-page-title').innerHTML = 'Snippets <span>/ Library</span>';
-    }
+  if (navNotes) navNotes.style.display = '';
+
+  // Snippets lock/unlock icon
+  const lockIcon      = document.getElementById('snippetsLockIcon');
+  const lockedSvg     = document.getElementById('snippetsLockedSvg');
+  const unlockedSvg   = document.getElementById('snippetsUnlockedSvg');
+  if (lockIcon) lockIcon.style.display = 'inline-flex';
+  if (isGuest) {
+    if (lockedSvg)   lockedSvg.style.display   = 'inline';
+    if (unlockedSvg) unlockedSvg.style.display = 'none';
+  } else {
+    if (lockedSvg)   lockedSvg.style.display   = 'none';
+    if (unlockedSvg) unlockedSvg.style.display = 'inline';
   }
 
+  // Snippets auth gate — show for guests, hide for logged-in users
+  const authGate = document.getElementById('snippetsAuthGate');
+  const addPanel = document.getElementById('addPanel');
+  const snippetsList = document.getElementById('snippetsList');
+  if (authGate) authGate.style.display = isGuest ? 'flex' : 'none';
+  if (addPanel) addPanel.style.display = isGuest ? 'none' : '';
+  if (snippetsList) snippetsList.style.display = isGuest ? 'none' : '';
+
+  // Make snippetsPanel relative so auth gate overlay works
+  const snippetsPanel = document.getElementById('snippetsPanel');
+  if (snippetsPanel) snippetsPanel.style.position = 'relative';
+
   showScreen('app');
-  fetchSnippets();
+  if (!isGuest) fetchSnippets();
   resetInactivityTimer();
 }
 
@@ -2883,16 +2875,12 @@ async function loadAdminData() {
 
 async function loadSiteLock() {
   try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', { headers: _headers(_session.access_token) });
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', { headers: _headers(_session.access_token) });
     const [row] = await res.json();
     const unlocked = row ? !row.locked : false;
-    // Keep in-memory flags in sync with DB
-    _siteUnlocked    = unlocked;
-    _guestNotes      = row ? !!row.guest_notes      : false;
-    _guestAddSnippet = row ? !!row.guest_add_snippet : false;
+    _siteUnlocked = unlocked;
     updateLockUI(unlocked);
-    updateGuestFeaturesUI(unlocked, _guestNotes, _guestAddSnippet);
-  } catch { updateLockUI(false); updateGuestFeaturesUI(false, false, false); }
+  } catch { updateLockUI(false); }
 }
 
 function updateLockUI(unlocked) {
@@ -2907,20 +2895,15 @@ function updateLockUI(unlocked) {
     dot.className     = 'lock-status-dot unlocked';
     text.textContent  = 'Public Access';
     label.textContent = 'Open';
-    title.textContent = '🔓 Site Unlocked';
-    desc.textContent  = 'The site is publicly accessible — no login required.';
+    title.textContent = '🔓 Snippets Public';
+    desc.textContent  = 'Anyone can browse snippets without logging in.';
   } else {
     dot.className     = 'lock-status-dot locked';
     text.textContent  = 'Login Required';
     label.textContent = 'Locked';
-    title.textContent = '🔒 Site Locked';
-    desc.textContent  = 'The site requires login. Only approved users can access it.';
+    title.textContent = '🔒 Snippets Locked';
+    desc.textContent  = 'Snippets require login. Notes and Clipboard remain public.';
   }
-  // Sync guest features section dimming
-  updateGuestFeaturesUI(unlocked,
-    document.getElementById('guestNotes')      ? document.getElementById('guestNotes').checked      : false,
-    document.getElementById('guestAddSnippet') ? document.getElementById('guestAddSnippet').checked : false
-  );
 }
 
 function updateGuestFeaturesUI(siteUnlocked, guestNotes, guestAddSnippet) {
@@ -2989,7 +2972,7 @@ async function toggleSiteLock() {
     _siteUnlocked = unlocked;
     applyLiveGuestRestrictions();
 
-    showToast(unlocked ? '🔓 Site unlocked — now public' : '🔒 Site locked — login required', 'success');
+    showToast(unlocked ? '🔓 Snippets unlocked — public access' : '🔒 Snippets locked — login required', 'success');
   } catch {
     // Revert on failure
     updateLockUI(!unlocked);
@@ -3005,30 +2988,24 @@ async function toggleSiteLock() {
 function applyLiveGuestRestrictions() {
   const isGuest = !_session;
 
-  // ── Add Snippet panel ──
-  const addPanel = document.getElementById('addPanel');
-  if (addPanel) addPanel.style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
+  // Notes always visible
+  const navNotes = document.getElementById('navNotes');
+  if (navNotes) navNotes.style.display = '';
 
-  // ── Quick Notes nav + panel ──
-  const navNotes   = document.getElementById('navNotes');
-  const notesPanel = document.getElementById('notesPanel');
-  const showNotes  = !isGuest || _guestNotes;
+  // Snippets auth gate + lock icon
+  const authGate     = document.getElementById('snippetsAuthGate');
+  const addPanel     = document.getElementById('addPanel');
+  const snippetsList = document.getElementById('snippetsList');
+  const lockedSvg    = document.getElementById('snippetsLockedSvg');
+  const unlockedSvg  = document.getElementById('snippetsUnlockedSvg');
+  const lockIcon     = document.getElementById('snippetsLockIcon');
 
-  if (navNotes) navNotes.style.display = showNotes ? '' : 'none';
-
-  if (!showNotes && notesPanel) {
-    notesPanel.classList.remove('visible');
-    // If the user is currently on the Notes panel, redirect them to Snippets
-    if (navNotes && navNotes.classList.contains('active')) {
-      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-      const navSnippets = document.getElementById('navSnippets');
-      if (navSnippets) navSnippets.classList.add('active');
-      const snippetsPanel = document.getElementById('snippetsPanel');
-      if (snippetsPanel) snippetsPanel.style.display = '';
-      const pageTitle = document.querySelector('.topbar-page-title');
-      if (pageTitle) pageTitle.innerHTML = 'Snippets <span>/ Library</span>';
-    }
-  }
+  if (authGate)    authGate.style.display    = isGuest ? 'flex' : 'none';
+  if (addPanel)    addPanel.style.display    = isGuest ? 'none' : '';
+  if (snippetsList) snippetsList.style.display = isGuest ? 'none' : '';
+  if (lockIcon)    lockIcon.style.display    = 'inline-flex';
+  if (lockedSvg)   lockedSvg.style.display   = isGuest ? 'inline' : 'none';
+  if (unlockedSvg) unlockedSvg.style.display = isGuest ? 'none'   : 'inline';
 }
 
 /* ════════════════════════════════════════════
@@ -3109,23 +3086,21 @@ async function updateUserStatus(userId, status) {
 ════════════════════════════════════════════ */
 function signOut() {
   _session = _userProfile = null;
-  _siteUnlocked = false;
+  _siteUnlocked = true;
+  _guestNotes = true;
+  _guestAddSnippet = false;
   snippets = [];
-  // Reset delta-fetch cursor so the next login fetches all snippets from scratch,
-  // not just rows newer than the previous session's last sync.
   _lastSyncTime = null;
   clearTimeout(_inactivityTimer);
   closeDropdown();
-  document.getElementById('appContainer').classList.remove('visible');
-  document.getElementById('adminPortal').classList.remove('active');
   document.getElementById('authEmail').value    = '';
   document.getElementById('authPassword').value = '';
   document.getElementById('authConfirm').value  = '';
   document.getElementById('adminKey').value     = '';
   document.getElementById('authError').classList.remove('show');
   document.getElementById('authNotice').style.display = 'none';
-  switchTab('login');
-  showScreen('authScreen');
+  // Return to guest app view (not auth screen)
+  showApp(null);
 }
 
 function adminSignOut() {
@@ -3826,8 +3801,6 @@ document.getElementById('pendingBack').addEventListener('click', signOut);
 
 // Admin toggle lock
 document.getElementById('siteUnlocked').addEventListener('change', toggleSiteLock);
-document.getElementById('guestNotes').addEventListener('change', e => toggleGuestFeature('guest_notes', e.target.checked));
-document.getElementById('guestAddSnippet').addEventListener('change', e => toggleGuestFeature('guest_add_snippet', e.target.checked));
 
 // Admin filter tabs (event delegation)
 document.getElementById('filterTabs').addEventListener('click', e => {
