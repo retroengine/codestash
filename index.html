@@ -988,6 +988,17 @@ select.field-input option { background: var(--surface2); }
    ONLINE CLIPBOARD — STYLES
 ════════════════════════════════════════════ */
 
+/* Nav lock icon — shown beside Snippets */
+.nav-lock-icon {
+  display: inline-flex; align-items: center; margin-left: auto;
+  color: var(--danger); opacity: 0.75; flex-shrink: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+.nav-lock-icon.unlocked {
+  color: var(--success);
+}
+.nav-item:hover .nav-lock-icon { opacity: 1; }
+
 /* Nav badge */
 .nav-badge {
   font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em;
@@ -1380,169 +1391,6 @@ select.field-input option { background: var(--surface2); }
 [data-theme="light"] .theme-toggle-btn .icon-sun  { display: block; }
 [data-theme="light"] .theme-toggle-btn .icon-moon { display: none; }
 
-/* ════════════════════════════════════════════
-   SNIPPET COLLECTIONS
-════════════════════════════════════════════ */
-/* Sidebar collection entries */
-.nav-collections-label {
-  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.13em;
-  text-transform: uppercase; color: var(--muted2); 
-  padding: 0 10px; margin: 14px 0 3px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.nav-add-collection {
-  background: none; border: none; cursor: pointer;
-  color: var(--muted); display: flex; align-items: center;
-  padding: 2px 4px; border-radius: 5px;
-  transition: color 0.15s, background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.nav-add-collection:hover { color: var(--text); background: var(--surface2); }
-.nav-add-collection svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; }
-
-.nav-collection-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px; border-radius: 9px; cursor: pointer;
-  color: var(--muted); font-size: 0.82rem; font-weight: 500;
-  border: 1px solid transparent; text-decoration: none;
-  min-height: 38px; -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, color 0.15s;
-  position: relative; user-select: none;
-}
-.nav-collection-item:hover  { background: var(--surface2); color: var(--text); }
-.nav-collection-item.active { background: var(--surface2); border-color: var(--border-hi); color: var(--text); }
-.nav-collection-icon { font-size: 0.85rem; flex-shrink: 0; }
-.nav-collection-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-collection-count {
-  font-size: 0.62rem; font-weight: 700; color: var(--muted2);
-  background: var(--surface3); border: 1px solid var(--border);
-  border-radius: 8px; padding: 1px 7px; flex-shrink: 0;
-}
-.nav-collection-del {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: var(--muted2);
-  font-size: 0.75rem; padding: 2px 5px; border-radius: 4px;
-  opacity: 0; transition: opacity 0.15s, color 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.nav-collection-item:hover .nav-collection-del { opacity: 1; }
-.nav-collection-del:hover { color: var(--danger); }
-
-/* New collection inline input */
-.new-collection-row {
-  display: none; align-items: center; gap: 6px;
-  padding: 5px 6px; margin: 2px 0;
-}
-.new-collection-row.show { display: flex; }
-.new-collection-input {
-  flex: 1; background: var(--surface2); border: 1px solid var(--border-hi);
-  border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
-  font-size: 0.8rem; padding: 6px 10px; outline: none;
-  -webkit-appearance: none;
-}
-.new-collection-input::placeholder { color: var(--muted2); }
-.new-collection-confirm {
-  background: var(--text); border: none; color: #0a0a0a;
-  border-radius: 7px; padding: 6px 10px; font-size: 0.75rem;
-  font-weight: 700; cursor: pointer; white-space: nowrap;
-  font-family: 'DM Sans', sans-serif;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Collection assign modal */
-.collection-modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 600;
-  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
-  align-items: flex-end; justify-content: center; padding: 0;
-}
-.collection-modal-overlay.open { display: flex; }
-.collection-modal {
-  background: var(--surface); border: 1px solid var(--border-hi);
-  border-radius: 20px 20px 0 0; padding: 22px 18px;
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
-  width: 100%; max-width: 100%;
-  animation: up 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-.collection-modal-title {
-  font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;
-}
-.collection-modal-sub {
-  font-size: 0.75rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5;
-}
-.collection-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
-.collection-list-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 14px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--surface2);
-  cursor: pointer; transition: border-color 0.15s, background 0.15s;
-  font-size: 0.84rem; -webkit-tap-highlight-color: transparent;
-}
-.collection-list-item:hover { border-color: var(--border-hi); }
-.collection-list-item.assigned {
-  border-color: rgba(139,120,255,0.4);
-  background: rgba(139,120,255,0.07);
-}
-.collection-item-icon { font-size: 1rem; }
-.collection-item-name { flex: 1; font-weight: 500; }
-.collection-item-check {
-  width: 18px; height: 18px; border-radius: 50%;
-  border: 2px solid var(--border-hi);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: background 0.15s, border-color 0.15s;
-  font-size: 0.65rem; color: transparent;
-}
-.collection-list-item.assigned .collection-item-check {
-  background: var(--accent); border-color: var(--accent); color: #fff;
-}
-.collection-modal-empty {
-  text-align: center; padding: 24px; color: var(--muted); font-size: 0.82rem;
-}
-.collection-modal-footer {
-  display: flex; gap: 8px; margin-top: 14px;
-}
-.collection-modal-close {
-  flex: 1; padding: 11px; border-radius: 10px;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--muted); font-family: 'DM Sans', sans-serif;
-  font-size: 0.84rem; font-weight: 600; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, color 0.15s;
-}
-.collection-modal-close:hover { background: var(--surface2); color: var(--text); }
-
-/* Collection badge on card */
-.collection-badge {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em;
-  padding: 2px 8px; border-radius: 20px;
-  background: rgba(139,120,255,0.12); border: 1px solid rgba(139,120,255,0.3);
-  color: var(--accent); white-space: nowrap; flex-shrink: 0;
-}
-
-/* Collection filter banner */
-.collection-filter-bar {
-  display: none; align-items: center; gap: 8px;
-  padding: 8px 14px; background: rgba(139,120,255,0.08);
-  border: 1px solid rgba(139,120,255,0.2); border-radius: 10px;
-  font-size: 0.8rem;
-}
-.collection-filter-bar.show { display: flex; }
-.collection-filter-name { font-weight: 600; color: var(--text); flex: 1; }
-.collection-filter-clear {
-  background: none; border: none; cursor: pointer; color: var(--muted);
-  font-size: 0.75rem; font-family: 'DM Sans', sans-serif;
-  padding: 3px 8px; border-radius: 6px;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
-}
-.collection-filter-clear:hover { color: var(--text); }
-
-@media (min-width: 769px) {
-  .collection-modal {
-    max-width: 420px; border-radius: 20px;
-    margin: auto; padding: 24px;
-  }
-  .collection-modal-overlay { align-items: center; }
-}
 
 /* Mobile tweaks — notes panel */
 @media (max-width: 768px) {
@@ -1814,66 +1662,6 @@ select.field-input option { background: var(--surface2); }
   </div>
 </div>
 
-<!-- ═══════════ AUTH SCREEN ═══════════ -->
-<div class="screen" id="authScreen">
-  <div class="auth-card">
-
-    <div class="auth-headline" id="authHeadline">Welcome back.</div>
-    <p class="auth-sub" id="authSubline">Sign in to access your personal snippet library.</p>
-
-    <div class="tab-switcher">
-      <button class="tab-btn active" id="tabLogin">Sign In</button>
-      <button class="tab-btn" id="tabSignup">Sign Up</button>
-      <button class="tab-btn admin-tab" id="tabAdmin">Admin</button>
-    </div>
-
-    <div class="rate-limit-bar" id="rateLimitBar">
-      <div class="rate-limit-bar-label" id="rateLimitLabel">⚠ Failed attempts</div>
-      <div class="rate-limit-dots" id="rateLimitDots"></div>
-    </div>
-
-    <div class="auth-notice" id="authNotice" style="display:none"></div>
-    <div class="auth-error" id="authError"></div>
-
-    <div class="auth-field">
-      <div class="field-label">Email</div>
-      <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" maxlength="254" />
-    </div>
-    <div class="auth-field">
-      <div class="field-label">Password</div>
-      <div class="pw-wrap">
-        <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" maxlength="128" />
-        <button class="pw-toggle" type="button" onclick="togglePw('authPassword',this)" aria-label="Show password">
-          <svg viewBox="0 0 24 24" id="eyeMain"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="auth-field" id="confirmField" style="display:none">
-      <div class="field-label">Confirm Password</div>
-      <div class="pw-wrap">
-        <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" maxlength="128" />
-        <button class="pw-toggle" type="button" onclick="togglePw('authConfirm',this)" aria-label="Show confirm password">
-          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="auth-field" id="adminKeyField" style="display:none">
-      <div class="field-label">Admin Passphrase</div>
-      <div class="pw-wrap">
-        <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" maxlength="128" />
-        <button class="pw-toggle" type="button" onclick="togglePw('adminKey',this)" aria-label="Show passphrase">
-          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <button class="btn-primary" id="authBtn">
-      Sign In
-      <svg width="13" height="13"><use href="#icon-arrow"/></svg>
-    </button>
-  </div>
-</div>
-
 <!-- ═══════════ PENDING SCREEN ═══════════ -->
 <div class="screen" id="pendingScreen">
   <div class="pending-card">
@@ -1901,6 +1689,77 @@ select.field-input option { background: var(--surface2); }
 
   <div class="admin-body">
 
+    <!-- Site Lock -->
+    <div class="admin-section">
+      <div class="admin-section-title">Site Access Control</div>
+      <div class="lock-card">
+        <div class="lock-info">
+          <h3 id="lockTitle">🔒 Site Locked</h3>
+          <p id="lockDesc">The site requires login. Only approved users can access it.</p>
+        </div>
+        <div class="lock-right">
+          <div class="lock-status">
+            <div class="lock-status-dot" id="lockStatusDot"></div>
+            <span id="lockStatusText">Loading...</span>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="siteUnlocked" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="toggleLabel">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guest Feature Permissions -->
+    <div class="admin-section" id="guestFeaturesSection">
+      <div class="admin-section-title">Guest Permissions
+        <span style="font-size:0.65rem;font-weight:500;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0;">
+          — controls what public visitors can do when site is unlocked
+        </span>
+      </div>
+      <div class="guest-features-note" id="guestFeaturesNote">
+        ⚠ These settings only apply when the site is <strong>unlocked</strong>. Lock the site first if you want to restrict all access.
+      </div>
+      <div class="guest-features-grid">
+
+        <!-- Add Snippet toggle -->
+        <div class="guest-feature-card" id="gfCardSnippet">
+          <div class="guest-feature-info">
+            <div class="guest-feature-icon">✏️</div>
+            <div class="guest-feature-title">Add Snippet</div>
+            <div class="guest-feature-sub">Allow guests to create and save new snippets without an account.</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="guestAddSnippet" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="guestAddSnippetLabel">Off</div>
+          </div>
+        </div>
+
+        <!-- Quick Notes toggle (always on) -->
+        <div class="guest-feature-card" id="gfCardNotes">
+          <div class="guest-feature-info">
+            <div class="guest-feature-icon">📝</div>
+            <div class="guest-feature-title">Quick Notes</div>
+            <div class="guest-feature-sub">Always enabled — guests can always use the Quick Notes scratchpad.</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="guestNotes" checked disabled />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="guestNotesLabel">Always On</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="admin-section">
       <div class="admin-section-title">Overview</div>
@@ -1916,30 +1775,6 @@ select.field-input option { background: var(--surface2); }
         <div class="stat-card">
           <div class="stat-num rejected-color" id="statRejected">—</div>
           <div class="stat-label">Rejected</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Snippets Access Control -->
-    <div class="admin-section">
-      <div class="admin-section-title">Guest Access — Snippets</div>
-      <div class="lock-card">
-        <div class="lock-info">
-          <h3 id="lockTitle">🔒 Snippets Locked</h3>
-          <p id="lockDesc">Guests must sign in to view the Snippets section. Online Clipboard &amp; Notes are always available to guests.</p>
-        </div>
-        <div class="lock-right">
-          <div class="lock-status">
-            <div class="lock-status-dot" id="lockStatusDot"></div>
-            <span id="lockStatusText">Loading...</span>
-          </div>
-          <div class="toggle-wrap">
-            <label class="toggle">
-              <input type="checkbox" id="siteUnlocked" />
-              <span class="toggle-slider"></span>
-            </label>
-            <div class="toggle-label" id="toggleLabel">—</div>
-          </div>
         </div>
       </div>
     </div>
@@ -1989,18 +1824,6 @@ select.field-input option { background: var(--surface2); }
         Copy Code
       </button>
       <a class="pub-btn-home" href="/">← Back to CodeStash</a>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ COLLECTION ASSIGN MODAL ═══════════ -->
-<div class="collection-modal-overlay" id="collectionModalOverlay">
-  <div class="collection-modal">
-    <div class="collection-modal-title">Add to Collection</div>
-    <div class="collection-modal-sub" id="collectionModalSub">Choose which collections this snippet belongs to.</div>
-    <div class="collection-list" id="collectionModalList"></div>
-    <div class="collection-modal-footer">
-      <button class="collection-modal-close" id="collectionModalClose">Done</button>
     </div>
   </div>
 </div>
@@ -2073,35 +1896,19 @@ select.field-input option { background: var(--surface2); }
         </svg>
       </span>
       Quick Notes
-      <span class="nav-badge" style="margin-left:auto">NEW</span>
     </a>
 
     <a class="nav-item" href="#" id="navSnippets" aria-label="Snippets">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       Snippets
-      <span id="snippetsLockIcon" style="margin-left:auto;display:flex;align-items:center;opacity:0.5;" title="Sign in to access Snippets">
-        <!-- lock/unlock icon injected by JS -->
+      <span class="nav-lock-icon" id="navSnippetsLock" title="Sign in to access snippets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
       </span>
     </a>
-
-    <!-- ── COLLECTIONS ── -->
-    <div class="nav-collections-label" id="collectionsNavLabel">
-      <span>Collections</span>
-      <button class="nav-add-collection" id="addCollectionBtn" title="New collection" aria-label="New collection">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
-    </div>
-
-    <!-- Inline new-collection input -->
-    <div class="new-collection-row" id="newCollectionRow">
-      <input class="new-collection-input" type="text" id="newCollectionInput" placeholder="Collection name…" maxlength="32" />
-      <button class="new-collection-confirm" id="newCollectionConfirm">Add</button>
-    </div>
-
-    <!-- Dynamic collection items injected by JS -->
-    <div id="collectionNavItems"></div>
-
-  </aside>
+    </aside>
 
   <!-- TOPBAR -->
   <header class="topbar">
@@ -2148,7 +1955,67 @@ select.field-input option { background: var(--surface2); }
   <main class="main-content">
 
     <!-- ══ SNIPPETS PANEL ══ -->
-    <div id="snippetsPanel">
+    <div id="snippetsPanel" style="display:none">
+
+    <!-- ── INLINE AUTH CARD (shown to guests) ── -->
+    <div id="inlineAuthWrap" style="display:none; max-width:390px; margin:0 auto; width:100%; padding-top:8px;">
+      <div class="auth-card" style="animation:up 0.4s cubic-bezier(0.16,1,0.3,1);">
+
+        <div class="auth-headline" id="authHeadline">Welcome back.</div>
+        <p class="auth-sub" id="authSubline">Sign in to access your personal snippet library.</p>
+
+        <div class="tab-switcher">
+          <button class="tab-btn active" id="tabLogin">Sign In</button>
+          <button class="tab-btn" id="tabSignup">Sign Up</button>
+          <button class="tab-btn admin-tab" id="tabAdmin">Admin</button>
+        </div>
+
+        <div class="rate-limit-bar" id="rateLimitBar">
+          <div class="rate-limit-bar-label" id="rateLimitLabel">⚠ Failed attempts</div>
+          <div class="rate-limit-dots" id="rateLimitDots"></div>
+        </div>
+
+        <div class="auth-notice" id="authNotice" style="display:none"></div>
+        <div class="auth-error" id="authError"></div>
+
+        <div class="auth-field">
+          <div class="field-label">Email</div>
+          <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" maxlength="254" />
+        </div>
+        <div class="auth-field">
+          <div class="field-label">Password</div>
+          <div class="pw-wrap">
+            <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" maxlength="128" />
+            <button class="pw-toggle" type="button" onclick="togglePw('authPassword',this)" aria-label="Show password">
+              <svg viewBox="0 0 24 24" id="eyeMain"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="auth-field" id="confirmField" style="display:none">
+          <div class="field-label">Confirm Password</div>
+          <div class="pw-wrap">
+            <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" maxlength="128" />
+            <button class="pw-toggle" type="button" onclick="togglePw('authConfirm',this)" aria-label="Show confirm password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="auth-field" id="adminKeyField" style="display:none">
+          <div class="field-label">Admin Passphrase</div>
+          <div class="pw-wrap">
+            <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" maxlength="128" />
+            <button class="pw-toggle" type="button" onclick="togglePw('adminKey',this)" aria-label="Show passphrase">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="authBtn">
+          Sign In
+          <svg width="13" height="13"><use href="#icon-arrow"/></svg>
+        </button>
+      </div>
+    </div>
 
     <!-- Add snippet panel -->
     <div class="add-panel" id="addPanel">
@@ -2217,21 +2084,13 @@ Indentation is preserved."
 
     <!-- Tag filter bar (rendered by JS) -->
     <div class="tag-filter-bar" id="tagFilterBar" style="display:none"></div>
-
-    <!-- Collection filter banner (shown when a collection is active) -->
-    <div class="collection-filter-bar" id="collectionFilterBar">
-      <span style="font-size:1rem">📁</span>
-      <span class="collection-filter-name" id="collectionFilterName">—</span>
-      <button class="collection-filter-clear" id="collectionFilterClear">✕ Show all</button>
-    </div>
-
     <!-- Snippets grid (rendered by JS) -->
     <div class="snippets-grid" id="snippetsList"></div>
 
     </div><!-- end #snippetsPanel -->
 
     <!-- ══ ONLINE CLIPBOARD PANEL ══ -->
-    <div class="clipboard-panel" id="clipboardPanel">
+    <div class="clipboard-panel visible" id="clipboardPanel">
 
       <!-- Upload Card -->
       <div class="cb-card" id="cbUploadCard">
@@ -2469,6 +2328,10 @@ function togglePw(inputId, btn) {
 </script>
 
 <script>
+/* ════════════════════════════════════════════
+   MODULE: AppCore — auth, snippets, admin, UI state
+   Main application logic for CodeStash.
+════════════════════════════════════════════ */
 (function () {
 'use strict';
 
@@ -2484,7 +2347,7 @@ function togglePw(inputId, btn) {
    CONFIG  — replace with your Supabase project
 ════════════════════════════════════════════ */
 const _c = 'https://gxqpnbiawfauyflsrwvj.supabase.co';
-const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pzMyI6InN1cGFiYXNlIiwicmVmIjoiZ3hxcG5iaW','F3ZmF1eWZsc3J3dmoiLCJyb2xlIjoiYW5vbiIsIm','lhdCI6MTc3MTk1ODExOSwiZXhwIjoyMDg3NTM0MT','E5fQ.5AG0IDt_nKWwhBSF8YiMcbT9Y9sr4ip9dL-','J655ATNI'].join('');
+const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4cXBuYml','hd2ZhdXlmbHNyd3ZqIiwicm9sZSI6ImFub24iLCJ','pYXQiOjE3NzE5NTgxMTksImV4cCI6MjA4NzUzND','ExOX0.5AG0IDt_nKWwhBSF8YiMcbT9Y9sr4ip9d','L-J655ATNI'].join('');
 
 /* ════════════════════════════════════════════
    ADMIN PASSPHRASE — stored as SHA-256 hash only.
@@ -2559,16 +2422,14 @@ function resetInactivityTimer() {
    STATE
 ════════════════════════════════════════════ */
 let _session      = null;
+let _siteUnlocked    = false;
+let _guestNotes      = false;   // always forced true — Notes are permanently unlocked
+let _guestAddSnippet = false;
 let _userProfile  = null;
 let _authMode     = 'login';
-let _siteUnlocked = false;
 let _allUsers     = [];
 let _currentFilter= 'pending';
 let snippets      = [];
-let _guestNotes      = false;   // kept for backward compat; no longer used
-let _guestAddSnippet = false;   // kept for backward compat; no longer used
-// FIX 2: Track the newest snippet's timestamp so auto-refresh only
-// downloads rows that didn't exist on the last fetch — not the full DB.
 let _lastSyncTime = null;
 // Edit mode: holds the id of the snippet currently being edited, or null.
 let _editingId    = null;
@@ -2577,37 +2438,23 @@ let _editingId    = null;
    SCREEN MANAGER
 ════════════════════════════════════════════ */
 function showScreen(id) {
-  ['authScreen','pendingScreen'].forEach(sid => {
-    document.getElementById(sid).classList.toggle('active', sid === id);
-  });
+  // #authScreen no longer exists as a full-screen — auth is inline in snippets panel
+  const pendingEl = document.getElementById('pendingScreen');
+  if (pendingEl) pendingEl.classList.toggle('active', id === 'pendingScreen');
   document.getElementById('adminPortal').classList.toggle('active',   id === 'adminPortal');
-  document.getElementById('appContainer').classList.toggle('visible', id === 'app');
-  // Show fixed logo only on auth/pending screens
-  const isAuthScreen = (id === 'authScreen' || id === 'pendingScreen');
-  document.getElementById('authFixedLogo').classList.toggle('visible', isAuthScreen);
+  document.getElementById('appContainer').classList.toggle('visible', id === 'app' || id === 'authScreen');
+  // Fixed logo only on pending screen
+  document.getElementById('authFixedLogo').classList.toggle('visible', id === 'pendingScreen');
 }
 
 /* ════════════════════════════════════════════
-   INIT — check site lock on load
+   INIT
 ════════════════════════════════════════════ */
 async function init() {
-  // Check if this is a public snippet URL first
   const isPublic = await checkPublicView();
   if (isPublic) return;
-
-  updateRateLimitUI();
-  try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', {
-      headers: { 'apikey': _k, 'Authorization': 'Bearer ' + _k }
-    });
-    if (res.ok) {
-      const [row] = await res.json();
-      // locked=false means guests CAN see snippets; locked=true means snippets require login
-      _siteUnlocked = row ? row.locked === false : false;
-    }
-  } catch {}
-  // Always show the app — guests can always access Clipboard & Notes
   showApp(null);
+  updateRateLimitUI();
 }
 init();
 
@@ -2652,7 +2499,7 @@ function switchTab(mode) {
     authBtn.innerHTML    = 'Sign In <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
   } else if (mode === 'signup') {
     headline.textContent   = 'Create an account.';
-    subline.textContent    = 'New accounts require admin approval before you can log in.';
+    subline.textContent    = 'New accounts require admin approval.';
     subline.className      = 'auth-sub red';
     confirmField.style.display = 'block';
     authBtn.innerHTML      = 'Request Access <svg width="13" height="13"><use href="#icon-arrow"/></svg>';
@@ -2786,29 +2633,44 @@ function showApp(session) {
   document.getElementById('dropdownEmail').textContent  = isGuest ? 'Not signed in' : email;
   const rawName = isGuest ? 'Guest' : (email.split('@')[0] || 'there').split(/[.\d]/)[0] || 'there';
   const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-  document.getElementById('dropdownName').textContent = isGuest ? 'Browsing as Guest' : 'Hi, ' + displayName + '!';
+  document.getElementById('dropdownName').textContent = isGuest ? 'Sign in to continue' : 'Hi, ' + displayName + '!';
 
-  // Always show Notes nav item (no guest restriction)
-  const navNotes = document.getElementById('navNotes');
-  if (navNotes) navNotes.style.display = '';
+  // Toggle inline auth card vs actual snippet content
+  const inlineAuth        = document.getElementById('inlineAuthWrap');
+  const addPanel          = document.getElementById('addPanel');
+  const snippetListHeader = document.querySelector('#snippetsPanel .row');
+  const searchWrap        = document.querySelector('#snippetsPanel .search-wrap');
+  const tagFilterBar      = document.getElementById('tagFilterBar');
+  const snippetsList      = document.getElementById('snippetsList');
 
-  // Update the lock/unlock icon beside Snippets in the sidebar
-  updateSnippetsLockIcon();
-
-  // If guest and snippets are locked, default to Clipboard view
-  if (isGuest && !_siteUnlocked) {
-    switchToPanel('clipboard');
+  if (isGuest) {
+    if (inlineAuth)        inlineAuth.style.display        = '';
+    if (addPanel)          addPanel.style.display          = 'none';
+    if (snippetListHeader) snippetListHeader.style.display = 'none';
+    if (searchWrap)        searchWrap.style.display        = 'none';
+    if (tagFilterBar)      tagFilterBar.style.display      = 'none';
+    if (snippetsList)      snippetsList.style.display      = 'none';
+    setStatus('connected', 'connected');
   } else {
-    // Authenticated or snippets unlocked — default to Clipboard (first in sidebar)
-    switchToPanel('clipboard');
+    if (inlineAuth)        inlineAuth.style.display        = 'none';
+    if (addPanel)          addPanel.style.display          = '';
+    if (snippetListHeader) snippetListHeader.style.display = '';
+    if (searchWrap)        searchWrap.style.display        = '';
+    if (snippetsList)      snippetsList.style.display      = '';
   }
 
-  // Hide add-snippet panel from guests always (they can view, not add)
-  document.getElementById('addPanel').style.display = isGuest ? 'none' : '';
+  // Notes — always visible for signed-in users, hidden for guests
+  const navNotes = document.getElementById('navNotes');
+  if (navNotes) navNotes.style.display = ''; // Notes always visible
+
+  // ── Lock icon on Snippets nav item ──
+  AppUI.updateSnippetsLock(!isGuest);
 
   showScreen('app');
-  fetchSnippets();
-  resetInactivityTimer();
+  if (!isGuest) {
+    fetchSnippets();
+    resetInactivityTimer();
+  }
 }
 
 function showPendingScreen(email) {
@@ -2825,7 +2687,7 @@ async function showAdminPortal() {
 }
 
 /* ════════════════════════════════════════════
-   ADMIN — LOCK / UNLOCK
+   ADMIN — LOCK / UNLOCK + USER MANAGEMENT
 ════════════════════════════════════════════ */
 async function loadAdminData() {
   await Promise.all([loadSiteLock(), loadAllUsers()]);
@@ -2833,12 +2695,15 @@ async function loadAdminData() {
 
 async function loadSiteLock() {
   try {
-    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked', { headers: _headers(_session.access_token) });
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', { headers: _headers(_session.access_token) });
     const [row] = await res.json();
     const unlocked = row ? !row.locked : false;
-    _siteUnlocked = unlocked;
+    _siteUnlocked    = unlocked;
+    _guestNotes      = true; // Notes always unlocked regardless of DB value
+    _guestAddSnippet = row ? !!row.guest_add_snippet : false;
     updateLockUI(unlocked);
-  } catch { updateLockUI(false); }
+    updateGuestFeaturesUI(unlocked, true, _guestAddSnippet);
+  } catch { updateLockUI(false); updateGuestFeaturesUI(false, true, false); }
 }
 
 function updateLockUI(unlocked) {
@@ -2851,68 +2716,68 @@ function updateLockUI(unlocked) {
   toggle.checked = unlocked;
   if (unlocked) {
     dot.className     = 'lock-status-dot unlocked';
-    text.textContent  = 'Guests Can View';
+    text.textContent  = 'Public Access';
     label.textContent = 'Open';
-    title.textContent = '🔓 Snippets Unlocked';
-    desc.textContent  = 'Guests can view Snippets without signing in.';
+    title.textContent = '🔓 Site Unlocked';
+    desc.textContent  = 'The site is publicly accessible — no login required.';
   } else {
     dot.className     = 'lock-status-dot locked';
     text.textContent  = 'Login Required';
     label.textContent = 'Locked';
-    title.textContent = '🔒 Snippets Locked';
-    desc.textContent  = 'Guests must sign in to view the Snippets section. Clipboard & Notes remain open.';
+    title.textContent = '🔒 Site Locked';
+    desc.textContent  = 'The site requires login. Only approved users can access it.';
   }
+  updateGuestFeaturesUI(unlocked,
+    true, // Notes always on
+    document.getElementById('guestAddSnippet') ? document.getElementById('guestAddSnippet').checked : false
+  );
 }
 
-function updateSnippetsLockIcon() {
-  const iconEl = document.getElementById('snippetsLockIcon');
-  if (!iconEl) return;
-  const isSignedIn = !!_session;
-  if (isSignedIn) {
-    iconEl.title = 'Snippets unlocked';
-    iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
-  } else {
-    iconEl.title = 'Sign in to access Snippets';
-    iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-  }
+function updateGuestFeaturesUI(siteUnlocked, guestNotes, guestAddSnippet) {
+  const snippetToggle = document.getElementById('guestAddSnippet');
+  const snippetLabel  = document.getElementById('guestAddSnippetLabel');
+  const snippetCard   = document.getElementById('gfCardSnippet');
+  const noteCard      = document.getElementById('gfCardNotes');
+  const warningNote   = document.getElementById('guestFeaturesNote');
+  const noteToggle    = document.getElementById('guestNotes');
+  const noteLabel     = document.getElementById('guestNotesLabel');
+
+  if (snippetToggle) snippetToggle.checked  = guestAddSnippet;
+  if (snippetLabel)  snippetLabel.textContent = guestAddSnippet ? 'On' : 'Off';
+  // Notes are always on — lock the toggle visually
+  if (noteToggle) { noteToggle.checked = true; noteToggle.disabled = true; }
+  if (noteLabel)  noteLabel.textContent = 'Always On';
+
+  const locked = !siteUnlocked;
+  if (snippetCard) snippetCard.classList.toggle('disabled-card', locked);
+  if (noteCard)    noteCard.classList.toggle('disabled-card', false); // Notes never dimmed
+  if (warningNote) warningNote.classList.toggle('show', locked);
 }
 
-async function toggleGuestFeature() {
-  // No-op: guest Notes/Clipboard toggles removed; only snippets lock remains
-}
-
-function updateGuestFeaturesUI() {
-  // No-op: simplified — only the snippets lock toggle exists now
-}
-
-/**
- * applyLiveGuestRestrictions — re-applies current _siteUnlocked flag to live app UI.
- */
-function applyLiveGuestRestrictions() {
-  const isGuest = !_session;
-  updateSnippetsLockIcon();
-
-  // If guest and snippets just got locked, switch them away from Snippets
-  if (isGuest && !_siteUnlocked) {
-    const snippetsPanel = document.getElementById('snippetsPanel');
-    const navSnippets   = document.getElementById('navSnippets');
-    if (navSnippets && navSnippets.classList.contains('active')) {
-      switchToPanel('clipboard');
-    }
-    // Show snippets lock notice instead of content
-    if (snippetsPanel) {
-      const list = document.getElementById('snippetsList');
-      if (list) list.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">🔒</div>
-        <p>Sign in to view Snippets.</p>
-      </div>`;
-    }
+async function toggleGuestFeature(field, value) {
+  const labelId = 'guestAddSnippetLabel';
+  document.getElementById(labelId).textContent = value ? 'On' : 'Off';
+  try {
+    const body = {};
+    body[field] = value;
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error();
+    if (field === 'guest_add_snippet') _guestAddSnippet = value;
+    applyLiveGuestRestrictions();
+    showToast((value ? '✓ ' : '✗ ') + 'Add Snippet' + (value ? ' enabled for guests' : ' disabled for guests'), 'success');
+  } catch {
+    const el = document.getElementById('guestAddSnippet');
+    if (el) { el.checked = !value; document.getElementById(labelId).textContent = !value ? 'On' : 'Off'; }
+    showToast('✗ Failed to update guest permissions', 'error');
   }
 }
 
 async function toggleSiteLock() {
   const unlocked = document.getElementById('siteUnlocked').checked;
-  // Optimistically update admin panel UI
   updateLockUI(unlocked);
   try {
     const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
@@ -2921,23 +2786,28 @@ async function toggleSiteLock() {
       body: JSON.stringify({ locked: !unlocked })
     });
     if (!res.ok) throw new Error();
-
-    // ── Update in-memory state so live UI responds immediately ──
     _siteUnlocked = unlocked;
     applyLiveGuestRestrictions();
-
-    showToast(unlocked ? '🔓 Snippets unlocked for guests' : '🔒 Snippets locked — sign in required', 'success');
+    showToast(unlocked ? '🔓 Site unlocked — now public' : '🔒 Site locked — login required', 'success');
   } catch {
-    // Revert on failure
     updateLockUI(!unlocked);
     showToast('✗ Failed to update site settings', 'error');
   }
 }
 
+/**
+ * applyLiveGuestRestrictions — re-applies _siteUnlocked / _guestAddSnippet
+ * to the live UI instantly. Notes are always visible for everyone.
+ */
+function applyLiveGuestRestrictions() {
+  const isGuest = !_session;
+  const addPanel = document.getElementById('addPanel');
+  if (addPanel) addPanel.style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
 
-/* ════════════════════════════════════════════
-   ADMIN — USER MANAGEMENT
-════════════════════════════════════════════ */
+  // Notes are always unlocked — always show navNotes
+  const navNotes = document.getElementById('navNotes');
+  if (navNotes) navNotes.style.display = '';
+}
 async function loadAllUsers() {
   const queueEl = document.getElementById('userQueue');
   queueEl.innerHTML = '<div class="empty-queue"><div class="eq-icon">⏳</div><p>Loading users...</p></div>';
@@ -3025,33 +2895,20 @@ function signOut() {
   document.getElementById('authError').classList.remove('show');
   document.getElementById('authNotice').style.display = 'none';
   switchTab('login');
-  // Return to guest app view instead of forcing auth screen
-  showApp(null);
+  showApp(null); // back to inline auth in snippets panel
 }
 
 function adminSignOut() {
   _session = _userProfile = null;
   _allUsers = [];
-  document.getElementById('adminPortal').classList.remove('active');
-  showScreen('authScreen');
-  switchTab('admin');
+  switchTab('login');
+  showApp(null); // back to inline auth
 }
 
 /* ════════════════════════════════════════════
    SNIPPETS — FETCH / SAVE / DELETE
 ════════════════════════════════════════════ */
 async function fetchSnippets() {
-  // If guest and snippets are locked, show lock message and bail
-  if (!_session && !_siteUnlocked) {
-    const list = document.getElementById('snippetsList');
-    if (list) list.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">🔒</div>
-      <p>Sign in to view Snippets.</p>
-    </div>`;
-    document.getElementById('countBadge').textContent = '—';
-    setStatus('', '');
-    return;
-  }
   try {
     const token = _session ? _session.access_token : _k;
 
@@ -3438,12 +3295,6 @@ function renderSnippets() {
     (s.tags || []).some(t => t.includes(query)))
   );
   if (_activeTagFilter) filtered = filtered.filter(s => (s.tags || []).includes(_activeTagFilter));
-  // Collection filter
-  if (_activeCollection) {
-    const col = _collections.find(c => c.id === _activeCollection);
-    filtered = col ? filtered.filter(s => col.snippetIds.includes(s.id)) : filtered;
-  }
-
   // Pinned first
   filtered.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
 
@@ -3536,16 +3387,6 @@ function renderSnippets() {
       codePreview.textContent = s.code;
     }
 
-    // Collection badges (shown in header right after lang badge if in any collections)
-    const snippetCollections = _collections.filter(c => c.snippetIds.includes(s.id));
-    if (snippetCollections.length) {
-      const badge = document.createElement('span');
-      badge.className = 'collection-badge';
-      badge.title = snippetCollections.map(c => c.name).join(', ');
-      badge.textContent = '📁 ' + (snippetCollections.length === 1 ? snippetCollections[0].name : snippetCollections.length + ' collections');
-      headerRight.insertBefore(badge, langBadge);
-    }
-
     // --- Expanded meta ---
     const expandedBody = document.createElement('div');
     expandedBody.className = 'card-expanded-body';
@@ -3594,16 +3435,6 @@ function renderSnippets() {
       shareBtn.setAttribute('aria-label', 'Share snippet');
       shareBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
       actions.appendChild(shareBtn);
-
-      // Collect (add to collection)
-      const collectBtn = document.createElement('button');
-      collectBtn.className = 'btn-icon js-collect';
-      collectBtn.dataset.id = s.id;
-      collectBtn.setAttribute('aria-label', 'Add to collection');
-      collectBtn.title = 'Add to collection';
-      collectBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
-      actions.appendChild(collectBtn);
-
       // Edit
       const editBtn = document.createElement('button');
       editBtn.className = 'btn-icon js-edit';
@@ -3628,7 +3459,6 @@ function renderSnippets() {
 
   list.replaceChildren(frag);
   renderTagFilterBar();
-  renderCollectionNav();
 }
 
 function copySnippet(id) {
@@ -3734,12 +3564,15 @@ if (_snippetNameEl) _snippetNameEl.addEventListener('input', () => sanitizeInput
 document.getElementById('authBtn').addEventListener('click', handleAuth);
 
 // Pending back
-document.getElementById('pendingBack').addEventListener('click', signOut);
+document.getElementById('pendingBack').addEventListener('click', () => {
+  _session = null;
+  showApp(null);
+  switchTab('login');
+});
 
 // Admin toggle lock
 document.getElementById('siteUnlocked').addEventListener('change', toggleSiteLock);
-// Note: guestNotes and guestAddSnippet toggles removed — only snippets lock remains
-
+document.getElementById('guestAddSnippet').addEventListener('change', e => toggleGuestFeature('guest_add_snippet', e.target.checked));
 
 // Admin filter tabs (event delegation)
 document.getElementById('filterTabs').addEventListener('click', e => {
@@ -3779,7 +3612,7 @@ document.getElementById('snippetCode').addEventListener('keydown', e => {
   }
 });
 
-// Snippet grid — expand / copy / pin / share / collect / edit / delete (event delegation)
+// Snippet grid — expand / copy / pin / share / edit / delete (event delegation)
 document.getElementById('snippetsList').addEventListener('click', e => {
   const copyBtn    = e.target.closest('.js-copy');
   const deleteBtn  = e.target.closest('.js-delete');
@@ -3787,7 +3620,6 @@ document.getElementById('snippetsList').addEventListener('click', e => {
   const expandBtn  = e.target.closest('.js-expand');
   const pinBtn     = e.target.closest('.js-pin');
   const shareBtn   = e.target.closest('.js-share');
-  const collectBtn = e.target.closest('.js-collect');
   const card       = e.target.closest('.snippet-card');
   if (!card) return;
 
@@ -3797,7 +3629,6 @@ document.getElementById('snippetsList').addEventListener('click', e => {
   if (expandBtn)  { e.stopPropagation(); card.classList.toggle('expanded'); return; }
   if (pinBtn)     { e.stopPropagation(); pinSnippet(pinBtn.dataset.id); return; }
   if (shareBtn)   { e.stopPropagation(); openShareModal(shareBtn.dataset.id); return; }
-  if (collectBtn) { e.stopPropagation(); openCollectionModal(collectBtn.dataset.id); return; }
   card.classList.toggle('expanded');
 });
 
@@ -3814,52 +3645,16 @@ window.closeMobileSidebar = function() {
   document.getElementById('sidebarOverlay').classList.remove('open');
 };
 
-// ── switchToPanel — shared helper used by showApp, signOut, applyLiveGuestRestrictions ──
-function switchToPanel(panel) {
-  const snippetsPanel  = document.getElementById('snippetsPanel');
-  const clipboardPanel = document.getElementById('clipboardPanel');
-  const notesPanel     = document.getElementById('notesPanel');
-  const pageTitle      = document.querySelector('.topbar-page-title');
-  snippetsPanel.style.display = 'none';
-  clipboardPanel.classList.remove('visible');
-  notesPanel.classList.remove('visible');
-  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-  if (panel === 'clipboard') {
-    clipboardPanel.classList.add('visible');
-    document.getElementById('navClipboard').classList.add('active');
-    if (pageTitle) pageTitle.innerHTML = 'Online Clipboard <span>/ Share &amp; Retrieve</span>';
-  } else if (panel === 'notes') {
-    notesPanel.classList.add('visible');
-    document.getElementById('navNotes').classList.add('active');
-    if (pageTitle) pageTitle.innerHTML = 'Quick Notes <span>/ Scratchpad</span>';
-  } else {
-    snippetsPanel.style.display = '';
-    document.getElementById('navSnippets').classList.add('active');
-    if (pageTitle) pageTitle.innerHTML = 'Snippets <span>/ Library</span>';
-  }
-}
-
 // Sidebar nav active state + panel switching
 document.querySelector('.sidebar').addEventListener('click', e => {
   const item = e.target.closest('.nav-item');
   if (!item) return;
   e.preventDefault();
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  item.classList.add('active');
   closeMobileSidebar(); // close drawer on mobile after selection
 
-  // Guard: if guest tries to open Snippets and it's locked → redirect to sign in
-  if (item.id === 'navSnippets' && !_session && !_siteUnlocked) {
-    showScreen('authScreen');
-    document.getElementById('authFixedLogo').classList.add('visible');
-    return;
-  }
-
-  if (item.id === 'navClipboard') {
-    switchToPanel('clipboard');
-  } else if (item.id === 'navNotes') {
-    switchToPanel('notes');
-  } else {
-    switchToPanel('snippets');
-  }
+  AppUI.switchPanel(item.id);
 });
 
 // Account dropdown
@@ -3897,176 +3692,6 @@ setInterval(() => {
 }, 30000);
 
 /* ════════════════════════════════════════════
-   COLLECTIONS — localStorage-backed
-════════════════════════════════════════════ */
-let _collections = [];      // [{ id, name, snippetIds[] }]
-let _activeCollection = null;  // id of currently filtered collection
-let _collectingSnippetId = null;
-
-function loadCollections() {
-  try {
-    _collections = JSON.parse(localStorage.getItem('cs_collections') || '[]');
-  } catch { _collections = []; }
-}
-
-function saveCollections() {
-  try { localStorage.setItem('cs_collections', JSON.stringify(_collections)); } catch {}
-}
-
-function createCollection(name) {
-  const id = 'col_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-  _collections.push({ id, name, snippetIds: [] });
-  saveCollections();
-  renderCollectionNav();
-  showToast('📁 Collection "' + name + '" created', 'success');
-}
-
-function deleteCollection(id) {
-  const col = _collections.find(c => c.id === id);
-  if (!col || !confirm('Delete collection "' + col.name + '"? Snippets won\'t be deleted.')) return;
-  _collections = _collections.filter(c => c.id !== id);
-  if (_activeCollection === id) { _activeCollection = null; updateCollectionFilter(); }
-  saveCollections();
-  renderCollectionNav();
-  renderSnippets();
-  showToast('Collection deleted', '');
-}
-
-function toggleSnippetInCollection(colId, snippetId) {
-  const col = _collections.find(c => c.id === colId);
-  if (!col) return;
-  const idx = col.snippetIds.indexOf(snippetId);
-  if (idx === -1) col.snippetIds.push(snippetId);
-  else col.snippetIds.splice(idx, 1);
-  saveCollections();
-  renderCollectionModal(snippetId);
-  renderCollectionNav();
-}
-
-function openCollectionModal(snippetId) {
-  _collectingSnippetId = snippetId;
-  const s = snippets.find(x => x.id === snippetId);
-  if (s) document.getElementById('collectionModalSub').textContent = 'Assigning snippet: "' + s.name + '"';
-  renderCollectionModal(snippetId);
-  document.getElementById('collectionModalOverlay').classList.add('open');
-}
-
-function closeCollectionModal() {
-  document.getElementById('collectionModalOverlay').classList.remove('open');
-  _collectingSnippetId = null;
-  renderSnippets(); // refresh badges
-}
-
-function renderCollectionModal(snippetId) {
-  const list = document.getElementById('collectionModalList');
-  if (!_collections.length) {
-    list.innerHTML = '<div class="collection-modal-empty">No collections yet.<br>Create one from the sidebar first.</div>';
-    return;
-  }
-  list.innerHTML = '';
-  _collections.forEach(col => {
-    const assigned = col.snippetIds.includes(snippetId);
-    const item = document.createElement('div');
-    item.className = 'collection-list-item' + (assigned ? ' assigned' : '');
-    item.innerHTML = `
-      <span class="collection-item-icon">📁</span>
-      <span class="collection-item-name">${escHtml(col.name)}</span>
-      <span class="collection-item-count" style="font-size:0.7rem;color:var(--muted)">${col.snippetIds.length} snippet${col.snippetIds.length !== 1 ? 's' : ''}</span>
-      <span class="collection-item-check">${assigned ? '✓' : ''}</span>
-    `;
-    item.onclick = () => toggleSnippetInCollection(col.id, snippetId);
-    list.appendChild(item);
-  });
-}
-
-function renderCollectionNav() {
-  const container = document.getElementById('collectionNavItems');
-  if (!container) return;
-  if (!_collections.length) {
-    container.innerHTML = '<div style="font-size:0.73rem;color:var(--muted2);padding:4px 12px 8px;line-height:1.6;">No collections yet.<br>Tap + to create one.</div>';
-    return;
-  }
-  container.innerHTML = '';
-  _collections.forEach(col => {
-    const item = document.createElement('div');
-    item.className = 'nav-collection-item' + (_activeCollection === col.id ? ' active' : '');
-    item.dataset.colId = col.id;
-    // Count only snippets that still exist
-    const existingCount = col.snippetIds.filter(id => snippets.find(s => s.id === id)).length;
-    item.innerHTML = `
-      <span class="nav-collection-icon">📁</span>
-      <span class="nav-collection-name">${escHtml(col.name)}</span>
-      <span class="nav-collection-count">${existingCount}</span>
-      <button class="nav-collection-del js-col-del" data-col-id="${escHtml(col.id)}" title="Delete collection">✕</button>
-    `;
-    item.addEventListener('click', (e) => {
-      if (e.target.closest('.js-col-del')) { e.stopPropagation(); deleteCollection(col.id); return; }
-      // Activate collection filter — navigate to Snippets panel
-      _activeCollection = (_activeCollection === col.id) ? null : col.id;
-      switchToPanel('snippets');
-      updateCollectionFilter();
-      renderCollectionNav();
-      renderSnippets();
-      closeMobileSidebar();
-    });
-    container.appendChild(item);
-  });
-}
-
-function updateCollectionFilter() {
-  const bar = document.getElementById('collectionFilterBar');
-  const nameEl = document.getElementById('collectionFilterName');
-  if (_activeCollection) {
-    const col = _collections.find(c => c.id === _activeCollection);
-    if (col) {
-      nameEl.textContent = col.name;
-      bar.classList.add('show');
-    }
-  } else {
-    bar.classList.remove('show');
-  }
-}
-
-// Collection sidebar controls
-document.getElementById('addCollectionBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const row = document.getElementById('newCollectionRow');
-  row.classList.toggle('show');
-  if (row.classList.contains('show')) document.getElementById('newCollectionInput').focus();
-});
-
-document.getElementById('newCollectionConfirm').addEventListener('click', () => {
-  const val = document.getElementById('newCollectionInput').value.trim();
-  if (!val) return;
-  createCollection(val);
-  document.getElementById('newCollectionInput').value = '';
-  document.getElementById('newCollectionRow').classList.remove('show');
-});
-
-document.getElementById('newCollectionInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('newCollectionConfirm').click();
-  if (e.key === 'Escape') { document.getElementById('newCollectionRow').classList.remove('show'); }
-});
-
-// Collection modal close
-document.getElementById('collectionModalClose').addEventListener('click', closeCollectionModal);
-document.getElementById('collectionModalOverlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('collectionModalOverlay')) closeCollectionModal();
-});
-
-// Collection filter clear
-document.getElementById('collectionFilterClear').addEventListener('click', () => {
-  _activeCollection = null;
-  updateCollectionFilter();
-  renderCollectionNav();
-  renderSnippets();
-});
-
-// Init collections
-loadCollections();
-renderCollectionNav();
-
-/* ════════════════════════════════════════════
    LIGHT / DARK MODE TOGGLE
 ════════════════════════════════════════════ */
 (function initTheme() {
@@ -4100,12 +3725,53 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   if (typeof renderSnippets === 'function') renderSnippets();
 });
 
+/* ════════════════════════════════════════════
+   MODULE: AppUI — panel switching + lock icon
+════════════════════════════════════════════ */
+const AppUI = (() => {
+  const PANELS = {
+    navClipboard: { panel: 'clipboardPanel', title: 'Online Clipboard <span>/ Share &amp; Retrieve</span>', type: 'class' },
+    navNotes:     { panel: 'notesPanel',     title: 'Quick Notes <span>/ Scratchpad</span>',              type: 'class' },
+    navSnippets:  { panel: 'snippetsPanel',  title: 'Snippets <span>/ Library</span>',                    type: 'style' },
+  };
+
+  function switchPanel(navId) {
+    const pageTitle = document.querySelector('.topbar-page-title');
+    // Hide all panels
+    document.getElementById('snippetsPanel').style.display = 'none';
+    document.getElementById('clipboardPanel').classList.remove('visible');
+    document.getElementById('notesPanel').classList.remove('visible');
+
+    const cfg = PANELS[navId] || PANELS.navClipboard;
+    if (cfg.type === 'style') {
+      document.getElementById(cfg.panel).style.display = '';
+    } else {
+      document.getElementById(cfg.panel).classList.add('visible');
+    }
+    pageTitle.innerHTML = cfg.title;
+  }
+
+  function updateSnippetsLock(isSignedIn) {
+    const lockEl = document.getElementById('navSnippetsLock');
+    if (!lockEl) return;
+    // Swap between locked and unlocked SVG
+    const lockedSVG   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+    const unlockedSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+    lockEl.innerHTML = isSignedIn ? unlockedSVG : lockedSVG;
+    lockEl.classList.toggle('unlocked', isSignedIn);
+    lockEl.title = isSignedIn ? 'Snippets unlocked' : 'Sign in to access snippets';
+  }
+
+  return { switchPanel, updateSnippetsLock };
 })();
 
+})(); /* end main app IIFE */
+
 /* ════════════════════════════════════════════
-   ONLINE CLIPBOARD — Separate Supabase project
+   MODULE: AppClipboard — online clipboard upload/retrieve
+   Separate Supabase project for ephemeral clipboard data.
 ════════════════════════════════════════════ */
-(function() {
+const AppClipboard = (function() {
 'use strict';
 
 const CB_URL = 'https://wqjylietxfhtxlzudvso.supabase.co';
@@ -4450,7 +4116,10 @@ function cbHideRetrieveError() {
   if (p && /^\d{4}$/.test(p)) {
     // Switch to clipboard panel and fill OTP boxes
     setTimeout(() => {
-      switchToPanel('clipboard');
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById('navClipboard').classList.add('active');
+      document.getElementById('snippetsPanel').style.display = 'none';
+      document.getElementById('clipboardPanel').classList.add('visible');
       p.split('').forEach((d, i) => {
         const el = document.getElementById('cbIn' + i);
         if (el) { el.value = d; el.classList.add('filled'); }
@@ -4460,9 +4129,9 @@ function cbHideRetrieveError() {
 })();
 
 /* ══════════════════════════════════════════
-   QUICK NOTES — full logic
+   MODULE: AppNotes — quick notes scratchpad
 ══════════════════════════════════════════ */
-(function () {
+const AppNotes = (function () {
   // ── State ────────────────────────────────
   const MAX_NOTES = 4;
   const notes = Array.from({ length: MAX_NOTES }, (_, i) => ({
@@ -4658,90 +4327,12 @@ function cbHideRetrieveError() {
 
   // ── Init ─────────────────────────────────
   updateStats();
-})();
 
-})();
+  return {}; // AppNotes has no public API
+})(); /* end AppNotes */
+
+  return {}; // AppClipboard has no public API
+})(); /* end AppClipboard */
 </script>
-
-<!--
-═══════════════════════════════════════════════════════════
-  SUPABASE SETUP — run this SQL in your Supabase SQL editor
-═══════════════════════════════════════════════════════════
-
--- 1. PROFILES TABLE
-CREATE TABLE IF NOT EXISTS profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL,
-  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin','user')),
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "user_read_own"    ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "admin_read_all"   ON profiles FOR SELECT USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
-CREATE POLICY "admin_update"     ON profiles FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
-CREATE POLICY "user_insert_own"  ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- 2. SITE SETTINGS TABLE
-CREATE TABLE IF NOT EXISTS site_settings (
-  id int PRIMARY KEY DEFAULT 1,
-  locked boolean NOT NULL DEFAULT true,
-  guest_notes boolean NOT NULL DEFAULT false,
-  guest_add_snippet boolean NOT NULL DEFAULT false,
-  updated_at timestamptz DEFAULT now()
-);
-INSERT INTO site_settings (id, locked, guest_notes, guest_add_snippet) VALUES (1, true, false, false) ON CONFLICT (id) DO NOTHING;
-
--- If you already have a site_settings table, run these to add the new columns:
--- ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS guest_notes boolean NOT NULL DEFAULT false;
--- ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS guest_add_snippet boolean NOT NULL DEFAULT false;
-ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
-CREATE POLICY "admin_update_settings" ON site_settings FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
-
--- 3. SNIPPETS TABLE
-CREATE TABLE IF NOT EXISTS snippets (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name text NOT NULL,
-  language text NOT NULL DEFAULT 'text',
-  code text NOT NULL,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  tags text[] DEFAULT '{}',
-  is_pinned boolean DEFAULT false,
-  is_public boolean DEFAULT false,
-  public_id uuid DEFAULT gen_random_uuid(),
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "approved_select" ON snippets FOR SELECT USING (auth.uid() IS NOT NULL AND (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')));
-CREATE POLICY "approved_insert" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved'));
-CREATE POLICY "approved_delete" ON snippets FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
--- Allow public read of publicly shared snippets (no auth required)
-CREATE POLICY "public_snippet_view" ON snippets FOR SELECT USING (is_public = true);
-
--- If you already have a snippets table, run these to add the new columns:
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_pinned boolean DEFAULT false;
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_public boolean DEFAULT false;
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS public_id uuid DEFAULT gen_random_uuid();
-
--- 4. PROMOTE YOUR FIRST ADMIN (run after signing up normally)
--- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your@email.com';
-
-═══════════════════════════════════════════════════════════
-  SECURITY NOTES
-═══════════════════════════════════════════════════════════
-  • _adminPhrase is now stored as a SHA-256 hash (_adminPhraseHash).
-    The real passphrase is never in this file — source code readers
-    only see an irreversible hash. To change it, hash your new passphrase
-    in the browser console (instructions are in the CONFIG section above).
-  • True security is enforced via Supabase RLS above
-  • Rate limiting tracks failed login attempts
-  • Inactivity timeout signs out after 30 min idle
-  • Never commit your Supabase anon key to public repos
-    (consider using environment variables or a build step)
-═══════════════════════════════════════════════════════════
--->
-
 </body>
 </html>
