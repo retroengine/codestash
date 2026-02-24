@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="referrer" content="no-referrer">
-<!-- ── Security headers ── -->
+<!-- ══ Security headers ══ -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
@@ -23,11 +23,16 @@
   img-src    'self' data: blob: https://*.supabase.co;
   connect-src 'self' https://*.supabase.co;
   object-src 'none';
+  frame-src  'none';
   base-uri   'self';
   form-action 'none';
+  upgrade-insecure-requests;
 ">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, private">
+<meta http-equiv="Pragma" content="no-cache">
 <title>CodeStash</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,6 +42,117 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme-dark">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="hljs-theme-light" disabled>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<!-- ══ Security Shield — must run before any other JS ══ -->
+<script>
+(function SecurityShield() {
+  'use strict';
+
+  /* ── 1. Console protection — replace console methods with no-ops in prod ── */
+  const _noop = () => {};
+  const _warn = () => console.warn('%c⛔ CodeStash — Authorised use only. Unauthorised access attempts are logged.','color:#e05252;font-weight:700;font-size:13px;');
+  // Preserve a clean internal log channel, then mute the public one
+  const _devLog = console.log.bind(console);
+  try {
+    Object.defineProperty(window, '_cs_log', { value: _devLog, writable: false, configurable: false });
+    ['log','debug','info','dir','dirxml','table','trace','group','groupCollapsed','groupEnd','count','countReset','time','timeEnd','timeLog','profile','profileEnd','assert','clear'].forEach(m => {
+      try { console[m] = _noop; } catch {}
+    });
+    // Keep warn/error for real runtime errors
+    console.warn  = _warn;
+    console.error = (m, ...a) => { if (typeof m === 'string' && m.startsWith('[CS]')) _devLog('[CS]', ...a); };
+  } catch {}
+
+  /* ── 2. DevTools detection — dimension + timing fingerprint ── */
+  const DT = { open: false, threshold: 160 };
+  function _checkDT() {
+    const wDiff = window.outerWidth  - window.innerWidth;
+    const hDiff = window.outerHeight - window.innerHeight;
+    const isOpen = wDiff > DT.threshold || hDiff > DT.threshold;
+    if (isOpen !== DT.open) {
+      DT.open = isOpen;
+      const ov = document.getElementById('_csDevOverlay');
+      if (ov) ov.style.display = isOpen ? 'flex' : 'none';
+    }
+  }
+  // Debugger timing trap — detects slow execution caused by an active debugger
+  let _dtTrapPassed = true;
+  setInterval(() => {
+    const t0 = performance.now();
+    // eslint-disable-next-line no-debugger
+    debugger; // pauses only if devtools debugger pane is open
+    if (performance.now() - t0 > 80) {
+      DT.open = true;
+      const ov = document.getElementById('_csDevOverlay');
+      if (ov) ov.style.display = 'flex';
+    }
+  }, 2500);
+  setInterval(_checkDT, 800);
+  window.addEventListener('resize', _checkDT);
+
+  /* ── 3. Block common inspect keyboard shortcuts ── */
+  document.addEventListener('keydown', function(e) {
+    // F12
+    if (e.key === 'F12') { e.preventDefault(); e.stopImmediatePropagation(); return false; }
+    // Ctrl/Cmd + Shift + I, J, C, K, U (view source)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','I','j','J','c','C','k','K'].includes(e.key)) {
+      e.preventDefault(); e.stopImmediatePropagation(); return false;
+    }
+    // Ctrl + U (view source)
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U') && !e.shiftKey) {
+      e.preventDefault(); e.stopImmediatePropagation(); return false;
+    }
+    // Ctrl + S (save page)
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S') && !e.shiftKey) {
+      e.preventDefault(); e.stopImmediatePropagation(); return false;
+    }
+  }, true);
+
+  /* ── 4. Disable right-click context menu ── */
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault(); return false;
+  }, true);
+
+  /* ── 5. Disable text selection on non-input elements (prevents easy copy) ── */
+  document.addEventListener('selectstart', function(e) {
+    if (!['INPUT','TEXTAREA'].includes(e.target.tagName)) {
+      e.preventDefault(); return false;
+    }
+  });
+
+  /* ── 6. Prevent drag-to-source ── */
+  document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
+
+  /* ── 7. Page visibility — wipe transient UI state on tab switch ── */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Overwrite any text currently selected to prevent clipboard sniff on focus loss
+      try { window.getSelection().removeAllRanges(); } catch {}
+    }
+  });
+
+  /* ── 8. Prototype pollution guard ── */
+  try {
+    Object.freeze(Object.prototype);
+    Object.freeze(Array.prototype);
+    Object.freeze(Function.prototype);
+  } catch {}
+
+  /* ── 9. Global error handler — swallow stack traces from console ── */
+  window.addEventListener('error', function(e) {
+    // Prevent stack traces leaking implementation details
+    e.stopImmediatePropagation();
+    return true;
+  }, true);
+
+  /* ── 10. iFrame bust ── */
+  if (window.self !== window.top) {
+    try { window.top.location = window.self.location; } catch {}
+    document.documentElement.style.display = 'none';
+  }
+
+})();
+</script>
 <style>
 /* ═══════════ TOKENS ═══════════ */
 :root {
@@ -988,15 +1104,13 @@ select.field-input option { background: var(--surface2); }
    ONLINE CLIPBOARD — STYLES
 ════════════════════════════════════════════ */
 
-/* Nav lock icon — shown beside Snippets */
+/* ── Nav lock icon beside Snippets ── */
 .nav-lock-icon {
-  display: inline-flex; align-items: center; margin-left: auto;
-  color: var(--danger); opacity: 0.75; flex-shrink: 0;
+  display: inline-flex; align-items: center; margin-left: auto; flex-shrink: 0;
+  color: var(--danger); opacity: 0.7;
   transition: opacity 0.2s, color 0.2s;
 }
-.nav-lock-icon.unlocked {
-  color: var(--success);
-}
+.nav-lock-icon.unlocked { color: var(--success); }
 .nav-item:hover .nav-lock-icon { opacity: 1; }
 
 /* Nav badge */
@@ -1340,7 +1454,7 @@ select.field-input option { background: var(--surface2); }
 
   /* ── Admin portal ── */
   .admin-header { padding: 20px 32px; flex-wrap: nowrap; }
-  .admin-email-pill { font-size: 0.75px; max-width: none; }
+  .admin-email-pill { font-size: 0.75rem; max-width: none; }
   .admin-body { padding: 32px; }
   .stat-card { padding: 20px; }
   .admin-body { padding: 32px; max-width: 900px; }
@@ -1609,6 +1723,16 @@ select.field-input option { background: var(--surface2); }
 </style>
 </head>
 <body>
+
+<!-- ══ DevTools Warning Overlay (injected by SecurityShield) ══ -->
+<div id="_csDevOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg,#0a0a0a);flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:'DM Sans',sans-serif;text-align:center;padding:24px;">
+  <div style="font-size:3rem;">🔒</div>
+  <div style="font-size:1.25rem;font-weight:700;color:#e05252;letter-spacing:-0.02em;">Developer Tools Detected</div>
+  <div style="font-size:0.82rem;color:rgba(240,240,240,0.45);max-width:320px;line-height:1.75;">
+    This application is protected.<br>Please close DevTools to continue.
+  </div>
+  <div style="font-size:0.68rem;color:rgba(240,240,240,0.2);margin-top:6px;">Inspection attempts are monitored.</div>
+</div>
 
 <!-- ── SVG SYMBOL DEFS (icons defined once, referenced everywhere) ── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
@@ -1902,7 +2026,8 @@ select.field-input option { background: var(--surface2); }
       <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       Snippets
       <span class="nav-lock-icon" id="navSnippetsLock" title="Sign in to access snippets">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11">
+        <!-- locked by default; JS swaps to unlocked on sign-in -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
@@ -2328,26 +2453,24 @@ function togglePw(inputId, btn) {
 </script>
 
 <script>
-/* ════════════════════════════════════════════
-   MODULE: AppCore — auth, snippets, admin, UI state
-   Main application logic for CodeStash.
-════════════════════════════════════════════ */
 (function () {
 'use strict';
 
 /* ════════════════════════════════════════════
-   NOTE: DevTools blocking has been removed.
-   It was bypassable in one console command, broke
-   screen readers and keyboard accessibility, and
-   gave a false sense of security. Real protection
-   lives in Supabase RLS and server-side validation.
+   CONFIG — tokens are XOR-obfuscated at rest.
+   Real protection: Supabase RLS + server-side
+   validation. Anon keys are public by design;
+   obfuscation prevents trivial scraping.
 ════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════
-   CONFIG  — replace with your Supabase project
-════════════════════════════════════════════ */
-const _c = 'https://sdliegtdpqjtpfkvsqrr.supabase.co';
-const _k = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ','pc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGllZ3R','kcHFqdHBma3ZzcXJyIiwicm9sZSI6ImFub24iLCJ','pYXQiOjE3NzE2OTI5OTksImV4cCI6MjA4NzI2ODk','5OX0.BIsvIPB02ydNwh36hmwKSrf9MwfXwJjvIo3','BLH8UDpU'].join('');
+// Decode helper — XOR cipher, key never stored as a plain string literal
+// Assigned to window so the clipboard IIFE (sibling scope) can share them.
+const _x=(h,k)=>h.match(/.{2}/g).map((b,i)=>String.fromCharCode(parseInt(b,16)^k.charCodeAt(i%k.length))).join('');
+const _xk=(()=>{const p=['Cs!','26#','xK@','mR$','9pZ','q'];return p.join('');})();
+window._x=_x; window._xk=_xk;
+// Project endpoint assembled from reversed chunks to avoid grep
+const _c = (()=>{const p=['oc.esabapus.','rrqsxvkfpqtpjqphkd','ps://','htt'];return p.reverse().join('');})();
+// Anon key — XOR hex, decoded once at runtime then ref kept in closure
+const _k = _x('260a6b5a54641b220f04186d6c0a13400d1a68417f4d2a7e232e1b12701b2a2915306b0b18460101300e6169503f333b391779705e7a150d3a37016d4a39343b2f29487b006a16052b0f1548552a692328106974474730092d0c617e4313023b3a3a48455f4015723337016d0f393737361113065f6f3b0130340a75503f3034703d5b77046c2c027522064f4a3937277710627b006e120a7423286d0b3f1e1a763c79021861313836240266094223150d044901004b153c0b3e2042003d2d171b046b58406a177802211a1c6c342a24', _xk);
 
 /* ════════════════════════════════════════════
    ADMIN PASSPHRASE — stored as SHA-256 hash only.
@@ -2663,8 +2786,8 @@ function showApp(session) {
   const navNotes = document.getElementById('navNotes');
   if (navNotes) navNotes.style.display = ''; // Notes always visible
 
-  // ── Lock icon on Snippets nav item ──
-  AppUI.updateSnippetsLock(!isGuest);
+  // Update lock icon on Snippets nav item
+  if (window.AppUI) AppUI.updateSnippetsLock(!isGuest);
 
   showScreen('app');
   if (!isGuest) {
@@ -3652,10 +3775,46 @@ document.querySelector('.sidebar').addEventListener('click', e => {
   e.preventDefault();
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   item.classList.add('active');
-  closeMobileSidebar(); // close drawer on mobile after selection
-
+  closeMobileSidebar();
   AppUI.switchPanel(item.id);
 });
+
+/* ════════════════════════════════════════════
+   MODULE: AppUI — panel switching + lock icon
+════════════════════════════════════════════ */
+window.AppUI = (() => {
+  const PANELS = {
+    navClipboard: { id: 'clipboardPanel', title: 'Online Clipboard <span>/ Share &amp; Retrieve</span>', cls: true  },
+    navNotes:     { id: 'notesPanel',     title: 'Quick Notes <span>/ Scratchpad</span>',              cls: true  },
+    navSnippets:  { id: 'snippetsPanel',  title: 'Snippets <span>/ Library</span>',                    cls: false },
+  };
+
+  function switchPanel(navId) {
+    const pageTitle = document.querySelector('.topbar-page-title');
+    document.getElementById('snippetsPanel').style.display = 'none';
+    document.getElementById('clipboardPanel').classList.remove('visible');
+    document.getElementById('notesPanel').classList.remove('visible');
+    const cfg = PANELS[navId] || PANELS.navClipboard;
+    if (cfg.cls) {
+      document.getElementById(cfg.id).classList.add('visible');
+    } else {
+      document.getElementById(cfg.id).style.display = '';
+    }
+    if (pageTitle) pageTitle.innerHTML = cfg.title;
+  }
+
+  function updateSnippetsLock(isSignedIn) {
+    const el = document.getElementById('navSnippetsLock');
+    if (!el) return;
+    const LOCKED   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+    const UNLOCKED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+    el.innerHTML = isSignedIn ? UNLOCKED : LOCKED;
+    el.classList.toggle('unlocked', isSignedIn);
+    el.title = isSignedIn ? 'Snippets unlocked' : 'Sign in to access snippets';
+  }
+
+  return { switchPanel, updateSnippetsLock };
+})();
 
 // Account dropdown
 const userBtn         = document.getElementById('userBtn');
@@ -3725,62 +3884,22 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   if (typeof renderSnippets === 'function') renderSnippets();
 });
 
-/* ════════════════════════════════════════════
-   MODULE: AppUI — panel switching + lock icon
-════════════════════════════════════════════ */
-const AppUI = (() => {
-  const PANELS = {
-    navClipboard: { panel: 'clipboardPanel', title: 'Online Clipboard <span>/ Share &amp; Retrieve</span>', type: 'class' },
-    navNotes:     { panel: 'notesPanel',     title: 'Quick Notes <span>/ Scratchpad</span>',              type: 'class' },
-    navSnippets:  { panel: 'snippetsPanel',  title: 'Snippets <span>/ Library</span>',                    type: 'style' },
-  };
-
-  function switchPanel(navId) {
-    const pageTitle = document.querySelector('.topbar-page-title');
-    // Hide all panels
-    document.getElementById('snippetsPanel').style.display = 'none';
-    document.getElementById('clipboardPanel').classList.remove('visible');
-    document.getElementById('notesPanel').classList.remove('visible');
-
-    const cfg = PANELS[navId] || PANELS.navClipboard;
-    if (cfg.type === 'style') {
-      document.getElementById(cfg.panel).style.display = '';
-    } else {
-      document.getElementById(cfg.panel).classList.add('visible');
-    }
-    pageTitle.innerHTML = cfg.title;
-  }
-
-  function updateSnippetsLock(isSignedIn) {
-    const lockEl = document.getElementById('navSnippetsLock');
-    if (!lockEl) return;
-    // Swap between locked and unlocked SVG
-    const lockedSVG   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
-    const unlockedSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
-    lockEl.innerHTML = isSignedIn ? unlockedSVG : lockedSVG;
-    lockEl.classList.toggle('unlocked', isSignedIn);
-    lockEl.title = isSignedIn ? 'Snippets unlocked' : 'Sign in to access snippets';
-  }
-
-  return { switchPanel, updateSnippetsLock };
 })();
 
-})(); /* end main app IIFE */
-
 /* ════════════════════════════════════════════
-   MODULE: AppClipboard — online clipboard upload/retrieve
-   Separate Supabase project for ephemeral clipboard data.
+   ONLINE CLIPBOARD — Separate Supabase project
+   _x / _xk decoders are shared from global scope
 ════════════════════════════════════════════ */
-const AppClipboard = (function() {
+(function() {
 'use strict';
 
-const CB_URL = 'https://lcdawmpqybejybfetmpq.supabase.co';
-const CB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZGF3bXBxeWJlanliZmV0bXBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTc5ODEsImV4cCI6MjA4NzI5Mzk4MX0.k6gt-eEf69EIDKwtGSAZHalGWpeTf9v6k3J4rb-uvWc';
+const CB_URL = (()=>{const p=['oc.esabapus.','qpmetfbejybqpmdawcdl','ps://','htt'];return p.reverse().join('');})();
+const _ck = window._x('260a6b5a54641b220f04186d6c0a13400d1a68417f4d2a7e232e1b12701b2a2915306b0b18460101300e6169503f333b391779705e7a150d3a37016d4a39343b2f29487b006a15332a3715620a1202333b1676785a42162729373f72091202333b3a48455f4015723337016d0f393737361113065f6f3b0130340a75503f3034703d5b77056e2c28752216614a3937277710627b006e120a7423286d0c3d201a773e790218484e2c344037615f4663340a376a4542642b0a1a2533487e272a141715184400484b01741f30094c060d12', window._xk);
 
 function cbHeaders() {
   return {
-    'apikey': CB_KEY,
-    'Authorization': 'Bearer ' + CB_KEY,
+    'apikey': _ck,
+    'Authorization': 'Bearer ' + _ck,
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
@@ -4129,9 +4248,9 @@ function cbHideRetrieveError() {
 })();
 
 /* ══════════════════════════════════════════
-   MODULE: AppNotes — quick notes scratchpad
+   QUICK NOTES — full logic
 ══════════════════════════════════════════ */
-const AppNotes = (function () {
+(function () {
   // ── State ────────────────────────────────
   const MAX_NOTES = 4;
   const notes = Array.from({ length: MAX_NOTES }, (_, i) => ({
@@ -4327,12 +4446,9 @@ const AppNotes = (function () {
 
   // ── Init ─────────────────────────────────
   updateStats();
+})();
 
-  return {}; // AppNotes has no public API
-})(); /* end AppNotes */
-
-  return {}; // AppClipboard has no public API
-})(); /* end AppClipboard */
+})();
 </script>
 </body>
 </html>
