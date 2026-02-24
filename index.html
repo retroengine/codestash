@@ -3893,7 +3893,7 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
 (function() {
 'use strict';
 
-const CB_URL = (()=>{const p=['oc.esabapus.','qpmetfbejybqpmdawcdl','ps://','htt'];return p.reverse().join('');})();
+const CB_URL = (()=>{const p=['.supabase.co','qpmetfbejybqpmdawcdl','ps://','htt'];return p.reverse().join('');})();
 const _ck = window._x('260a6b5a54641b220f04186d6c0a13400d1a68417f4d2a7e232e1b12701b2a2915306b0b18460101300e6169503f333b391779705e7a150d3a37016d4a39343b2f29487b006a15332a3715620a1202333b1676785a42162729373f72091202333b3a48455f4015723337016d0f393737361113065f6f3b0130340a75503f3034703d5b77056e2c28752216614a3937277710627b006e120a7423286d0c3d201a773e790218484e2c344037615f4663340a376a4542642b0a1a2533487e272a141715184400484b01741f30094c060d12', window._xk);
 
 function cbHeaders() {
@@ -4014,7 +4014,7 @@ window.cbUpload = async function() {
         CB_URL + '/storage/v1/object/clipboard-files/' + encodeURIComponent(filePath),
         {
           method: 'POST',
-          headers: { 'apikey': CB_KEY, 'Authorization': 'Bearer ' + CB_KEY, 'Content-Type': _cbFile.type || 'application/octet-stream' },
+          headers: { 'apikey': _ck, 'Authorization': 'Bearer ' + _ck, 'Content-Type': _cbFile.type || 'application/octet-stream' },
           body: _cbFile
         }
       );
