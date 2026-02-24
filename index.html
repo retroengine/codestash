@@ -1678,6 +1678,77 @@ select.field-input option { background: var(--surface2); }
 
   <div class="admin-body">
 
+    <!-- Site Lock -->
+    <div class="admin-section">
+      <div class="admin-section-title">Site Access Control</div>
+      <div class="lock-card">
+        <div class="lock-info">
+          <h3 id="lockTitle">🔒 Site Locked</h3>
+          <p id="lockDesc">The site requires login. Only approved users can access it.</p>
+        </div>
+        <div class="lock-right">
+          <div class="lock-status">
+            <div class="lock-status-dot" id="lockStatusDot"></div>
+            <span id="lockStatusText">Loading...</span>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="siteUnlocked" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="toggleLabel">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guest Feature Permissions -->
+    <div class="admin-section" id="guestFeaturesSection">
+      <div class="admin-section-title">Guest Permissions
+        <span style="font-size:0.65rem;font-weight:500;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0;">
+          — controls what public visitors can do when site is unlocked
+        </span>
+      </div>
+      <div class="guest-features-note" id="guestFeaturesNote">
+        ⚠ These settings only apply when the site is <strong>unlocked</strong>. Lock the site first if you want to restrict all access.
+      </div>
+      <div class="guest-features-grid">
+
+        <!-- Add Snippet toggle -->
+        <div class="guest-feature-card" id="gfCardSnippet">
+          <div class="guest-feature-info">
+            <div class="guest-feature-icon">✏️</div>
+            <div class="guest-feature-title">Add Snippet</div>
+            <div class="guest-feature-sub">Allow guests to create and save new snippets without an account.</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="guestAddSnippet" />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="guestAddSnippetLabel">Off</div>
+          </div>
+        </div>
+
+        <!-- Quick Notes toggle (always on) -->
+        <div class="guest-feature-card" id="gfCardNotes">
+          <div class="guest-feature-info">
+            <div class="guest-feature-icon">📝</div>
+            <div class="guest-feature-title">Quick Notes</div>
+            <div class="guest-feature-sub">Always enabled — guests can always use the Quick Notes scratchpad.</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="guestNotes" checked disabled />
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-label" id="guestNotesLabel">Always On</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="admin-section">
       <div class="admin-section-title">Overview</div>
@@ -2331,6 +2402,9 @@ function resetInactivityTimer() {
    STATE
 ════════════════════════════════════════════ */
 let _session      = null;
+let _siteUnlocked    = false;
+let _guestNotes      = false;   // always forced true — Notes are permanently unlocked
+let _guestAddSnippet = false;
 let _userProfile  = null;
 let _authMode     = 'login';
 let _allUsers     = [];
@@ -2566,7 +2640,7 @@ function showApp(session) {
 
   // Notes — always visible for signed-in users, hidden for guests
   const navNotes = document.getElementById('navNotes');
-  if (navNotes) navNotes.style.display = isGuest ? 'none' : '';
+  if (navNotes) navNotes.style.display = ''; // Notes always visible
 
   showScreen('app');
   if (!isGuest) {
@@ -2589,10 +2663,126 @@ async function showAdminPortal() {
 }
 
 /* ════════════════════════════════════════════
-   ADMIN — USER MANAGEMENT
+   ADMIN — LOCK / UNLOCK + USER MANAGEMENT
 ════════════════════════════════════════════ */
 async function loadAdminData() {
-  await loadAllUsers();
+  await Promise.all([loadSiteLock(), loadAllUsers()]);
+}
+
+async function loadSiteLock() {
+  try {
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_notes,guest_add_snippet', { headers: _headers(_session.access_token) });
+    const [row] = await res.json();
+    const unlocked = row ? !row.locked : false;
+    _siteUnlocked    = unlocked;
+    _guestNotes      = true; // Notes always unlocked regardless of DB value
+    _guestAddSnippet = row ? !!row.guest_add_snippet : false;
+    updateLockUI(unlocked);
+    updateGuestFeaturesUI(unlocked, true, _guestAddSnippet);
+  } catch { updateLockUI(false); updateGuestFeaturesUI(false, true, false); }
+}
+
+function updateLockUI(unlocked) {
+  const toggle = document.getElementById('siteUnlocked');
+  const dot    = document.getElementById('lockStatusDot');
+  const text   = document.getElementById('lockStatusText');
+  const label  = document.getElementById('toggleLabel');
+  const title  = document.getElementById('lockTitle');
+  const desc   = document.getElementById('lockDesc');
+  toggle.checked = unlocked;
+  if (unlocked) {
+    dot.className     = 'lock-status-dot unlocked';
+    text.textContent  = 'Public Access';
+    label.textContent = 'Open';
+    title.textContent = '🔓 Site Unlocked';
+    desc.textContent  = 'The site is publicly accessible — no login required.';
+  } else {
+    dot.className     = 'lock-status-dot locked';
+    text.textContent  = 'Login Required';
+    label.textContent = 'Locked';
+    title.textContent = '🔒 Site Locked';
+    desc.textContent  = 'The site requires login. Only approved users can access it.';
+  }
+  updateGuestFeaturesUI(unlocked,
+    true, // Notes always on
+    document.getElementById('guestAddSnippet') ? document.getElementById('guestAddSnippet').checked : false
+  );
+}
+
+function updateGuestFeaturesUI(siteUnlocked, guestNotes, guestAddSnippet) {
+  const snippetToggle = document.getElementById('guestAddSnippet');
+  const snippetLabel  = document.getElementById('guestAddSnippetLabel');
+  const snippetCard   = document.getElementById('gfCardSnippet');
+  const noteCard      = document.getElementById('gfCardNotes');
+  const warningNote   = document.getElementById('guestFeaturesNote');
+  const noteToggle    = document.getElementById('guestNotes');
+  const noteLabel     = document.getElementById('guestNotesLabel');
+
+  if (snippetToggle) snippetToggle.checked  = guestAddSnippet;
+  if (snippetLabel)  snippetLabel.textContent = guestAddSnippet ? 'On' : 'Off';
+  // Notes are always on — lock the toggle visually
+  if (noteToggle) { noteToggle.checked = true; noteToggle.disabled = true; }
+  if (noteLabel)  noteLabel.textContent = 'Always On';
+
+  const locked = !siteUnlocked;
+  if (snippetCard) snippetCard.classList.toggle('disabled-card', locked);
+  if (noteCard)    noteCard.classList.toggle('disabled-card', false); // Notes never dimmed
+  if (warningNote) warningNote.classList.toggle('show', locked);
+}
+
+async function toggleGuestFeature(field, value) {
+  const labelId = 'guestAddSnippetLabel';
+  document.getElementById(labelId).textContent = value ? 'On' : 'Off';
+  try {
+    const body = {};
+    body[field] = value;
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error();
+    if (field === 'guest_add_snippet') _guestAddSnippet = value;
+    applyLiveGuestRestrictions();
+    showToast((value ? '✓ ' : '✗ ') + 'Add Snippet' + (value ? ' enabled for guests' : ' disabled for guests'), 'success');
+  } catch {
+    const el = document.getElementById('guestAddSnippet');
+    if (el) { el.checked = !value; document.getElementById(labelId).textContent = !value ? 'On' : 'Off'; }
+    showToast('✗ Failed to update guest permissions', 'error');
+  }
+}
+
+async function toggleSiteLock() {
+  const unlocked = document.getElementById('siteUnlocked').checked;
+  updateLockUI(unlocked);
+  try {
+    const res = await fetch(_c + '/rest/v1/site_settings?id=eq.1', {
+      method: 'PATCH',
+      headers: _headers(_session.access_token),
+      body: JSON.stringify({ locked: !unlocked })
+    });
+    if (!res.ok) throw new Error();
+    _siteUnlocked = unlocked;
+    applyLiveGuestRestrictions();
+    showToast(unlocked ? '🔓 Site unlocked — now public' : '🔒 Site locked — login required', 'success');
+  } catch {
+    updateLockUI(!unlocked);
+    showToast('✗ Failed to update site settings', 'error');
+  }
+}
+
+/**
+ * applyLiveGuestRestrictions — re-applies _siteUnlocked / _guestAddSnippet
+ * to the live UI instantly. Notes are always visible for everyone.
+ */
+function applyLiveGuestRestrictions() {
+  const isGuest = !_session;
+  const addPanel = document.getElementById('addPanel');
+  if (addPanel) addPanel.style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
+
+  // Notes are always unlocked — always show navNotes
+  const navNotes = document.getElementById('navNotes');
+  if (navNotes) navNotes.style.display = '';
 }
 async function loadAllUsers() {
   const queueEl = document.getElementById('userQueue');
@@ -3357,7 +3547,8 @@ document.getElementById('pendingBack').addEventListener('click', () => {
 });
 
 // Admin toggle lock
-
+document.getElementById('siteUnlocked').addEventListener('change', toggleSiteLock);
+document.getElementById('guestAddSnippet').addEventListener('change', e => toggleGuestFeature('guest_add_snippet', e.target.checked));
 
 // Admin filter tabs (event delegation)
 document.getElementById('filterTabs').addEventListener('click', e => {
