@@ -988,6 +988,17 @@ select.field-input option { background: var(--surface2); }
    ONLINE CLIPBOARD — STYLES
 ════════════════════════════════════════════ */
 
+/* Nav lock icon — shown beside Snippets */
+.nav-lock-icon {
+  display: inline-flex; align-items: center; margin-left: auto;
+  color: var(--danger); opacity: 0.75; flex-shrink: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+.nav-lock-icon.unlocked {
+  color: var(--success);
+}
+.nav-item:hover .nav-lock-icon { opacity: 1; }
+
 /* Nav badge */
 .nav-badge {
   font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em;
@@ -1866,12 +1877,7 @@ select.field-input option { background: var(--surface2); }
       </div>
     </div>
 
-    <a class="nav-item active" href="#" id="navSnippets" aria-label="Snippets">
-      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
-      Snippets
-    </a>
-
-    <a class="nav-item" href="#" id="navClipboard" aria-label="Online Clipboard">
+    <a class="nav-item active" href="#" id="navClipboard" aria-label="Online Clipboard">
       <span class="nav-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="2" width="6" height="4" rx="1"/>
@@ -1891,6 +1897,17 @@ select.field-input option { background: var(--surface2); }
       </span>
       Quick Notes
     </a>
+
+    <a class="nav-item" href="#" id="navSnippets" aria-label="Snippets">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+      Snippets
+      <span class="nav-lock-icon" id="navSnippetsLock" title="Sign in to access snippets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </span>
+    </a>
     </aside>
 
   <!-- TOPBAR -->
@@ -1899,7 +1916,7 @@ select.field-input option { background: var(--surface2); }
     <button class="mob-menu-btn" id="mobMenuBtn" aria-label="Open menu" onclick="toggleMobileSidebar()">
       <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div class="topbar-page-title">Snippets <span>/ Library</span></div>
+    <div class="topbar-page-title">Online Clipboard <span>/ Share &amp; Retrieve</span></div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
 
@@ -1938,7 +1955,7 @@ select.field-input option { background: var(--surface2); }
   <main class="main-content">
 
     <!-- ══ SNIPPETS PANEL ══ -->
-    <div id="snippetsPanel">
+    <div id="snippetsPanel" style="display:none">
 
     <!-- ── INLINE AUTH CARD (shown to guests) ── -->
     <div id="inlineAuthWrap" style="display:none; max-width:390px; margin:0 auto; width:100%; padding-top:8px;">
@@ -2073,7 +2090,7 @@ Indentation is preserved."
     </div><!-- end #snippetsPanel -->
 
     <!-- ══ ONLINE CLIPBOARD PANEL ══ -->
-    <div class="clipboard-panel" id="clipboardPanel">
+    <div class="clipboard-panel visible" id="clipboardPanel">
 
       <!-- Upload Card -->
       <div class="cb-card" id="cbUploadCard">
@@ -2311,6 +2328,10 @@ function togglePw(inputId, btn) {
 </script>
 
 <script>
+/* ════════════════════════════════════════════
+   MODULE: AppCore — auth, snippets, admin, UI state
+   Main application logic for CodeStash.
+════════════════════════════════════════════ */
 (function () {
 'use strict';
 
@@ -2641,6 +2662,9 @@ function showApp(session) {
   // Notes — always visible for signed-in users, hidden for guests
   const navNotes = document.getElementById('navNotes');
   if (navNotes) navNotes.style.display = ''; // Notes always visible
+
+  // ── Lock icon on Snippets nav item ──
+  AppUI.updateSnippetsLock(!isGuest);
 
   showScreen('app');
   if (!isGuest) {
@@ -3630,26 +3654,7 @@ document.querySelector('.sidebar').addEventListener('click', e => {
   item.classList.add('active');
   closeMobileSidebar(); // close drawer on mobile after selection
 
-  const snippetsPanel  = document.getElementById('snippetsPanel');
-  const clipboardPanel = document.getElementById('clipboardPanel');
-  const notesPanel     = document.getElementById('notesPanel');
-  const pageTitle      = document.querySelector('.topbar-page-title');
-
-  // Hide all panels first
-  snippetsPanel.style.display = 'none';
-  clipboardPanel.classList.remove('visible');
-  notesPanel.classList.remove('visible');
-
-  if (item.id === 'navClipboard') {
-    clipboardPanel.classList.add('visible');
-    pageTitle.innerHTML = 'Online Clipboard <span>/ Share & Retrieve</span>';
-  } else if (item.id === 'navNotes') {
-    notesPanel.classList.add('visible');
-    pageTitle.innerHTML = 'Quick Notes <span>/ Scratchpad</span>';
-  } else {
-    snippetsPanel.style.display = '';
-    pageTitle.innerHTML = 'Snippets <span>/ Library</span>';
-  }
+  AppUI.switchPanel(item.id);
 });
 
 // Account dropdown
@@ -3720,12 +3725,53 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   if (typeof renderSnippets === 'function') renderSnippets();
 });
 
+/* ════════════════════════════════════════════
+   MODULE: AppUI — panel switching + lock icon
+════════════════════════════════════════════ */
+const AppUI = (() => {
+  const PANELS = {
+    navClipboard: { panel: 'clipboardPanel', title: 'Online Clipboard <span>/ Share &amp; Retrieve</span>', type: 'class' },
+    navNotes:     { panel: 'notesPanel',     title: 'Quick Notes <span>/ Scratchpad</span>',              type: 'class' },
+    navSnippets:  { panel: 'snippetsPanel',  title: 'Snippets <span>/ Library</span>',                    type: 'style' },
+  };
+
+  function switchPanel(navId) {
+    const pageTitle = document.querySelector('.topbar-page-title');
+    // Hide all panels
+    document.getElementById('snippetsPanel').style.display = 'none';
+    document.getElementById('clipboardPanel').classList.remove('visible');
+    document.getElementById('notesPanel').classList.remove('visible');
+
+    const cfg = PANELS[navId] || PANELS.navClipboard;
+    if (cfg.type === 'style') {
+      document.getElementById(cfg.panel).style.display = '';
+    } else {
+      document.getElementById(cfg.panel).classList.add('visible');
+    }
+    pageTitle.innerHTML = cfg.title;
+  }
+
+  function updateSnippetsLock(isSignedIn) {
+    const lockEl = document.getElementById('navSnippetsLock');
+    if (!lockEl) return;
+    // Swap between locked and unlocked SVG
+    const lockedSVG   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+    const unlockedSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+    lockEl.innerHTML = isSignedIn ? unlockedSVG : lockedSVG;
+    lockEl.classList.toggle('unlocked', isSignedIn);
+    lockEl.title = isSignedIn ? 'Snippets unlocked' : 'Sign in to access snippets';
+  }
+
+  return { switchPanel, updateSnippetsLock };
 })();
 
+})(); /* end main app IIFE */
+
 /* ════════════════════════════════════════════
-   ONLINE CLIPBOARD — Separate Supabase project
+   MODULE: AppClipboard — online clipboard upload/retrieve
+   Separate Supabase project for ephemeral clipboard data.
 ════════════════════════════════════════════ */
-(function() {
+const AppClipboard = (function() {
 'use strict';
 
 const CB_URL = 'https://lcdawmpqybejybfetmpq.supabase.co';
@@ -4083,9 +4129,9 @@ function cbHideRetrieveError() {
 })();
 
 /* ══════════════════════════════════════════
-   QUICK NOTES — full logic
+   MODULE: AppNotes — quick notes scratchpad
 ══════════════════════════════════════════ */
-(function () {
+const AppNotes = (function () {
   // ── State ────────────────────────────────
   const MAX_NOTES = 4;
   const notes = Array.from({ length: MAX_NOTES }, (_, i) => ({
@@ -4281,9 +4327,12 @@ function cbHideRetrieveError() {
 
   // ── Init ─────────────────────────────────
   updateStats();
-})();
 
-})();
+  return {}; // AppNotes has no public API
+})(); /* end AppNotes */
+
+  return {}; // AppClipboard has no public API
+})(); /* end AppClipboard */
 </script>
 </body>
 </html>
