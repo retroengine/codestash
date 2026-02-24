@@ -1890,7 +1890,6 @@ select.field-input option { background: var(--surface2); }
         </svg>
       </span>
       Quick Notes
-      <span class="nav-badge" style="margin-left:auto">NEW</span>
     </a>
     </aside>
 
@@ -2630,7 +2629,7 @@ function showApp(session) {
     if (searchWrap)        searchWrap.style.display        = 'none';
     if (tagFilterBar)      tagFilterBar.style.display      = 'none';
     if (snippetsList)      snippetsList.style.display      = 'none';
-    setStatus('sign in to sync', '');
+    setStatus('connected', 'connected');
   } else {
     if (inlineAuth)        inlineAuth.style.display        = 'none';
     if (addPanel)          addPanel.style.display          = '';
@@ -4286,86 +4285,5 @@ function cbHideRetrieveError() {
 
 })();
 </script>
-
-<!--
-═══════════════════════════════════════════════════════════
-  SUPABASE SETUP — run this SQL in your Supabase SQL editor
-═══════════════════════════════════════════════════════════
-
--- 1. PROFILES TABLE
-CREATE TABLE IF NOT EXISTS profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL,
-  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin','user')),
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "user_read_own"    ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "admin_read_all"   ON profiles FOR SELECT USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
-CREATE POLICY "admin_update"     ON profiles FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
-CREATE POLICY "user_insert_own"  ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- 2. SITE SETTINGS TABLE
-CREATE TABLE IF NOT EXISTS site_settings (
-  id int PRIMARY KEY DEFAULT 1,
-  locked boolean NOT NULL DEFAULT true,
-  guest_notes boolean NOT NULL DEFAULT false,
-  guest_add_snippet boolean NOT NULL DEFAULT false,
-  updated_at timestamptz DEFAULT now()
-);
-INSERT INTO site_settings (id, locked, guest_notes, guest_add_snippet) VALUES (1, true, false, false) ON CONFLICT (id) DO NOTHING;
-
--- If you already have a site_settings table, run these to add the new columns:
--- ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS guest_notes boolean NOT NULL DEFAULT false;
--- ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS guest_add_snippet boolean NOT NULL DEFAULT false;
-ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
-CREATE POLICY "admin_update_settings" ON site_settings FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
-
--- 3. SNIPPETS TABLE
-CREATE TABLE IF NOT EXISTS snippets (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name text NOT NULL,
-  language text NOT NULL DEFAULT 'text',
-  code text NOT NULL,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  tags text[] DEFAULT '{}',
-  is_pinned boolean DEFAULT false,
-  is_public boolean DEFAULT false,
-  public_id uuid DEFAULT gen_random_uuid(),
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "approved_select" ON snippets FOR SELECT USING (auth.uid() IS NOT NULL AND (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')));
-CREATE POLICY "approved_insert" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved'));
-CREATE POLICY "approved_delete" ON snippets FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
--- Allow public read of publicly shared snippets (no auth required)
-CREATE POLICY "public_snippet_view" ON snippets FOR SELECT USING (is_public = true);
-
--- If you already have a snippets table, run these to add the new columns:
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_pinned boolean DEFAULT false;
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS is_public boolean DEFAULT false;
--- ALTER TABLE snippets ADD COLUMN IF NOT EXISTS public_id uuid DEFAULT gen_random_uuid();
-
--- 4. PROMOTE YOUR FIRST ADMIN (run after signing up normally)
--- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your@email.com';
-
-═══════════════════════════════════════════════════════════
-  SECURITY NOTES
-═══════════════════════════════════════════════════════════
-  • _adminPhrase is now stored as a SHA-256 hash (_adminPhraseHash).
-    The real passphrase is never in this file — source code readers
-    only see an irreversible hash. To change it, hash your new passphrase
-    in the browser console (instructions are in the CONFIG section above).
-  • True security is enforced via Supabase RLS above
-  • Rate limiting tracks failed login attempts
-  • Inactivity timeout signs out after 30 min idle
-  • Never commit your Supabase anon key to public repos
-    (consider using environment variables or a build step)
-═══════════════════════════════════════════════════════════
--->
-
 </body>
 </html>
