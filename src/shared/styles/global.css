@@ -26,6 +26,14 @@ body::before {
 }
 
 /* ═══════════ SCREENS (fixed overlays) ═══════════ */
+#appContainer {
+  display: none;
+  grid-template-columns: 1fr;
+  grid-template-rows: 56px 1fr;
+  min-height: 100vh;
+}
+#appContainer.visible { display: grid; }
+
 /* ── SIDEBAR — off-canvas by default (mobile-first) ── */
 .sidebar {
   position: fixed; left: 0; top: 0; bottom: 0;
@@ -383,7 +391,6 @@ body::before {
 .toast.success { border-color: rgba(61,186,112,0.4); }
 .toast.error   { border-color: rgba(224,82,82,0.4); }
 .toast.warning { border-color: rgba(246,166,35,0.4); }
-.toast.warning { border-color: rgba(246,166,35,0.4); }
 
 /* ════════════════════════════════════════════
    THEME TOGGLE BUTTON
@@ -417,6 +424,10 @@ body::before {
   .cb-otp-digit  { width: 42px; height: 52px; font-size: 1.5rem; border-radius: 10px; }
 }
 
+.notes-panel {
+  display: none; flex-direction: column; gap: 14px;
+}
+.notes-panel.visible { display: flex; }
 /* ════════════════════════════════════════════
    SYNTAX HIGHLIGHTING OVERRIDES
 ════════════════════════════════════════════ */
@@ -464,4 +475,3 @@ body::before {
 @media (max-width: 768px) {
   .guest-features-grid { grid-template-columns: 1fr; }
 }
-
