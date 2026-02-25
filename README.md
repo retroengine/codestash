@@ -67,10 +67,11 @@ codestash/
         │   ├── clipboard.css       ← Clipboard upload card, OTP code display, file
         │   │                         drop zone, progress bar, retrieve card, QR code.
         │   └── clipboard.js        ← AppClipboard module (upload text/files, retrieve
-        │                             by 4-digit code, QR generation) AND AppNotes module
-        │                             (tabs, toolbar, fullscreen, copy, download, clear).
-        │                             ⚠ AppNotes is nested INSIDE AppClipboard — do not
-        │                             separate them or both will break.
+        │   |                         by 4-digit code, QR generation) AND AppNotes module
+        │   |                         (tabs, toolbar, fullscreen, copy, download, clear).
+        │   |                         ⚠ AppNotes is nested INSIDE AppClipboard — do not
+        │   |                         separate them or both will break.
+        |   |__ live-clipboard.js
         │
         └── notes/
             ├── notes.css           ← Notes panel, tab bar, rename input, toolbar
@@ -139,7 +140,13 @@ crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassphrase'))
 3. In `app-core.js`, replace the value of `_adminPhraseHash` with your new hash
 
 ---
-
+   AppLiveClipboard  —  Real-time shared clipboard + file share
+   ─────────────────────────────────────────────────────────────
+   SYNC:      WebSocket broadcast (~50ms) + DB poll every 2s
+   PRESENCE:  DB heartbeat 10s, TTL 25s
+   FILE:      One file per session via Supabase Storage (max 15MB)
+              path stored in live_sessions.file_path
+              
 ## Tech Stack
 
 | Layer | Technology |
