@@ -2604,10 +2604,16 @@ async function handleAuth() {
 async function fetchProfile(userId, token) {
   try {
     const res = await fetch(_c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId) + '&limit=1', { headers: _headers(token) });
-    if (!res.ok) return null;
     const rows = await res.json();
-    return rows[0] || null;
-  } catch { return null; }
+    const profile = rows[0] || null;
+    // DEBUG — remove after fixing
+    alert('fetchProfile debug:\nstatus: ' + res.status + '\nrows: ' + JSON.stringify(rows) + '\nprofile: ' + JSON.stringify(profile));
+    if (!res.ok) return null;
+    return profile;
+  } catch (e) {
+    alert('fetchProfile ERROR: ' + e.message);
+    return null;
+  }
 }
 async function createProfile(userId, email, role, status, token) {
   try {
