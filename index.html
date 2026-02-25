@@ -537,6 +537,19 @@ Indentation is preserved."
     <!-- ══ ONLINE CLIPBOARD PANEL ══ -->
     <div class="clipboard-panel visible" id="clipboardPanel">
 
+      <!-- ── Mode Tabs: Share / Live ── -->
+      <div class="cb-mode-tabs">
+        <button class="cb-mode-tab active" id="cbModeShare" onclick="cbSwitchMode('share')">
+          🔗 Share Clipboard
+        </button>
+        <button class="cb-mode-tab" id="cbModeLive" onclick="cbSwitchMode('live')">
+          ⚡ Live Clipboard
+        </button>
+      </div>
+
+      <!-- ── Share Mode (existing upload + retrieve) ── -->
+      <div id="cbShareMode">
+
       <!-- Upload Card -->
       <div class="cb-card" id="cbUploadCard">
         <div class="cb-card-header">
@@ -650,6 +663,125 @@ Indentation is preserved."
 
 
 
+      </div><!-- end #cbShareMode -->
+
+      <!-- ── Live Mode ── -->
+      <div id="cbLiveMode" style="display:none">
+        <div class="lcb-panel visible" id="lcbPanel">
+
+          <!-- Join / Create Screen -->
+          <div class="lcb-join-screen" id="lcbJoinScreen">
+
+            <!-- Host card -->
+            <div class="lcb-join-card">
+              <div class="lcb-join-header">
+                <div class="lcb-join-icon">⚡</div>
+                <div>
+                  <div class="lcb-join-title">Start a Live Session</div>
+                  <div class="lcb-join-sub">Get a 6-character code — any device that enters it sees your clipboard in real time.</div>
+                </div>
+              </div>
+              <button class="btn-primary" id="lcbHostBtn">＋ New Session</button>
+            </div>
+
+            <div class="lcb-divider">or join an existing session</div>
+
+            <!-- Join card -->
+            <div class="lcb-join-card">
+              <div class="lcb-join-header">
+                <div class="lcb-join-icon">🔗</div>
+                <div>
+                  <div class="lcb-join-title">Join a Session</div>
+                  <div class="lcb-join-sub">Enter the 6-character code shown on the other device.</div>
+                </div>
+              </div>
+              <div class="lcb-code-input-wrap">
+                <input class="field-input" type="text" id="lcbCodeInput"
+                  placeholder="A B C 1 2 3"
+                  maxlength="6" autocomplete="off" autocorrect="off"
+                  autocapitalize="characters" spellcheck="false" />
+                <button class="lcb-join-btn" id="lcbJoinBtn">Join →</button>
+              </div>
+            </div>
+
+            <!-- How it works -->
+            <div class="lcb-how-card">
+              <div class="lcb-how-title">How Live Clipboard Works</div>
+              <div class="lcb-steps">
+                <div class="lcb-step">
+                  <div class="lcb-step-num">1</div>
+                  <div class="lcb-step-text">One device clicks <strong>New Session</strong> — gets a 6-character code instantly.</div>
+                </div>
+                <div class="lcb-step">
+                  <div class="lcb-step-num">2</div>
+                  <div class="lcb-step-text">Other devices <strong>enter the code</strong> to join. Any number of devices can join.</div>
+                </div>
+                <div class="lcb-step">
+                  <div class="lcb-step-num">3</div>
+                  <div class="lcb-step-text"><strong>Type anything</strong> — changes appear on all connected devices in real time. Session expires in 24h.</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end lcbJoinScreen -->
+
+          <!-- Active Session Screen -->
+          <div class="lcb-session-screen" id="lcbSessionScreen">
+
+            <!-- Status bar -->
+            <div class="lcb-status-bar">
+              <div class="lcb-status-left">
+                <div class="lcb-dot disconnected" id="lcbStatusDot"></div>
+                <span class="lcb-status-text" id="lcbStatusText">connecting…</span>
+                <span class="lcb-presence" id="lcbPresence">1 device connected</span>
+              </div>
+              <button class="lcb-leave-btn" id="lcbLeaveBtn">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Leave
+              </button>
+            </div>
+
+            <!-- Session code -->
+            <div class="lcb-code-bar">
+              <div>
+                <div class="lcb-code-label">Session Code</div>
+                <div class="lcb-code-digits" id="lcbCodeDigits"></div>
+              </div>
+              <button class="lcb-copy-code-btn" id="lcbCopyCodeBtn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Code
+              </button>
+            </div>
+
+            <!-- Editor -->
+            <div class="lcb-editor-wrap">
+              <textarea class="lcb-textarea" id="lcbTextarea"
+                placeholder="Start typing — it will appear on all connected devices instantly."
+                spellcheck="true" autocorrect="on" autocapitalize="sentences"></textarea>
+            </div>
+
+            <!-- Footer -->
+            <div class="lcb-footer">
+              <div class="lcb-footer-left">
+                <button class="lcb-action-btn" id="lcbCopyBtn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy
+                </button>
+                <button class="lcb-action-btn danger" id="lcbClearBtn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  Clear
+                </button>
+              </div>
+              <div class="lcb-footer-right">
+                <span class="lcb-stats" id="lcbStats">0 words · 0 chars</span>
+              </div>
+            </div>
+
+          </div><!-- end lcbSessionScreen -->
+
+        </div><!-- end lcbPanel -->
+      </div><!-- end #cbLiveMode -->
+
     </div><!-- end #clipboardPanel -->
 
     <!-- ══ QUICK NOTES PANEL ══ -->
@@ -756,19 +888,35 @@ Indentation is preserved."
      depends on the ones above it)
 ══════════════════════════════════════════ -->
 
+<!-- 0. Supabase JS client — needed for Realtime WebSocket in Live Clipboard -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <!-- 1. Config — Supabase URLs & keys -->
 <script src="src/shared/lib/supabase.js"></script>
 
 <!-- 2. Global helpers (togglePw, handleLangChange) -->
 <script src="src/shared/ui/helpers.js"></script>
 
+<!-- Clipboard mode switcher (Share / Live tabs) -->
+<script>
+function cbSwitchMode(mode) {
+  document.getElementById('cbShareMode').style.display = mode === 'share' ? '' : 'none';
+  document.getElementById('cbLiveMode').style.display  = mode === 'live'  ? '' : 'none';
+  document.getElementById('cbModeShare').classList.toggle('active', mode === 'share');
+  document.getElementById('cbModeLive').classList.toggle('active',  mode === 'live');
+}
+</script>
+
 <!-- Theme toggle is handled inside app-core.js -->
 
 <!-- 4. Core app: auth, snippets, admin, navigation -->
 <script src="src/features/auth/app-core.js"></script>
 
-<!-- 5. Online Clipboard feature -->
+<!-- 5. Online Clipboard + Quick Notes -->
 <script src="src/features/clipboard/clipboard.js"></script>
+
+<!-- 6. Live Clipboard — real-time shared sessions -->
+<script src="src/features/clipboard/live-clipboard.js"></script>
 
 <!-- AppNotes is nested inside clipboard.js -->
 
