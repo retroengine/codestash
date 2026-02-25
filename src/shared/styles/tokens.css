@@ -1,0 +1,59 @@
+/* ═══════════ DESIGN TOKENS ═══════════ */
+/* Dark (default) and light mode CSS variables */
+
+/* ═══════════ TOKENS ═══════════ */
+:root {
+  --bg:        #0a0a0a;
+  --surface:   #141414;
+  --surface2:  #1c1c1c;
+  --surface3:  #242424;
+  --border:    rgba(255,255,255,0.07);
+  --border-hi: rgba(255,255,255,0.13);
+  --text:      #f0f0f0;
+  --muted:     rgba(240,240,240,0.4);
+  --muted2:    rgba(240,240,240,0.2);
+  --danger:    #e05252;
+  --success:   #3dba70;
+  --warning:   #f6a623;
+  --accent:    #8b78ff;
+  --admin:     #d77bff;
+  /* theme transition */
+  --theme-transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ── LIGHT MODE ── */
+[data-theme="light"] {
+  --bg:        #f5f5f0;
+  --surface:   #ffffff;
+  --surface2:  #f0f0ea;
+  --surface3:  #e8e8e2;
+  --border:    rgba(0,0,0,0.08);
+  --border-hi: rgba(0,0,0,0.16);
+  --text:      #1a1a1a;
+  --muted:     rgba(26,26,26,0.45);
+  --muted2:    rgba(26,26,26,0.25);
+  --danger:    #d43f3f;
+  --success:   #2e9e5e;
+  --warning:   #d4880a;
+  --accent:    #6b56e8;
+  --admin:     #a855d4;
+}
+[data-theme="light"] body::before { opacity: 0.18; }
+[data-theme="light"] .logo-mark { background: #1a1a1a; }
+[data-theme="light"] .logo-mark svg path,
+[data-theme="light"] .logo-mark svg line { stroke: #fff; }
+[data-theme="light"] .auth-card,
+[data-theme="light"] .pending-card { box-shadow: 0 4px 32px rgba(0,0,0,0.1); }
+[data-theme="light"] .code-preview { background: var(--surface2) !important; }
+[data-theme="light"] .hljs { background: var(--surface2) !important; color: #383a42; }
+[data-theme="light"] #hljs-theme-dark { display: none; }
+[data-theme="light"] #hljs-theme-light { }
+
+/* Smooth transitions on all theme-aware elements */
+body, .sidebar, .topbar, .auth-card, .pending-card, .add-panel,
+.snippet-card, .code-preview, .field-input, .btn-primary, .btn-ghost,
+.btn-save, .nav-item, .tag-input-wrap, .cb-card, .account-dropdown,
+.share-modal, .toast, .admin-header, .admin-body, .stat-card,
+.user-card, .lock-card, .cb-otp-result, .cb-retrieved, .notes-editor-wrap,
+.notes-toolbar { transition: var(--theme-transition); }
+
