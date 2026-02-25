@@ -20,8 +20,8 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
   style-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
   font-src   https://fonts.gstatic.com;
-  img-src    'self' data: blob: https://*.supabase.co;
-  connect-src 'self' https://*.supabase.co https://raxnqglobvykqylejibx.supabase.co https://vbtzptvgbzsvrustnwiz.supabase.co;
+  img-src    'self' data: blob:;
+  connect-src 'self';
   object-src 'none';
   base-uri   'self';
 ">
@@ -2345,7 +2345,7 @@ function togglePw(inputId, btn) {
 /* ════════════════════════════════════════════
    CONFIG  — replace with your Supabase project
 ════════════════════════════════════════════ */
-const _c = 'https://raxnqglobvykqylejibx.supabase.co';
+const _c = '/api/sb-snippets';
 const _k = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheG5xZ2xvYnZ5a3F5bGVqaWJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NjE4NzksImV4cCI6MjA4NzUzNzg3OX0.ESup3R8G2TTizcdloSrSxi8XyopmSaHpUidVGCL3CVI';
 
 /* ════════════════════════════════════════════
@@ -3774,7 +3774,7 @@ const AppUI = (() => {
 const AppClipboard = (function() {
 'use strict';
 
-const CB_URL = 'https://vbtzptvgbzsvrustnwiz.supabase.co';
+const CB_URL = '/api/sb-clipboard';
 const CB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZidHpwdHZnYnpzdnJ1c3Rud2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMzY2NzksImV4cCI6MjA4NzYxMjY3OX0.25To041KTncq-3gRm0QB3qrGzeGyD1v9ODOCvh3i1Z0';
 function cbHeaders() {
   return {
