@@ -147,6 +147,7 @@ async function persistContent(content, isRetry = false) {
 }
 
 /* ── Realtime Channel ────────────────────────────────────────── */
+/* ── Realtime Channel ────────────────────────────────────────── */
 function connectChannel(code) {
   const sb = getClient();
   if (!sb) return;
@@ -159,7 +160,7 @@ function connectChannel(code) {
 
   _channel = sb.channel('lcb:' + code, {
     config: {
-      broadcast: { self: false },  // don't echo back to sender
+      broadcast: { self: false },  
       presence:  { key: _deviceId }
     }
   });
@@ -168,11 +169,9 @@ function connectChannel(code) {
   _channel.on('broadcast', { event: 'content' }, ({ payload }) => {
     if (!payload || payload.deviceId === _deviceId) return;
 
-    // Prevent the textarea's 'input' handler from re-broadcasting
     _fromRemote = true;
     const ta = el('lcbTextarea');
     if (ta) {
-      // Preserve cursor position as best we can
       const cursor = ta.selectionStart;
       ta.value = payload.content;
       const newCursor = Math.min(cursor, payload.content.length);
@@ -182,39 +181,44 @@ function connectChannel(code) {
     updateStats(payload.content || '');
   });
 
-  // ── Presence: sync ────────────────────────────────────────
+  // ── Presence: sync (The ONLY place we count devices) ───────
   _channel.on('presence', { event: 'sync' }, () => {
-    const count = Object.keys(_channel.presenceState()).length;
+    const state = _channel.presenceState();
+    const count = Object.keys(state).length;
     updatePresence(count);
   });
 
-  // ── Presence: join ────────────────────────────────────────
-  _channel.on('presence', { event: 'join' }, () => {
-    const count = Object.keys(_channel.presenceState()).length;
-    updatePresence(count);
-    if (count > 1) toast('📱 Device joined the session');
+  // ── Presence: join (Only for toasts) ────────────────────────
+  _channel.on('presence', { event: 'join' }, ({ newPresences }) => {
+    // Prevent the host from seeing a toast for their own connection
+    const isOtherDevice = newPresences.some(p => p.deviceId !== _deviceId);
+    if (isOtherDevice) toast('📱 Device joined the session');
   });
 
-  // ── Presence: leave ───────────────────────────────────────
-  _channel.on('presence', { event: 'leave' }, () => {
-    const count = Object.keys(_channel.presenceState()).length;
-    updatePresence(count);
-    toast('📴 Device left the session');
+  // ── Presence: leave (Only for toasts) ───────────────────────
+  _channel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
+    const isOtherDevice = leftPresences.some(p => p.deviceId !== _deviceId);
+    if (isOtherDevice) toast('📴 Device left the session');
   });
 
   // ── Subscribe ─────────────────────────────────────────────
   _channel.subscribe(async (status) => {
+    // Only react to explicitly known connection states
     if (status === 'SUBSCRIBED') {
-      await _channel.track({
-        deviceId: _deviceId,
-        joinedAt: Date.now()
-      });
-      setStatus('live');
+      try {
+        await _channel.track({
+          deviceId: _deviceId,
+          joinedAt: Date.now()
+        });
+      } catch (err) {
+        console.warn('Presence track failed, but broadcast is active:', err);
+      }
+      // Set to live regardless of presence tracking success
+      setStatus('live'); 
     } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
       setStatus('disconnected');
-    } else {
-      setStatus('connecting');
     }
+    // Removed the greedy `else` block so background events don't break the UI
   });
 }
 
