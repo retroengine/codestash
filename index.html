@@ -762,8 +762,7 @@ Indentation is preserved."
 <!-- 2. Global helpers (togglePw, handleLangChange) -->
 <script src="src/shared/ui/helpers.js"></script>
 
-<!-- 3. Theme (init before app so no flash of wrong theme) -->
-<script src="src/shared/hooks/theme.js"></script>
+<!-- Theme toggle is handled inside app-core.js -->
 
 <!-- 4. Core app: auth, snippets, admin, navigation -->
 <script src="src/features/auth/app-core.js"></script>
@@ -771,8 +770,7 @@ Indentation is preserved."
 <!-- 5. Online Clipboard feature -->
 <script src="src/features/clipboard/clipboard.js"></script>
 
-<!-- 6. Quick Notes feature -->
-<script src="src/features/notes/notes.js"></script>
+<!-- AppNotes is nested inside clipboard.js -->
 
 </body>
 </html>
