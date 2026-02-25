@@ -336,11 +336,3 @@ select.field-input option { background: var(--surface2); }
 .eq-icon { font-size: 2rem; margin-bottom: 10px; }
 
 /* ═══════════ APP LAYOUT — mobile-first ═══════════ */
-#appContainer {
-  display: none;
-  grid-template-columns: 1fr;
-  grid-template-rows: 56px 1fr;
-  min-height: 100vh;
-}
-#appContainer.visible { display: grid; }
-
