@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/sb-snippets/:path*",
+      "destination": "https://raxnqglobvykqylejibx.supabase.co/:path*"
+    },
+    {
+      "source": "/api/sb-clipboard/:path*",
+      "destination": "https://vbtzptvgbzsvrustnwiz.supabase.co/:path*"
+    }
+  ]
+}
