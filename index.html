@@ -51,6 +51,140 @@
   <link rel="stylesheet" href="src/features/snippets/snippets.css">
   <link rel="stylesheet" href="src/features/clipboard/clipboard.css">
   <link rel="stylesheet" href="src/features/notes/notes.css">
+  <style>
+    /* ── topbar: hide the muted span entirely now that JS uses textContent ── */
+    .topbar-page-title span { display: none; }
+
+    /* ── Logo sizing ── */
+    .logo-mark {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      background: #0a0a0a;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { width: 18px; height: 18px; }
+    .lw-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .lw-sub { display: none; }
+
+    /* ── Sidebar logo area ── */
+    .sidebar-logo .logo-mark {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+    }
+    .sidebar-logo .logo-mark svg { width: 20px; height: 20px; }
+    .sidebar-logo .lw-name { font-size: 1.05rem; }
+
+    /* ══════════════════════════════════════════
+       MOBILE SIDEBAR REDESIGN
+    ══════════════════════════════════════════ */
+
+    /* Sidebar base — cleaner, no border on right edge shadow instead */
+    .sidebar {
+      width: min(260px, 82vw);
+      background: var(--surface);
+      border-right: none;
+      box-shadow: 4px 0 40px rgba(0,0,0,0.35);
+      padding: 0;
+      gap: 0;
+    }
+
+    /* ── Sidebar inner scroll wrapper ── */
+    .sidebar-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding-top: max(16px, env(safe-area-inset-top));
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
+    }
+
+    /* ── Logo row ── */
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px 14px 18px;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Close button (mobile only) ── */
+    .sidebar-close-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sidebar-close-btn svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none; stroke-width: 2.5;
+    }
+    .sidebar-close-btn:hover { background: var(--surface3); color: var(--text); }
+
+    /* ── Nav list ── */
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 10px;
+      gap: 2px;
+    }
+
+    /* ── Nav items — cleaner on mobile ── */
+    .nav-item {
+      padding: 11px 13px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      min-height: 46px;
+      letter-spacing: -0.01em;
+    }
+    .nav-item.active {
+      background: var(--surface3);
+      border-color: var(--border-hi);
+      color: var(--text);
+    }
+
+    /* ── Sidebar overlay — slightly darker ── */
+    .sidebar-overlay {
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    /* ── Desktop: undo all mobile overrides ── */
+    @media (min-width: 769px) {
+      .sidebar {
+        width: 252px;
+        box-shadow: none;
+        border-right: 1px solid var(--border);
+        padding: 24px 14px;
+        gap: 2px;
+      }
+      .sidebar-inner { padding: 0; height: auto; }
+      .sidebar-logo {
+        border-bottom: none;
+        padding: 8px 10px;
+        margin-bottom: 24px;
+        justify-content: flex-start;
+      }
+      .sidebar-close-btn { display: none; }
+      .sidebar-nav { padding: 0; gap: 2px; }
+    }
+  </style>
 </head>
 
 <body>
@@ -103,7 +237,7 @@
   </div>
   <div class="logo-wordmark">
     <div class="lw-name">CodeStash</div>
-    <div class="lw-sub">Snippet Library</div>
+
   </div>
 </div>
 
@@ -250,7 +384,7 @@
       </div>
       <div class="logo-wordmark">
         <div class="lw-name">CodeStash</div>
-        <div class="lw-sub">Snippet Library</div>
+    
       </div>
     </div>
     <span class="pub-badge">Public Snippet</span>
@@ -303,20 +437,29 @@
 <div id="appContainer">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+
     <div class="sidebar-logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 20 20" fill="none">
-          <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
-        </svg>
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div class="logo-mark">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M6 4L1 10L6 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 4L19 10L14 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="12.5" y1="3" x2="7.5" y2="17" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
+          </svg>
+        </div>
+        <div class="logo-wordmark">
+          <div class="lw-name">CodeStash</div>
+      
+        </div>
       </div>
-      <div class="logo-wordmark">
-        <div class="lw-name">CodeStash</div>
-        <div class="lw-sub">Snippet Library</div>
-      </div>
+      <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close menu">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
+
+    <nav class="sidebar-nav">
 
     <a class="nav-item active" href="#" id="navClipboard" aria-label="Online Clipboard">
       <span class="nav-icon">
@@ -327,7 +470,7 @@
           <line x1="9" y1="14" x2="15" y2="14"/>
         </svg>
       </span>
-      Online Clipboard
+      Clipboard
     </a>
 
     <a class="nav-item" href="#" id="navNotes" aria-label="Quick Notes">
@@ -336,7 +479,7 @@
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
       </span>
-      Quick Notes
+      Notes
     </a>
 
     <a class="nav-item" href="#" id="navSnippets" aria-label="Snippets">
@@ -349,6 +492,9 @@
         </svg>
       </span>
     </a>
+
+    </nav>
+    </div><!-- end sidebar-inner -->
     </aside>
 
   <!-- TOPBAR -->
@@ -357,7 +503,7 @@
     <button class="mob-menu-btn" id="mobMenuBtn" aria-label="Open menu" onclick="toggleMobileSidebar()">
       <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div class="topbar-page-title">Online Clipboard <span>/ Share &amp; Retrieve</span></div>
+    <div class="topbar-page-title" id="topbarPageTitle">Clipboard</div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
 
@@ -552,7 +698,6 @@
           </div>
           <div>
             <div class="cb-card-title">Upload to Clipboard</div>
-            <div class="cb-card-sub">Share text or a file — get a 4-digit code instantly</div>
           </div>
         </div>
 
@@ -625,7 +770,6 @@
           </div>
           <div>
             <div class="cb-card-title">Retrieve from Clipboard</div>
-            <div class="cb-card-sub">Enter a 4-digit code to get the content</div>
           </div>
         </div>
 
@@ -669,7 +813,6 @@
               <div class="lcb-join-header">
                 <div>
                   <div class="lcb-join-title">Start a Session</div>
-                  <div class="lcb-join-sub">Get a 6-character code to share with other devices.</div>
                 </div>
               </div>
               <button class="btn-primary" id="lcbHostBtn">New Session</button>
@@ -682,7 +825,6 @@
               <div class="lcb-join-header">
                 <div>
                   <div class="lcb-join-title">Join a Session</div>
-                  <div class="lcb-join-sub">Enter the 6-character code shown on the other device.</div>
                 </div>
               </div>
               <div class="lcb-code-input-wrap">
