@@ -1,51 +1,61 @@
 /* ═══════════════════════════════════════════
    MODULE: AppLiveClipboard
-   Real-time shared clipboard via 6-digit session code.
+   Real-time shared clipboard via 6-character session code.
 
    Architecture:
    ┌─────────────────────────────────────────────┐
-   │  Typing → Broadcast (WebSocket, ~50ms)       │  instant sync
+   │  Typing → Broadcast (WebSocket, ~50ms)       │  instant peer sync
    │         → Debounced DB write (800ms)         │  persistence
    │  Race condition → optimistic locking         │  version column
+   │  Disconnect → auto-reconnect (3 attempts)    │  resilience
    │  Presence → track connected devices          │  who's online
    └─────────────────────────────────────────────┘
 
    Depends on:
-   - supabase.js (SUPABASE_CLIPBOARD_KEY)
-   - @supabase/supabase-js loaded via CDN (window.supabase)
+   - supabase.js  (SUPABASE_CLIPBOARD_KEY, SUPABASE_CLIPBOARD_URL)
+   - @supabase/supabase-js v2 loaded via CDN (window.supabase)
+
+   CRITICAL — why this file uses two URLs:
+   - REST  → SUPABASE_CLIPBOARD_URL  (Vercel proxy, hides raw URL)
+   - WS    → SB_URL direct           (Vercel cannot proxy WebSockets)
+   The CSP in index.html must allow:
+     connect-src ... https://vbtzptvgbzsvrustnwiz.supabase.co
+                     wss://vbtzptvgbzsvrustnwiz.supabase.co
 ════════════════════════════════════════════ */
 
 const AppLiveClipboard = (function () {
 'use strict';
 
 /* ── Config ──────────────────────────────────────────────────── */
-// Direct Supabase URL needed for Realtime WebSocket.
-// Vercel proxy cannot forward WebSocket connections.
 const SB_URL = 'https://vbtzptvgbzsvrustnwiz.supabase.co';
-const SB_KEY = SUPABASE_CLIPBOARD_KEY;
+const SB_KEY = SUPABASE_CLIPBOARD_KEY;           // from supabase.js
+const REST   = SUPABASE_CLIPBOARD_URL;           // Vercel proxy base
 
-// REST calls still go through Vercel proxy (keeps URL hidden in Network tab)
-const REST   = SUPABASE_CLIPBOARD_URL;
+const DEBOUNCE_MS   = 800;   // ms after last keystroke before DB write
+const MAX_RECONNECT = 3;     // attempts before giving up
+const RECONNECT_MS  = 3000;  // ms between reconnect attempts
 
 /* ── State ───────────────────────────────────────────────────── */
-let _sb          = null;   // Supabase client instance
-let _channel     = null;   // Realtime broadcast channel
-let _code        = null;   // Active session code
-let _version     = 0;      // DB version for optimistic locking
-let _debounce    = null;   // Timer for debounced DB write
-let _fromRemote  = false;  // Flag to ignore echoed remote updates
-let _deviceId    = 'lcb_' + Math.random().toString(36).slice(2, 10);
+let _sb             = null;   // Supabase JS client
+let _channel        = null;   // Realtime broadcast + presence channel
+let _code           = null;   // Active 6-char session code
+let _version        = 0;      // DB version for optimistic locking
+let _debounce       = null;   // Keystroke debounce timer
+let _reconnectTimer = null;   // Reconnect backoff timer
+let _reconnectCount = 0;      // Attempts since last clean connect
+let _applying       = false;  // True while applying a remote update
+let _deviceId       = 'lcb_' + Math.random().toString(36).slice(2, 10);
 
-/* ── Supabase Client ─────────────────────────────────────────── */
+/* ── Supabase Client (lazy singleton) ───────────────────────── */
 function getClient() {
   if (_sb) return _sb;
-  if (!window.supabase) {
-    console.error('AppLiveClipboard: @supabase/supabase-js not loaded');
+  if (!window.supabase?.createClient) {
+    console.error('[LiveClip] @supabase/supabase-js v2 not loaded');
     return null;
   }
   _sb = window.supabase.createClient(SB_URL, SB_KEY, {
-    // Rely on standard Supabase defaults for Realtime
-    auth: { persistSession: false } 
+    auth:     { persistSession: false },
+    realtime: { params: { eventsPerSecond: 20 } }
   });
   return _sb;
 }
@@ -60,21 +70,20 @@ function headers() {
   };
 }
 
-/* ── Session Code Generation ─────────────────────────────────── */
-// Avoids ambiguous chars: 0/O, 1/I, 5/S
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRTUVWXYZ2346789';
-  return Array.from({ length: 6 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join('');
+async function restGet(code) {
+  const res = await fetch(
+    REST + '/rest/v1/live_sessions?code=eq.' + encodeURIComponent(code),
+    { headers: headers() }
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows[0] ?? null;
 }
 
-/* ── Create Session (host) ───────────────────────────────────── */
-async function createSession() {
-  const code = generateCode();
+async function restPost(code) {
   const res = await fetch(REST + '/rest/v1/live_sessions', {
     method:  'POST',
-    headers: { ...headers(), 'Prefer': 'return=representation' },
+    headers: headers(),
     body: JSON.stringify({
       code,
       content:    '',
@@ -82,144 +91,157 @@ async function createSession() {
       expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
     })
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Create failed: ' + err);
-  }
-  return code;
+  if (!res.ok) throw new Error('Create failed: ' + await res.text());
 }
 
-/* ── Fetch Session (guest join) ──────────────────────────────── */
-async function fetchSession(code) {
-  const res = await fetch(
-    REST + '/rest/v1/live_sessions?code=eq.' + encodeURIComponent(code),
-    { headers: headers() }
-  );
-  if (!res.ok) return null;
-  const rows = await res.json();
-  return rows[0] || null;
-}
-
-/* ── Persist to DB with Optimistic Locking ───────────────────── */
-// Only writes if the version in DB matches what we last read.
-// If someone else wrote in the meantime, PATCH affects 0 rows → we re-fetch.
-// Removed expectedVersion parameter; we read _version at execution time.
-// Added a retry flag to prevent infinite loops in edge cases.
+/* ── Optimistic-locked DB Write ─────────────────────────────────
+   Sends PATCH only if DB version still matches _version.
+   If another device wrote first (0 rows updated = race lost),
+   re-fetch to sync our version pointer then retry once.
+   isRetry flag prevents infinite loops.                        ── */
 async function persistContent(content, isRetry = false) {
   if (!_code) return;
-  const expectedVersion = _version; // Evaluate at execution time
+  const expected = _version;
 
   try {
     const res = await fetch(
-      REST + '/rest/v1/live_sessions?code=eq.' + _code +
-      '&version=eq.' + expectedVersion,
+      REST + '/rest/v1/live_sessions' +
+        '?code=eq.'    + _code +
+        '&version=eq.' + expected,
       {
         method:  'PATCH',
         headers: headers(),
         body: JSON.stringify({
           content,
-          version:    expectedVersion + 1,
+          version:    expected + 1,
           updated_at: new Date().toISOString()
         })
       }
     );
     if (!res.ok) return;
-    const rows = await res.json();
 
+    const rows = await res.json();
     if (rows.length === 0) {
-      // ── Race condition detected ──────────────────────────────
-      const latest = await fetchSession(_code);
-      if (latest) {
-        _version = latest.version;
-        // CRITICAL FIX: Retry the write immediately so data isn't lost
-        // if the user has stopped typing.
-        if (!isRetry) {
-          await persistContent(content, true); 
-        }
-      }
+      // Race lost — re-sync version, retry once so our content isn't dropped
+      const latest = await restGet(_code);
+      if (!latest) return;
+      _version = latest.version;
+      if (!isRetry) await persistContent(content, true);
     } else {
-      // Write succeeded
-      _version = expectedVersion + 1;
+      _version = expected + 1;
     }
-  } catch { /* network errors silent */ }
+  } catch (err) {
+    console.warn('[LiveClip] persistContent error:', err);
+  }
+}
+
+/* ── Session Code Generator ──────────────────────────────────── */
+// Excludes ambiguous characters: 0/O, 1/I, 5/S
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRTUVWXYZ2346789';
+  return Array.from({ length: 6 },
+    () => chars[Math.floor(Math.random() * chars.length)]
+  ).join('');
 }
 
 /* ── Realtime Channel ────────────────────────────────────────── */
-/* ── Realtime Channel ────────────────────────────────────────── */
 async function connectChannel(code) {
   const sb = getClient();
-  if (!sb) return;
+  if (!sb) { setStatus('disconnected'); return; }
 
-  // 1. Safety check for v2 library
-  if (typeof sb.channel !== 'function') {
-    console.error('CRITICAL ERROR: You are using Supabase v1. This requires @supabase/supabase-js v2.');
-    setStatus('disconnected');
-    return;
-  }
-
-  // 2. Cleanly await cleanup to prevent zombie socket collisions
+  // Cleanly tear down any existing channel first
   if (_channel) {
+    try { await _channel.untrack(); } catch { /* ignore */ }
     await sb.removeChannel(_channel);
     _channel = null;
   }
 
-  console.log(`[Realtime] Attempting to join channel: lcb:${code}`);
+  setStatus('connecting');
+  console.log('[LiveClip] Connecting to channel lcb:' + code);
 
-  // 3. Create and chain the listeners
-  _channel = sb.channel('lcb:' + code, {
-    config: {
-      broadcast: { self: false },
-      presence:  { key: _deviceId }
-    }
-  });
+  _channel = sb
+    .channel('lcb:' + code, {
+      config: {
+        broadcast: { self: false },        // never echo our own sends
+        presence:  { key: _deviceId }
+      }
+    })
 
-  _channel
+    // ── Peer content updates ──────────────────────────────────
     .on('broadcast', { event: 'content' }, ({ payload }) => {
       if (!payload || payload.deviceId === _deviceId) return;
-      _fromRemote = true;
-      const ta = el('lcbTextarea');
-      if (ta) {
-        const cursor = ta.selectionStart;
-        ta.value = payload.content;
-        const newCursor = Math.min(cursor, payload.content.length);
-        ta.selectionStart = ta.selectionEnd = newCursor;
-      }
-      _fromRemote = false;
-      updateStats(payload.content || '');
+      applyRemoteContent(payload.content ?? '');
     })
+
+    // ── Presence ──────────────────────────────────────────────
     .on('presence', { event: 'sync' }, () => {
-      const state = _channel.presenceState();
-      const count = Object.keys(state).length;
-      console.log('[Realtime] Presence synced. Connected devices:', count);
+      const count = Object.keys(_channel.presenceState()).length;
       updatePresence(count);
     })
     .on('presence', { event: 'join' }, ({ newPresences }) => {
-      const isOther = newPresences.some(p => p.deviceId !== _deviceId);
-      if (isOther) toast('📱 Device joined the session');
+      if (newPresences.some(p => p.deviceId !== _deviceId))
+        toast('📱 Device joined the session');
     })
     .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-      const isOther = leftPresences.some(p => p.deviceId !== _deviceId);
-      if (isOther) toast('📴 Device left the session');
+      if (leftPresences.some(p => p.deviceId !== _deviceId))
+        toast('📴 Device left the session');
     })
+
+    // ── Connection lifecycle ──────────────────────────────────
     .subscribe(async (status, err) => {
-      console.log('[Realtime] Subscription status:', status);
+      console.log('[LiveClip] Channel status:', status, err ?? '');
 
       if (status === 'SUBSCRIBED') {
+        _reconnectCount = 0;
+        clearTimeout(_reconnectTimer);
         try {
           await _channel.track({ deviceId: _deviceId, joinedAt: Date.now() });
-          setStatus('live');
-          console.log('[Realtime] Successfully connected and tracking presence.');
-        } catch (trackErr) {
-          console.error('[Realtime] Presence track failed:', trackErr);
-          setStatus('live'); // Keep app active; broadcast still works if presence fails
+        } catch (e) {
+          console.warn('[LiveClip] Presence track failed (broadcast still active):', e);
         }
-      } 
-      else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-        console.error(`[Realtime] Connection failed with status: ${status}`, err || '');
+        setStatus('live');
+
+      } else if (
+        status === 'TIMED_OUT' ||
+        status === 'CHANNEL_ERROR' ||
+        status === 'CLOSED'
+      ) {
         setStatus('disconnected');
-        toast('⚠ Realtime connection lost');
+        scheduleReconnect(code);
       }
     });
+}
+
+/* ── Auto-reconnect with linear backoff ──────────────────────── */
+function scheduleReconnect(code) {
+  if (!_code) return;                          // user already left cleanly
+  if (_reconnectCount >= MAX_RECONNECT) {
+    toast('⚠ Connection lost — please refresh to reconnect');
+    return;
+  }
+  _reconnectCount++;
+  const delay = RECONNECT_MS * _reconnectCount;
+  console.log(`[LiveClip] Reconnecting in ${delay}ms (attempt ${_reconnectCount}/${MAX_RECONNECT})`);
+  clearTimeout(_reconnectTimer);
+  _reconnectTimer = setTimeout(() => connectChannel(code), delay);
+}
+
+/* ── Apply Remote Content Without Disrupting Cursor ─────────────
+   Calculates where the cursor would proportionally land in the
+   new content so the user's reading position doesn't jump.    ── */
+function applyRemoteContent(content) {
+  const ta = el('lcbTextarea');
+  if (!ta) return;
+
+  const ratio     = ta.value.length > 0 ? ta.selectionStart / ta.value.length : 0;
+  const newCursor = Math.round(ratio * content.length);
+
+  _applying = true;
+  ta.value = content;
+  ta.selectionStart = ta.selectionEnd = Math.min(newCursor, content.length);
+  _applying = false;
+
+  updateStats(content);
 }
 
 /* ── Broadcast to Peers ──────────────────────────────────────── */
@@ -229,7 +251,7 @@ function broadcastContent(content) {
     type:    'broadcast',
     event:   'content',
     payload: { content, deviceId: _deviceId, ts: Date.now() }
-  });
+  }).catch(() => { /* next keystroke will retry */ });
 }
 
 /* ── UI Helpers ──────────────────────────────────────────────── */
@@ -238,10 +260,10 @@ function el(id) { return document.getElementById(id); }
 function setStatus(status) {
   const dot  = el('lcbStatusDot');
   const text = el('lcbStatusText');
-  if (dot)  dot.className   = 'lcb-dot ' + status;
+  if (dot)  dot.className    = 'lcb-dot ' + status;
   if (text) text.textContent =
-    status === 'live'         ? 'live' :
-    status === 'connecting'   ? 'connecting…' : 'disconnected';
+    status === 'live'       ? 'live'        :
+    status === 'connecting' ? 'connecting…' : 'disconnected';
 }
 
 function updatePresence(count) {
@@ -264,7 +286,7 @@ function toast(msg) {
 function showCodeDigits(code) {
   const wrap = el('lcbCodeDigits');
   if (!wrap) return;
-  wrap.innerHTML = code.split('').map(c =>
+  wrap.innerHTML = [...code].map(c =>
     `<span class="lcb-digit">${c}</span>`
   ).join('');
 }
@@ -274,7 +296,8 @@ function showJoinScreen() {
   const session = el('lcbSessionScreen');
   if (join)    join.style.display    = 'flex';
   if (session) session.style.display = 'none';
-  el('lcbCodeInput') && (el('lcbCodeInput').value = '');
+  const inp = el('lcbCodeInput');
+  if (inp) inp.value = '';
 }
 
 function showSessionScreen(code, content) {
@@ -285,58 +308,65 @@ function showSessionScreen(code, content) {
 
   showCodeDigits(code);
   const ta = el('lcbTextarea');
-  if (ta) ta.value = content || '';
-  updateStats(content || '');
+  if (ta) ta.value = content ?? '';
+  updateStats(content ?? '');
   setStatus('connecting');
 }
 
-/* ── Public: Host a Session ──────────────────────────────────── */
+/* ── Public: Host ────────────────────────────────────────────── */
 async function hostSession() {
   const btn = el('lcbHostBtn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…'; }
   try {
-    const code = await createSession();
+    const code = generateCode();
+    await restPost(code);
     _code    = code;
     _version = 0;
+    _reconnectCount = 0;
     showSessionScreen(code, '');
-    connectChannel(code);
+    await connectChannel(code);
   } catch (e) {
+    console.error('[LiveClip] hostSession failed:', e);
     toast('✗ Failed to create session');
-    console.error(e);
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '＋ New Session'; }
   }
 }
 
-/* ── Public: Join a Session ──────────────────────────────────── */
+/* ── Public: Join ────────────────────────────────────────────── */
 async function joinSession() {
   const input = el('lcbCodeInput');
-  const raw   = (input ? input.value : '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const raw   = (input?.value ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (raw.length !== 6) { toast('⚠ Enter a 6-character code'); return; }
 
   const btn = el('lcbJoinBtn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Joining…'; }
   try {
-    const session = await fetchSession(raw);
+    const session = await restGet(raw);
     if (!session) { toast('✗ Session not found or expired'); return; }
     _code    = raw;
     _version = session.version;
+    _reconnectCount = 0;
     showSessionScreen(raw, session.content);
-    connectChannel(raw);
-  } catch {
+    await connectChannel(raw);
+  } catch (e) {
+    console.error('[LiveClip] joinSession failed:', e);
     toast('✗ Failed to join session');
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = 'Join →'; }
   }
 }
 
-/* ── Public: Leave Session ───────────────────────────────────── */
+/* ── Public: Leave ───────────────────────────────────────────── */
 async function leaveSession() {
   clearTimeout(_debounce);
+  clearTimeout(_reconnectTimer);
+  _reconnectCount = MAX_RECONNECT;     // block auto-reconnect after intentional leave
+
   if (_channel) {
     const sb = getClient();
-    await _channel.untrack();
-    if (sb) sb.removeChannel(_channel);
+    try { await _channel.untrack(); } catch { /* ignore */ }
+    if (sb) await sb.removeChannel(_channel);
     _channel = null;
   }
   _code    = null;
@@ -360,39 +390,35 @@ function copyCode() {
 /* ── Public: Copy Content ────────────────────────────────────── */
 function copyContent() {
   const ta = el('lcbTextarea');
-  if (!ta || !ta.value.trim()) return;
+  if (!ta?.value.trim()) return;
   navigator.clipboard.writeText(ta.value).then(() => toast('✓ Copied to clipboard'));
 }
 
 /* ── Public: Clear Content ───────────────────────────────────── */
 function clearContent() {
   const ta = el('lcbTextarea');
-  if (!ta || !ta.value.trim()) return;
+  if (!ta?.value.trim()) return;
   if (!confirm('Clear live clipboard? This affects all connected devices.')) return;
-  
-  clearTimeout(_debounce); // CRITICAL FIX: Kill pending keystroke writes
-  
+
+  clearTimeout(_debounce);
   ta.value = '';
   updateStats('');
   broadcastContent('');
-  persistContent(''); 
+  persistContent('');
 }
 
 /* ── Textarea Input Handler ──────────────────────────────────── */
 function onInput() {
-  if (_fromRemote) return;
+  if (_applying || !_code) return;
   const ta = el('lcbTextarea');
-  if (!ta || !_code) return;
+  if (!ta) return;
   const content = ta.value;
 
   updateStats(content);
-  broadcastContent(content); // 1. Instant peer update
+  broadcastContent(content);          // 1. Instant peer update via WebSocket
 
-  // 2. Write to DB after 800ms
-  clearTimeout(_debounce);
-  _debounce = setTimeout(() => {
-    persistContent(content); // Version is now evaluated inside this call
-  }, 800);
+  clearTimeout(_debounce);            // 2. Persist to DB after 800ms of silence
+  _debounce = setTimeout(() => persistContent(content), DEBOUNCE_MS);
 }
 
 /* ── Code Input Formatter ────────────────────────────────────── */
@@ -400,24 +426,20 @@ function onCodeInput(e) {
   const inp = e.target;
   const val = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   inp.value = val;
-  if (val.length === 6) el('lcbJoinBtn').focus();
+  if (val.length === 6) el('lcbJoinBtn')?.focus();
 }
 
-/* ── Init — wire up events ───────────────────────────────────── */
+/* ── Init ────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  const ta   = el('lcbTextarea');
-  const code = el('lcbCodeInput');
-
-  if (ta)   ta.addEventListener('input', onInput);
-  if (code) code.addEventListener('input', onCodeInput);
-  if (code) code.addEventListener('keydown', e => { if (e.key === 'Enter') joinSession(); });
-
-  el('lcbHostBtn')     && el('lcbHostBtn').addEventListener('click', hostSession);
-  el('lcbJoinBtn')     && el('lcbJoinBtn').addEventListener('click', joinSession);
-  el('lcbLeaveBtn')    && el('lcbLeaveBtn').addEventListener('click', leaveSession);
-  el('lcbCopyCodeBtn') && el('lcbCopyCodeBtn').addEventListener('click', copyCode);
-  el('lcbCopyBtn')     && el('lcbCopyBtn').addEventListener('click', copyContent);
-  el('lcbClearBtn')    && el('lcbClearBtn').addEventListener('click', clearContent);
+  el('lcbTextarea')   ?.addEventListener('input',   onInput);
+  el('lcbCodeInput')  ?.addEventListener('input',   onCodeInput);
+  el('lcbCodeInput')  ?.addEventListener('keydown', e => { if (e.key === 'Enter') joinSession(); });
+  el('lcbHostBtn')    ?.addEventListener('click',   hostSession);
+  el('lcbJoinBtn')    ?.addEventListener('click',   joinSession);
+  el('lcbLeaveBtn')   ?.addEventListener('click',   leaveSession);
+  el('lcbCopyCodeBtn')?.addEventListener('click',   copyCode);
+  el('lcbCopyBtn')    ?.addEventListener('click',   copyContent);
+  el('lcbClearBtn')   ?.addEventListener('click',   clearContent);
 });
 
 return { hostSession, joinSession, leaveSession };
