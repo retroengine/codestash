@@ -1408,9 +1408,9 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
 ════════════════════════════════════════════ */
 const AppUI = (() => {
   const PANELS = {
-    navClipboard: { panel: 'clipboardPanel', title: 'Online Clipboard <span>/ Share &amp; Retrieve</span>', type: 'class' },
-    navNotes:     { panel: 'notesPanel',     title: 'Quick Notes <span>/ Scratchpad</span>',              type: 'class' },
-    navSnippets:  { panel: 'snippetsPanel',  title: 'Snippets <span>/ Library</span>',                    type: 'style' },
+    navClipboard: { panel: 'clipboardPanel', title: 'Clipboard', type: 'class' },
+    navNotes:     { panel: 'notesPanel',     title: 'Notes',     type: 'class' },
+    navSnippets:  { panel: 'snippetsPanel',  title: 'Snippets',  type: 'style' },
   };
 
   function switchPanel(navId) {
@@ -1426,7 +1426,7 @@ const AppUI = (() => {
     } else {
       document.getElementById(cfg.panel).classList.add('visible');
     }
-    pageTitle.innerHTML = cfg.title;
+    pageTitle.textContent = cfg.title;
   }
 
   function updateSnippetsLock(isSignedIn) {
