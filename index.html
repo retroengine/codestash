@@ -36,7 +36,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Third-party libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -52,56 +52,104 @@
   <link rel="stylesheet" href="src/features/clipboard/clipboard.css">
   <link rel="stylesheet" href="src/features/notes/notes.css">
   <style>
-    /* ── topbar: hide the muted span entirely now that JS uses textContent ── */
-    .topbar-page-title span { display: none; }
+    /* ══════════════════════════════════════════
+       GLOBAL FONT OVERRIDE
+    ══════════════════════════════════════════ */
+    body, button, input, select, textarea {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
 
-    /* ── Logo sizing ── */
+    /* ══════════════════════════════════════════
+       LOGO
+    ══════════════════════════════════════════ */
+    .lw-sub { display: none; }
+
     .logo-mark {
       width: 34px; height: 34px;
-      border-radius: 9px;
+      border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      background: #0a0a0a;
+      background: var(--surface3);
+      border: 1px solid var(--border-hi);
       flex-shrink: 0;
     }
     .logo-mark svg { width: 18px; height: 18px; }
+
     .lw-name {
-      font-size: 1rem;
+      font-size: 0.975rem;
       font-weight: 700;
       letter-spacing: -0.03em;
       color: var(--text);
       line-height: 1;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    .lw-sub { display: none; }
-
-    /* ── Sidebar logo area ── */
-    .sidebar-logo .logo-mark {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-    }
-    .sidebar-logo .logo-mark svg { width: 20px; height: 20px; }
-    .sidebar-logo .lw-name { font-size: 1.05rem; }
 
     /* ══════════════════════════════════════════
-       MOBILE SIDEBAR REDESIGN
+       TOPBAR
     ══════════════════════════════════════════ */
+    .topbar-page-title span { display: none; }
 
-    /* Sidebar base — cleaner, no border on right edge shadow instead */
-    .sidebar {
-      width: min(260px, 82vw);
-      background: var(--surface);
-      border-right: none;
-      box-shadow: 4px 0 40px rgba(0,0,0,0.35);
-      padding: 0;
-      gap: 0;
+    .topbar-page-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      font-size: clamp(0.82rem, 3vw, 0.95rem);
+      letter-spacing: -0.025em;
+      color: var(--text);
     }
 
-    /* ── Sidebar inner scroll wrapper ── */
+    /* ══════════════════════════════════════════
+       SIDEBAR — BASE (mobile-first)
+    ══════════════════════════════════════════ */
+    .sidebar {
+      width: min(268px, 84vw);
+      /* Slightly deeper than --surface for layering depth */
+      background: #0e0e0e;
+      border-right: none;
+      /* Deep shadow — feels like a panel lifting above content */
+      box-shadow:
+        1px 0 0 rgba(255,255,255,0.04),
+        8px 0 48px rgba(0,0,0,0.5),
+        2px 0 12px rgba(0,0,0,0.3);
+      padding: 0;
+      gap: 0;
+      /* Slide + scale entry */
+      transform: translateX(-100%) scale(0.97);
+      transform-origin: left center;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sidebar.mob-open {
+      transform: translateX(0) scale(1);
+    }
+
+    [data-theme="light"] .sidebar {
+      background: #fafafa;
+      box-shadow:
+        1px 0 0 rgba(0,0,0,0.06),
+        8px 0 48px rgba(0,0,0,0.12);
+    }
+
+    /* ── Inner wrapper — handles safe area + scroll ── */
     .sidebar-inner {
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding-top: max(16px, env(safe-area-inset-top));
-      padding-bottom: max(24px, env(safe-area-inset-bottom));
+      padding-top: max(0px, env(safe-area-inset-top));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      position: relative;
+    }
+
+    /* Soft fade at bottom — hints at scrollability */
+    .sidebar-inner::after {
+      content: '';
+      position: sticky;
+      bottom: 0;
+      left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(to top, #0e0e0e, transparent);
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+    [data-theme="light"] .sidebar-inner::after {
+      background: linear-gradient(to top, #fafafa, transparent);
     }
 
     /* ── Logo row ── */
@@ -109,80 +157,231 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 18px 14px 18px;
+      padding: 16px 16px 16px 18px;
       margin-bottom: 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      flex-shrink: 0;
+    }
+    [data-theme="light"] .sidebar-logo {
+      border-bottom-color: rgba(0,0,0,0.07);
     }
 
-    /* ── Close button (mobile only) ── */
+    .sidebar-logo .logo-mark {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border-hi);
+    }
+    .sidebar-logo .logo-mark svg { width: 19px; height: 19px; }
+    .sidebar-logo .lw-name {
+      font-size: 1rem;
+      letter-spacing: -0.035em;
+    }
+
+    /* ── Close button ── */
     .sidebar-close-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 32px; height: 32px;
+      width: 30px; height: 30px;
       border-radius: 8px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
       color: var(--muted);
       cursor: pointer;
       flex-shrink: 0;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
+    [data-theme="light"] .sidebar-close-btn {
+      border-color: rgba(0,0,0,0.1);
+    }
     .sidebar-close-btn svg {
-      width: 14px; height: 14px;
+      width: 13px; height: 13px;
       stroke: currentColor; fill: none; stroke-width: 2.5;
     }
-    .sidebar-close-btn:hover { background: var(--surface3); color: var(--text); }
+    .sidebar-close-btn:hover {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.15);
+    }
 
-    /* ── Nav list ── */
+    /* ── Nav section ── */
     .sidebar-nav {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 12px 10px;
-      gap: 2px;
+      padding: 14px 10px 8px;
+      gap: 3px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* ── Nav items — cleaner on mobile ── */
+    /* ── Nav items ── */
     .nav-item {
-      padding: 11px 13px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px 10px 14px;
       border-radius: 10px;
+      border: 1px solid transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 0.875rem;
       font-weight: 500;
-      min-height: 46px;
       letter-spacing: -0.01em;
+      color: rgba(240,240,240,0.45);
+      text-decoration: none;
+      min-height: 46px;
+      cursor: pointer;
+      transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      overflow: hidden;
     }
+    [data-theme="light"] .nav-item {
+      color: rgba(26,26,26,0.45);
+    }
+
+    /* Left accent bar — hidden by default */
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0%;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+      transition: height 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Icon badge */
+    .nav-icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    [data-theme="light"] .nav-icon {
+      background: rgba(0,0,0,0.04);
+      border-color: rgba(0,0,0,0.07);
+    }
+    .nav-icon svg {
+      width: 15px; height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      transition: stroke 0.15s;
+    }
+
+    /* Hover state */
+    .nav-item:hover {
+      background: rgba(255,255,255,0.04);
+      color: rgba(240,240,240,0.8);
+      transform: translateX(2px);
+    }
+    [data-theme="light"] .nav-item:hover {
+      background: rgba(0,0,0,0.04);
+      color: rgba(26,26,26,0.8);
+    }
+    .nav-item:hover .nav-icon {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    /* Active state */
     .nav-item.active {
-      background: var(--surface3);
-      border-color: var(--border-hi);
+      background: rgba(139,120,255,0.08);
+      border-color: rgba(139,120,255,0.15);
+      color: var(--text);
+      transform: translateX(0);
+    }
+    [data-theme="light"] .nav-item.active {
+      background: rgba(107,86,232,0.07);
+      border-color: rgba(107,86,232,0.15);
       color: var(--text);
     }
 
-    /* ── Sidebar overlay — slightly darker ── */
-    .sidebar-overlay {
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
+    /* Active bar — animate in */
+    .nav-item.active::before {
+      height: 55%;
     }
 
-    /* ── Desktop: undo all mobile overrides ── */
+    /* Active icon badge */
+    .nav-item.active .nav-icon {
+      background: rgba(139,120,255,0.15);
+      border-color: rgba(139,120,255,0.25);
+      color: var(--accent);
+    }
+    [data-theme="light"] .nav-item.active .nav-icon {
+      background: rgba(107,86,232,0.12);
+      border-color: rgba(107,86,232,0.2);
+      color: var(--accent);
+    }
+
+    /* Lock icon in nav */
+    .nav-lock-icon {
+      margin-left: auto;
+      opacity: 0.4;
+      flex-shrink: 0;
+    }
+    .nav-lock-icon.unlocked { opacity: 0.25; }
+
+    /* ── Overlay ── */
+    .sidebar-overlay {
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    /* ══════════════════════════════════════════
+       DESKTOP OVERRIDES (min-width: 769px)
+    ══════════════════════════════════════════ */
     @media (min-width: 769px) {
       .sidebar {
-        width: 252px;
+        width: 248px;
+        background: var(--surface);
         box-shadow: none;
         border-right: 1px solid var(--border);
-        padding: 24px 14px;
-        gap: 2px;
+        padding: 20px 12px;
+        gap: 0;
+        transform: translateX(0) scale(1);
+        transition: none;
       }
-      .sidebar-inner { padding: 0; height: auto; }
+      [data-theme="light"] .sidebar { background: var(--surface); }
+
+      .sidebar-inner {
+        padding: 0;
+        height: auto;
+      }
+      .sidebar-inner::after { display: none; }
+
       .sidebar-logo {
         border-bottom: none;
-        padding: 8px 10px;
-        margin-bottom: 24px;
+        padding: 4px 10px;
+        margin-bottom: 20px;
         justify-content: flex-start;
       }
+
       .sidebar-close-btn { display: none; }
-      .sidebar-nav { padding: 0; gap: 2px; }
+
+      .sidebar-nav {
+        padding: 0;
+        gap: 2px;
+        overflow-y: visible;
+      }
+
+      /* Desktop: no translateX nudge — sidebar is static */
+      .nav-item:hover { transform: none; }
+      .nav-item:active { transform: none; }
     }
   </style>
 </head>
@@ -1064,7 +1263,16 @@ function cbSwitchMode(mode) {
 <!-- 6. Live Clipboard — real-time shared sessions -->
 <script src="src/features/clipboard/live-clipboard.js"></script>
 
-<!-- AppNotes is nested inside clipboard.js -->
+<!-- Auto-close mobile sidebar when a nav item is tapped -->
+<script>
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      if (window.innerWidth < 769) {
+        if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
+      }
+    });
+  });
+</script>
 
 </body>
 </html>
