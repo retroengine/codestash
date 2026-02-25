@@ -371,6 +371,11 @@
 }
 .lcb-dot.connecting { background: var(--warning); }
 .lcb-dot.disconnected { background: var(--danger); }
+.lcb-dot.polling { background: #f59e0b; animation: lcb-pulse-warn 1.5s ease-in-out infinite; }
+@keyframes lcb-pulse-warn {
+  0%,100% { box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
+  50%      { box-shadow: 0 0 0 5px rgba(245,158,11,0.08); }
+}
 @keyframes lcb-pulse {
   0%,100% { box-shadow: 0 0 0 3px rgba(61,186,112,0.2); }
   50%      { box-shadow: 0 0 0 5px rgba(61,186,112,0.08); }
