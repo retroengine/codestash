@@ -732,8 +732,8 @@ Indentation is preserved."
             <div class="lcb-status-bar">
               <div class="lcb-status-left">
                 <div class="lcb-dot disconnected" id="lcbStatusDot"></div>
-                <span class="lcb-status-text" id="lcbStatusText">connecting…</span>
-                <span class="lcb-presence" id="lcbPresence">1 device connected</span>
+                <span class="lcb-status-text" id="lcbStatusText">connecting</span>
+                <span class="lcb-presence" id="lcbPresence"></span>
               </div>
               <button class="lcb-leave-btn" id="lcbLeaveBtn">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -753,11 +753,46 @@ Indentation is preserved."
               </button>
             </div>
 
-            <!-- Editor -->
+            <!-- Text editor -->
             <div class="lcb-editor-wrap">
               <textarea class="lcb-textarea" id="lcbTextarea"
                 placeholder="Start typing — it will appear on all connected devices instantly."
                 spellcheck="true" autocorrect="on" autocapitalize="sentences"></textarea>
+            </div>
+
+            <!-- File share -->
+            <div class="lcb-file-section">
+              <!-- Drop zone (shown when no file) -->
+              <div class="lcb-file-drop" id="lcbFileDrop">
+                <input type="file" id="lcbFileInput" style="display:none" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span class="lcb-file-drop-label"><strong>Click to attach</strong> or drag a file — max 15 MB</span>
+              </div>
+              <!-- File card (shown when a file is attached) -->
+              <div class="lcb-file-card" id="lcbFileCard" style="display:none">
+                <div class="lcb-file-card-info">
+                  <div class="lcb-file-icon" id="lcbFileIcon">📄</div>
+                  <div class="lcb-file-meta">
+                    <div class="lcb-file-name" id="lcbFileName">—</div>
+                    <div class="lcb-file-size" id="lcbFileSize">—</div>
+                  </div>
+                </div>
+                <div class="lcb-file-card-actions">
+                  <button class="lcb-action-btn" id="lcbFileDownloadBtn" style="display:none">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download
+                  </button>
+                  <button class="lcb-action-btn danger" id="lcbFileRemoveBtn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <!-- Upload progress -->
+              <div class="lcb-file-progress" id="lcbFileProgress" style="display:none">
+                <div class="lcb-file-progress-bar-wrap"><div class="lcb-file-progress-bar" id="lcbFileProgressBar"></div></div>
+                <span class="lcb-file-progress-text" id="lcbFileProgressText">Uploading…</span>
+              </div>
             </div>
 
             <!-- Footer -->
@@ -765,11 +800,11 @@ Indentation is preserved."
               <div class="lcb-footer-left">
                 <button class="lcb-action-btn" id="lcbCopyBtn">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  Copy
+                  Copy Text
                 </button>
                 <button class="lcb-action-btn danger" id="lcbClearBtn">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                  Clear
+                  Clear Text
                 </button>
               </div>
               <div class="lcb-footer-right">
