@@ -110,9 +110,8 @@
 <!-- ═══════════ PENDING SCREEN ═══════════ -->
 <div class="screen" id="pendingScreen">
   <div class="pending-card">
-    <div class="pending-icon">⏳</div>
     <div class="pending-title">Awaiting Approval</div>
-    <p class="pending-sub">Your account is pending admin review.<br>You can sign in once approved.</p>
+    <p class="pending-sub">Your account is pending admin review. You'll be notified once approved.</p>
     <div class="pending-email" id="pendingEmail">—</div>
     <button class="btn-ghost" id="pendingBack">Back to Sign In</button>
   </div>
@@ -122,7 +121,6 @@
 <div id="adminPortal">
   <div class="admin-header">
     <div class="admin-title">
-      <span>🛡</span>
       <span>Admin Portal</span>
       <span class="admin-title-badge">SECURE</span>
     </div>
@@ -162,20 +160,19 @@
     <div class="admin-section" id="guestFeaturesSection">
       <div class="admin-section-title">Guest Permissions
         <span style="font-size:0.65rem;font-weight:500;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0;">
-          — controls what public visitors can do when site is unlocked
+          — applies when site is unlocked
         </span>
       </div>
       <div class="guest-features-note" id="guestFeaturesNote">
-        ⚠ These settings only apply when the site is <strong>unlocked</strong>. Lock the site first if you want to restrict all access.
+        Only applies when the site is <strong>unlocked</strong>.
       </div>
       <div class="guest-features-grid">
 
         <!-- Add Snippet toggle -->
         <div class="guest-feature-card" id="gfCardSnippet">
           <div class="guest-feature-info">
-            <div class="guest-feature-icon">✏️</div>
             <div class="guest-feature-title">Add Snippet</div>
-            <div class="guest-feature-sub">Allow guests to create and save new snippets without an account.</div>
+            <div class="guest-feature-sub">Allow guests to save snippets without an account.</div>
           </div>
           <div class="toggle-wrap">
             <label class="toggle">
@@ -189,9 +186,8 @@
         <!-- Quick Notes toggle (always on) -->
         <div class="guest-feature-card" id="gfCardNotes">
           <div class="guest-feature-info">
-            <div class="guest-feature-icon">📝</div>
             <div class="guest-feature-title">Quick Notes</div>
-            <div class="guest-feature-sub">Always enabled — guests can always use the Quick Notes scratchpad.</div>
+            <div class="guest-feature-sub">Always available to guests.</div>
           </div>
           <div class="toggle-wrap">
             <label class="toggle">
@@ -228,13 +224,13 @@
     <div class="admin-section">
       <div class="admin-section-title">User Management</div>
       <div class="filter-tabs" id="filterTabs">
-        <button class="filter-tab active" data-filter="pending">⏳ Pending</button>
+        <button class="filter-tab active" data-filter="pending">Pending</button>
         <button class="filter-tab" data-filter="approved">✓ Approved</button>
         <button class="filter-tab" data-filter="rejected">✗ Rejected</button>
         <button class="filter-tab" data-filter="all">All</button>
       </div>
       <div class="user-queue" id="userQueue">
-        <div class="empty-queue"><div class="eq-icon">👥</div><p>Loading users...</p></div>
+        <div class="empty-queue"><p>Loading users...</p></div>
       </div>
     </div>
 
@@ -257,7 +253,7 @@
         <div class="lw-sub">Snippet Library</div>
       </div>
     </div>
-    <span class="pub-badge">🔗 Public Snippet</span>
+    <span class="pub-badge">Public Snippet</span>
   </div>
   <div class="pub-body">
     <div class="pub-snippet-name" id="pubName">Loading...</div>
@@ -277,8 +273,8 @@
 <div class="share-modal-overlay" id="shareModalOverlay">
   <div class="share-modal">
     <button class="share-modal-close" onclick="closeShareModal()">✕</button>
-    <div class="share-modal-title">🔗 Share Snippet</div>
-    <p class="share-modal-sub">Make this snippet publicly accessible — anyone with the link can view and copy the code. No account required.</p>
+    <div class="share-modal-title">Share Snippet</div>
+    <p class="share-modal-sub">Anyone with the link can view and copy the code. No account required.</p>
 
     <div class="share-toggle-row">
       <div>
@@ -382,7 +378,7 @@
         <div class="account-dropdown" id="accountDropdown" role="menu">
           <div class="dropdown-email" id="dropdownEmail">—</div>
           <div class="dropdown-avatar" id="dropdownAvatar">?</div>
-          <div class="dropdown-name" id="dropdownName">Hello!</div>
+          <div class="dropdown-name" id="dropdownName"></div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-actions">
             <div class="dropdown-action danger" role="menuitem" id="dropdownSignOut" style="grid-column:1/-1;">
@@ -416,7 +412,7 @@
         </div>
 
         <div class="rate-limit-bar" id="rateLimitBar">
-          <div class="rate-limit-bar-label" id="rateLimitLabel">⚠ Failed attempts</div>
+          <div class="rate-limit-bar-label" id="rateLimitLabel">Failed attempts</div>
           <div class="rate-limit-dots" id="rateLimitDots"></div>
         </div>
 
@@ -475,8 +471,8 @@
           <option value="javascript">JavaScript</option>
           <option value="cpp">C++</option>
           <option value="sql">SQL</option>
-          <option value="note">📝 Notes</option>
-          <option value="custom">✏ Custom…</option>
+          <option value="note">Notes</option>
+          <option value="custom">Custom…</option>
         </select>
         <input class="field-input" type="text" id="customLangInput"
           placeholder="Enter language name…"
@@ -491,9 +487,7 @@
       </div>
       <div class="tag-input-hint">Press Enter or comma to add a tag · max 6 tags</div>
       <textarea class="code-area" id="snippetCode"
-        placeholder="Paste your code here...
-Line 2 will stay on line 2.
-Indentation is preserved."
+        placeholder="Paste your code here…"
         aria-label="Code"
         spellcheck="false"
         autocorrect="off"
@@ -540,10 +534,10 @@ Indentation is preserved."
       <!-- ── Mode Tabs: Share / Live ── -->
       <div class="cb-mode-tabs">
         <button class="cb-mode-tab active" id="cbModeShare" onclick="cbSwitchMode('share')">
-          🔗 Share Clipboard
+          Share Clipboard
         </button>
         <button class="cb-mode-tab" id="cbModeLive" onclick="cbSwitchMode('live')">
-          ⚡ Live Clipboard
+          Live Clipboard
         </button>
       </div>
 
@@ -564,27 +558,27 @@ Indentation is preserved."
 
         <!-- Mode tabs -->
         <div class="cb-tabs">
-          <button class="cb-tab active" id="cbTabText" onclick="cbSwitchUploadMode('text')">📝 Paste Text</button>
-          <button class="cb-tab" id="cbTabFile" onclick="cbSwitchUploadMode('file')">📎 Upload File</button>
+          <button class="cb-tab active" id="cbTabText" onclick="cbSwitchUploadMode('text')">Paste Text</button>
+          <button class="cb-tab" id="cbTabFile" onclick="cbSwitchUploadMode('file')">Upload File</button>
         </div>
 
         <!-- Text mode -->
         <div id="cbTextMode">
-          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste your text, code, or notes here...&#10;It will be available for 24 hours." spellcheck="false" autocorrect="off" autocapitalize="off" maxlength="50000"></textarea>
+          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste text, code, or notes here…" spellcheck="false" autocorrect="off" autocapitalize="off" maxlength="50000"></textarea>
         </div>
 
         <!-- File mode -->
         <div id="cbFileMode" style="display:none">
           <div class="cb-upload-area" id="cbDropZone">
             <input type="file" id="cbFileInput" />
-            <div class="cb-upload-icon">📂</div>
+            <div class="cb-upload-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
             <div class="cb-upload-label">
-              <strong>Click to browse</strong> or drag & drop a file here<br>
-              <span style="font-size:0.72rem">Max 15 MB — any file type</span>
+              <strong>Click to browse</strong> or drag & drop — max 15 MB
             </div>
           </div>
           <div class="cb-file-chosen" id="cbFileChosen">
-            <span style="font-size:1.1rem">📄</span>
             <span class="cb-file-name" id="cbFileName">—</span>
             <button class="cb-file-clear" onclick="cbClearFile()" title="Remove file">✕</button>
           </div>
@@ -604,7 +598,7 @@ Indentation is preserved."
         <div class="cb-otp-result" id="cbOtpResult">
           <div class="cb-otp-label">Your Clipboard Code</div>
           <div class="cb-otp-digits" id="cbOtpDigits"></div>
-          <div class="cb-otp-expiry" id="cbOtpExpiry">⏱ Expires in 24 hours</div>
+          <div class="cb-otp-expiry" id="cbOtpExpiry">Expires in 24 hours</div>
           <!-- QR Code -->
           <div class="cb-qr-wrap">
             <div class="cb-qr-label">or scan QR code</div>
@@ -634,8 +628,6 @@ Indentation is preserved."
             <div class="cb-card-sub">Enter a 4-digit code to get the content</div>
           </div>
         </div>
-
-        <p class="cb-retrieve-label">Type each digit below — the boxes auto-advance as you type.</p>
 
         <div class="cb-otp-inputs" id="cbOtpInputs">
           <input class="cb-otp-input" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" id="cbIn0" oninput="cbOtpNext(this,0)" onkeydown="cbOtpKey(event,0)" autocomplete="off" />
@@ -675,13 +667,12 @@ Indentation is preserved."
             <!-- Host card -->
             <div class="lcb-join-card">
               <div class="lcb-join-header">
-                <div class="lcb-join-icon">⚡</div>
                 <div>
-                  <div class="lcb-join-title">Start a Live Session</div>
-                  <div class="lcb-join-sub">Get a 6-character code — any device that enters it sees your clipboard in real time.</div>
+                  <div class="lcb-join-title">Start a Session</div>
+                  <div class="lcb-join-sub">Get a 6-character code to share with other devices.</div>
                 </div>
               </div>
-              <button class="btn-primary" id="lcbHostBtn">＋ New Session</button>
+              <button class="btn-primary" id="lcbHostBtn">New Session</button>
             </div>
 
             <div class="lcb-divider">or join an existing session</div>
@@ -689,7 +680,6 @@ Indentation is preserved."
             <!-- Join card -->
             <div class="lcb-join-card">
               <div class="lcb-join-header">
-                <div class="lcb-join-icon">🔗</div>
                 <div>
                   <div class="lcb-join-title">Join a Session</div>
                   <div class="lcb-join-sub">Enter the 6-character code shown on the other device.</div>
@@ -701,25 +691,6 @@ Indentation is preserved."
                   maxlength="6" autocomplete="off" autocorrect="off"
                   autocapitalize="characters" spellcheck="false" />
                 <button class="lcb-join-btn" id="lcbJoinBtn">Join →</button>
-              </div>
-            </div>
-
-            <!-- How it works -->
-            <div class="lcb-how-card">
-              <div class="lcb-how-title">How Live Clipboard Works</div>
-              <div class="lcb-steps">
-                <div class="lcb-step">
-                  <div class="lcb-step-num">1</div>
-                  <div class="lcb-step-text">One device clicks <strong>New Session</strong> — gets a 6-character code instantly.</div>
-                </div>
-                <div class="lcb-step">
-                  <div class="lcb-step-num">2</div>
-                  <div class="lcb-step-text">Other devices <strong>enter the code</strong> to join. Any number of devices can join.</div>
-                </div>
-                <div class="lcb-step">
-                  <div class="lcb-step-num">3</div>
-                  <div class="lcb-step-text"><strong>Type anything</strong> — changes appear on all connected devices in real time. Session expires in 24h.</div>
-                </div>
               </div>
             </div>
 
@@ -756,7 +727,7 @@ Indentation is preserved."
             <!-- Text editor -->
             <div class="lcb-editor-wrap">
               <textarea class="lcb-textarea" id="lcbTextarea"
-                placeholder="Start typing — it will appear on all connected devices instantly."
+                placeholder="Start typing — syncs to all connected devices instantly."
                 spellcheck="true" autocorrect="on" autocapitalize="sentences"></textarea>
             </div>
 
@@ -771,7 +742,9 @@ Indentation is preserved."
               <!-- File card (shown when a file is attached) -->
               <div class="lcb-file-card" id="lcbFileCard" style="display:none">
                 <div class="lcb-file-card-info">
-                  <div class="lcb-file-icon" id="lcbFileIcon">📄</div>
+                  <div class="lcb-file-icon" id="lcbFileIcon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
                   <div class="lcb-file-meta">
                     <div class="lcb-file-name" id="lcbFileName">—</div>
                     <div class="lcb-file-size" id="lcbFileSize">—</div>
@@ -880,7 +853,7 @@ Indentation is preserved."
       <!-- Textarea -->
       <div class="notes-editor-wrap" id="notesEditorWrap">
         <textarea class="notes-textarea" id="notesTextarea"
-          placeholder="Start typing your note…&#10;&#10;Use the toolbar above to format, or just write freely."
+          placeholder="Start typing…"
           spellcheck="true"
           autocorrect="on"
           autocapitalize="sentences"></textarea>
@@ -910,10 +883,6 @@ Indentation is preserved."
 
   </main>
 </div>
-
-<!-- ── TOAST ── -->
-<div class="toast" id="toast"></div>
-
 
 <!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
