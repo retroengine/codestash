@@ -141,15 +141,20 @@ async function restPost(code) {
 async function presenceUpsert() {
   if (!_code) return;
   try {
-    await fetch(REST_BASE + '/rest/v1/live_presence', {
+    const res = await fetch(REST_BASE + '/rest/v1/live_presence', {
       method:  'POST',
-      headers: { ...restHeaders(), 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      headers: {
+        ...restHeaders(),
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
       body: JSON.stringify({
         session_code: _code,
         device_id:    _deviceId,
         last_seen:    new Date().toISOString()
       })
     });
+    if (!res.ok) dbg('presenceUpsert HTTP error:', res.status, await res.text());
+    else dbg('presenceUpsert ok for', _deviceId);
   } catch (e) { dbg('presenceUpsert error:', e); }
 }
 
@@ -174,14 +179,15 @@ async function presenceCount() {
         '?session_code=eq.' + _code +
         '&last_seen=gte.'   + encodeURIComponent(cutoff) +
         '&select=device_id',
-      { headers: { ...restHeaders(), 'Prefer': 'count=exact' } }
+      { headers: restHeaders() }
     );
-    if (!res.ok) return 1;
-    // PostgREST returns count in Content-Range: 0-N/TOTAL
-    const range = res.headers.get('Content-Range') ?? '';
-    const total = parseInt(range.split('/')[1] ?? '1', 10);
-    dbg('presenceCount from DB:', total);
-    return isNaN(total) ? 1 : total;
+    if (!res.ok) {
+      dbg('presenceCount HTTP error:', res.status, await res.text());
+      return 1;
+    }
+    const rows = await res.json();
+    dbg('presenceCount rows:', rows);
+    return Array.isArray(rows) ? rows.length : 1;
   } catch (e) { dbg('presenceCount error:', e); return 1; }
 }
 
