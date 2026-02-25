@@ -1,250 +1,152 @@
 # CodeStash
 
-A self-hosted, private snippet library and online clipboard — built as a single HTML file powered by Supabase.
+A personal code snippet library with an online clipboard and quick notes — built with vanilla HTML, CSS, and JavaScript, backed by Supabase and deployed on Vercel.
+
+**Live site:** https://codestash-gamma.vercel.app
 
 ---
 
 ## Features
 
-### Snippet Library
-- Save, edit, and delete code snippets with syntax labels
-- Supports Python, JavaScript, Java, C++, SQL, HTML, CSS, Notes, and custom languages
-- Search snippets in real time
-- Auto-refresh every 30 seconds (delta fetch — only new rows downloaded)
-- Admin-approved user access system
+- **Snippets** — save, search, tag, pin, and share code snippets with syntax highlighting
+- **Online Clipboard** — paste text or upload a file, get a 4-digit code to retrieve it on any device (expires in 24h)
+- **Quick Notes** — 4-tab scratchpad with a markdown-style toolbar, fullscreen mode, and download as `.txt`
+- **Auth** — sign in / sign up with admin approval flow
+- **Admin Panel** — approve/reject users, lock/unlock the site, toggle guest permissions
+- **Light / Dark mode** — persisted to localStorage
+- **Public sharing** — make any snippet public via a shareable link
 
-### Online Clipboard
-- Paste text or upload a file (up to 15 MB) and receive a 4-digit retrieval code
-- Codes are easy-to-type patterns: pairs (`1122`), mirrors (`3443`), sequences (`2345`), alternating odds/evens (`1357`), etc.
-- Retrieve content from any device using the code
-- All clipboard data auto-deletes after 24 hours
-- Uses a **separate** Supabase project from the snippet library
+---
+
+## File Structure
+
+```
+codestash/
+│
+├── index.html              ← Entry point. Just HTML + <link> and <script> tags.
+├── vercel.json             ← Proxies /api/sb-* to Supabase (hides raw URLs from browser)
+├── README.md
+│
+└── src/
+    │
+    ├── shared/             ← Code used by more than one feature
+    │   │
+    │   ├── lib/
+    │   │   └── supabase.js         ← Supabase URLs + anon keys for both projects.
+    │   │                             Change your keys here — one place, affects everything.
+    │   │
+    │   ├── hooks/
+    │   │   └── (theme.js removed)  ← Theme logic lives inside app-core.js
+    │   │
+    │   ├── ui/
+    │   │   └── helpers.js          ← Global utility functions (togglePw, handleLangChange)
+    │   │                             called directly from HTML onclick= attributes.
+    │   │
+    │   └── styles/
+    │       ├── tokens.css          ← CSS variables: colors, spacing, transitions.
+    │       │                         Dark mode defaults + [data-theme="light"] overrides.
+    │       └── global.css          ← Body, layout grid (#appContainer), sidebar, topbar,
+    │                                 responsive breakpoints, toast, theme toggle button,
+    │                                 syntax highlighting overrides, guest feature cards.
+    │
+    └── features/           ← One folder per feature. Each owns its styles + logic.
+        │
+        ├── auth/
+        │   ├── auth.css            ← Auth card, pending screen, admin portal styles.
+        │   └── app-core.js         ← Everything that shares _session state:
+        │                             auth (login/signup/admin), snippets (fetch/save/
+        │                             delete/pin/share/tags), admin panel (users/lock),
+        │                             navigation (AppUI panel switching), auto-refresh,
+        │                             theme toggle listener, rate limiting.
+        │
+        ├── snippets/
+        │   └── snippets.css        ← Snippet cards, tag chips, tag filter bar,
+        │                             share modal, public view screen, pinned styles.
+        │
+        ├── clipboard/
+        │   ├── clipboard.css       ← Clipboard upload card, OTP code display, file
+        │   │                         drop zone, progress bar, retrieve card, QR code.
+        │   └── clipboard.js        ← AppClipboard module (upload text/files, retrieve
+        │                             by 4-digit code, QR generation) AND AppNotes module
+        │                             (tabs, toolbar, fullscreen, copy, download, clear).
+        │                             ⚠ AppNotes is nested INSIDE AppClipboard — do not
+        │                             separate them or both will break.
+        │
+        └── notes/
+            ├── notes.css           ← Notes panel, tab bar, rename input, toolbar
+            │                         buttons, editor textarea, footer actions.
+            └── notes.js            ← Empty. AppNotes logic is in clipboard.js.
+```
+
+---
+
+## Script Load Order
+
+The order of `<script>` tags in `index.html` matters. Each file depends on the one above it:
+
+```
+1. supabase.js      → defines SUPABASE_SNIPPETS_URL / KEY and SUPABASE_CLIPBOARD_URL / KEY
+2. helpers.js       → defines togglePw() and handleLangChange() (used by HTML onclick=)
+3. app-core.js      → reads supabase.js constants; runs the main app IIFE
+4. clipboard.js     → reads supabase.js constants; runs AppClipboard + AppNotes IIFEs
+```
+
+## CSS Load Order
+
+```
+1. tokens.css       → CSS variables (--bg, --accent, etc.) must come first
+2. global.css       → uses those variables for layout
+3. auth.css         → uses variables for auth card styles
+4. snippets.css     → uses variables for card styles
+5. clipboard.css    → uses variables for clipboard styles
+6. notes.css        → uses variables for notes styles
+```
+
+---
+
+## Two Supabase Projects
+
+CodeStash uses **two separate Supabase projects** intentionally:
+
+| Project | Used for | Key constant |
+|---|---|---|
+| `raxnqglobvykqylejibx` | Snippets, auth, profiles, site settings | `SUPABASE_SNIPPETS_KEY` |
+| `vbtzptvgbzsvrustnwiz` | Clipboard (ephemeral, no auth needed) | `SUPABASE_CLIPBOARD_KEY` |
+
+Both are proxied through Vercel rewrites in `vercel.json` so the raw Supabase URLs never appear in the browser network tab.
+
+---
+
+## Deploying
+
+1. Push to GitHub
+2. Import the repo on [vercel.com](https://vercel.com)
+3. Vercel auto-detects it as a static site — no build settings needed
+4. Every `git push` to `main` triggers an automatic redeploy
+
+---
+
+## Changing the Admin Passphrase
+
+The admin passphrase is stored as a SHA-256 hash in `app-core.js` — the real passphrase is never in the code. To change it:
+
+1. Open your browser console and run:
+```js
+crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassphrase'))
+  .then(b => console.log([...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join('')))
+```
+2. Copy the hash it prints
+3. In `app-core.js`, replace the value of `_adminPhraseHash` with your new hash
 
 ---
 
 ## Tech Stack
 
-| Layer | Tool |
+| Layer | Technology |
 |---|---|
-| Frontend | Vanilla HTML/CSS/JS (single file) |
-| Auth | Supabase Auth |
-| Database | Supabase Postgres (REST API) |
-| File Storage | Supabase Storage |
+| Frontend | Vanilla HTML + CSS + JavaScript (no framework) |
+| Auth + Database | [Supabase](https://supabase.com) (Postgres + Auth) |
+| Syntax Highlighting | [highlight.js](https://highlightjs.org) |
+| QR Codes | [qrcodejs](https://github.com/davidshimjs/qrcodejs) |
 | Fonts | DM Sans + DM Mono (Google Fonts) |
-
----
-
-## Project Structure
-
-Everything lives in **one file**: `index.html`
-
-Internally it's organized as:
-
-```
-index.html
-├── CSS tokens & global styles
-├── Auth screen (Sign In / Sign Up / Admin)
-├── Pending approval screen
-├── Admin portal (user management, site lock)
-├── App layout
-│   ├── Sidebar (Snippets nav, Online Clipboard nav)
-│   ├── Topbar (status, user dropdown)
-│   ├── Snippets panel (add, search, grid)
-│   └── Clipboard panel (upload, retrieve)
-├── Script — CodeStash (Supabase project #1)
-└── Script — Online Clipboard (Supabase project #2)
-```
-
----
-
-## Supabase Setup
-
-CodeStash uses **two separate Supabase projects**.
-
-### Project 1 — Snippet Library
-
-Run this SQL in your first Supabase project:
-
-```sql
--- 1. Profiles table
-CREATE TABLE IF NOT EXISTS profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL,
-  role text NOT NULL DEFAULT 'user' CHECK (role IN ('admin','user')),
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "user_read_own"   ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "admin_read_all"  ON profiles FOR SELECT USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
-CREATE POLICY "admin_update"    ON profiles FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
-CREATE POLICY "user_insert_own" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- 2. Site settings table
-CREATE TABLE IF NOT EXISTS site_settings (
-  id int PRIMARY KEY DEFAULT 1,
-  locked boolean NOT NULL DEFAULT true,
-  updated_at timestamptz DEFAULT now()
-);
-INSERT INTO site_settings (id, locked) VALUES (1, true) ON CONFLICT (id) DO NOTHING;
-ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
-CREATE POLICY "admin_update_settings" ON site_settings FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
-
--- 3. Snippets table
-CREATE TABLE IF NOT EXISTS snippets (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name text NOT NULL,
-  language text NOT NULL DEFAULT 'text',
-  code text NOT NULL,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE snippets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "approved_select" ON snippets FOR SELECT USING (auth.uid() IS NOT NULL AND (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')));
-CREATE POLICY "approved_insert" ON snippets FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved'));
-CREATE POLICY "approved_delete" ON snippets FOR DELETE USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
-
--- 4. Promote your first admin (run after signing up normally)
--- UPDATE profiles SET role = 'admin', status = 'approved' WHERE email = 'your@email.com';
-```
-
----
-
-### Project 2 — Online Clipboard
-
-Run this SQL in your **second** Supabase project:
-
-```sql
--- 1. Clipboard entries table
-CREATE TABLE IF NOT EXISTS clipboard_entries (
-  id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  otp        char(4) NOT NULL UNIQUE,
-  content    text,
-  file_url   text,
-  file_name  text,
-  file_type  text,
-  type       text NOT NULL DEFAULT 'text' CHECK (type IN ('text', 'file')),
-  created_at timestamptz DEFAULT now(),
-  expires_at timestamptz DEFAULT (now() + interval '24 hours')
-);
-
-CREATE INDEX idx_clipboard_otp     ON clipboard_entries(otp);
-CREATE INDEX idx_clipboard_expires ON clipboard_entries(expires_at);
-
-ALTER TABLE clipboard_entries ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public_read"   ON clipboard_entries FOR SELECT USING (expires_at > now());
-CREATE POLICY "public_insert" ON clipboard_entries FOR INSERT WITH CHECK (true);
-CREATE POLICY "public_delete" ON clipboard_entries FOR DELETE USING (true);
-
--- 2. Auto-cleanup trigger (fires on every insert, purges expired rows)
-CREATE OR REPLACE FUNCTION cleanup_expired_clipboard()
-RETURNS TRIGGER AS $$
-BEGIN
-  DELETE FROM clipboard_entries WHERE expires_at < now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_cleanup_clipboard
-  AFTER INSERT ON clipboard_entries
-  FOR EACH STATEMENT
-  EXECUTE FUNCTION cleanup_expired_clipboard();
-
--- 3. Storage bucket for file uploads
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('clipboard-files', 'clipboard-files', true)
-ON CONFLICT DO NOTHING;
-
-CREATE POLICY "public_upload"     ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'clipboard-files');
-CREATE POLICY "public_read_files" ON storage.objects FOR SELECT USING (bucket_id = 'clipboard-files');
-```
-
-> **Optional:** If your Supabase plan supports `pg_cron`, you can also schedule an hourly cleanup:
-> ```sql
-> SELECT cron.schedule('delete-expired-clipboard', '0 * * * *', $$DELETE FROM clipboard_entries WHERE expires_at < now()$$);
-> ```
-
----
-
-## Configuration
-
-Open `index.html` and update the two config blocks near the top of the `<script>` section:
-
-```js
-// ── Snippet Library (Project #1)
-const _c = 'https://YOUR-PROJECT.supabase.co';
-const _k = 'YOUR-ANON-KEY';
-const _adminPhrase = 'your-secret-passphrase';
-
-// ── Online Clipboard (Project #2)
-const CB_URL = 'https://YOUR-CLIPBOARD-PROJECT.supabase.co';
-const CB_KEY = 'YOUR-CLIPBOARD-ANON-KEY';
-```
-
-Both keys are the **anon/public** keys from Supabase → Settings → API. They are safe to use in frontend code because Row Level Security (RLS) enforces all access rules at the database level.
-
----
-
-## Deployment
-
-Since everything is a single HTML file, deployment is straightforward:
-
-- **GitHub Pages** — push `index.html` to a repo and enable Pages
-- **Netlify / Vercel** — drop the file or connect a repo
-- **Cloudflare Pages** — same as above
-- **Self-hosted** — serve it from any static file host or Nginx/Caddy
-
-No build step, no dependencies, no Node.js required.
-
----
-
-## User Flow
-
-### Snippet Library
-
-1. User visits the site
-2. If site is **locked** → must sign in (Sign In / Sign Up tabs)
-3. New sign-ups land in **pending** status until an admin approves them
-4. Approved users can create, edit, copy, and delete their own snippets
-5. Session expires after **30 minutes of inactivity**
-
-### Admin Portal
-
-1. Sign in via the **Admin** tab using your email + secret passphrase
-2. Approve or reject pending users
-3. Toggle site lock (locked = login required, unlocked = public read access)
-
-### Online Clipboard
-
-1. Click **Online Clipboard** in the left sidebar
-2. **Upload tab** — paste text or drop a file → click Generate Code → share the 4-digit code
-3. **Retrieve tab** — type the 4-digit code in the boxes → content or download link appears instantly
-4. Entries auto-delete after 24 hours — no manual cleanup needed
-
----
-
-## Security Notes
-
-- Change `_adminPhrase` before deploying — the default is a placeholder
-- All data access is enforced by Supabase RLS policies, not just the frontend
-- The clipboard is intentionally anonymous — security relies on the OTP being unguessable (1-in-10,000 odds)
-- The app blocks DevTools (right-click, F12, Ctrl+Shift+I) to deter casual inspection
-- Failed login attempts are rate-limited (5 attempts max per session)
-- Never commit your Supabase anon key to a public repo if you've hardcoded it — use environment variables or a build step instead
-
----
-
-## File Size Limits
-
-| Type | Limit |
-|---|---|
-| Clipboard text | Unlimited (Postgres `text` column) |
-| Clipboard file upload | 15 MB |
-| Snippet code | Unlimited (Postgres `text` column) |
-
----
-
-## License
-
-MIT — use it, fork it, self-host it.
+| Hosting | [Vercel](https://vercel.com) |
