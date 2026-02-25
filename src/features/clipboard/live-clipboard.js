@@ -49,8 +49,8 @@ const REST_BASE  = typeof SUPABASE_CLIPBOARD_URL !== 'undefined'
 const DEBOUNCE_MS      = 800;   // keystroke → DB write delay
 const POLL_MS          = 2000;  // how often to check DB when WS is down
 const POLL_PAUSE_MS    = 3000;  // pause polling after our own write
-const HEARTBEAT_MS     = 30000; // how often to refresh our presence row in DB
-const PRESENCE_TTL_MS  = 65000; // rows older than this are considered gone
+const HEARTBEAT_MS     = 10000; // how often to refresh our presence row in DB
+const PRESENCE_TTL_MS  = 25000; // rows older than this are considered gone
 const MAX_RECONNECT    = 4;
 const RECONNECT_BASE   = 2500;
 
@@ -204,8 +204,6 @@ function stopHeartbeat() {
     _heartbeatTimer = null;
   }
 }
-
-
 // Only succeeds if DB version still matches _version.
 // On race-loss: re-fetch winner's version, retry once.
 async function persistContent(content, isRetry = false) {
@@ -650,6 +648,31 @@ document.addEventListener('DOMContentLoaded', () => {
   el('lcbCopyCodeBtn')?.addEventListener('click',   copyCode);
   el('lcbCopyBtn')    ?.addEventListener('click',   copyContent);
   el('lcbClearBtn')   ?.addEventListener('click',   clearContent);
+
+  // Mobile: tab coming back from background stops setInterval.
+  // Re-upsert immediately when visibility is restored so the count
+  // doesn't flicker to stale values.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && _code) {
+      dbg('Tab visible again — re-upserting presence');
+      presenceUpsert();
+    }
+  });
+
+  // Best-effort cleanup when the tab/window is closed.
+  // navigator.sendBeacon would be ideal but we need auth headers,
+  // so we do a synchronous fetch via keepalive instead.
+  window.addEventListener('beforeunload', () => {
+    if (!_code) return;
+    const url = REST_BASE + '/rest/v1/live_presence' +
+      '?session_code=eq.' + _code +
+      '&device_id=eq.'    + _deviceId;
+    fetch(url, {
+      method:  'DELETE',
+      headers: restHeaders(),
+      keepalive: true          // browser sends this even as the page unloads
+    }).catch(() => {});
+  });
 });
 
 return { hostSession, joinSession, leaveSession };
