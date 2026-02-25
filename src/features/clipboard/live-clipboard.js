@@ -49,6 +49,8 @@ const REST_BASE  = typeof SUPABASE_CLIPBOARD_URL !== 'undefined'
 const DEBOUNCE_MS      = 800;   // keystroke → DB write delay
 const POLL_MS          = 2000;  // how often to check DB when WS is down
 const POLL_PAUSE_MS    = 3000;  // pause polling after our own write
+const HEARTBEAT_MS     = 30000; // how often to refresh our presence row in DB
+const PRESENCE_TTL_MS  = 65000; // rows older than this are considered gone
 const MAX_RECONNECT    = 4;
 const RECONNECT_BASE   = 2500;
 
@@ -62,6 +64,7 @@ let _reconnectTimer = null;
 let _reconnectN     = 0;
 let _pollTimer      = null;
 let _pollPaused     = false;     // true for POLL_PAUSE_MS after our own write
+let _heartbeatTimer = null;      // DB presence heartbeat
 let _applying       = false;     // true while updating textarea from remote
 let _wsAlive        = false;     // true when Realtime is SUBSCRIBED
 let _deviceId       = 'lcb_' + Math.random().toString(36).slice(2, 10);
@@ -128,7 +131,75 @@ async function restPost(code) {
   dbg('POST ok');
 }
 
-/* ─── OPTIMISTIC-LOCK PATCH ─────────────────────────────────── */
+/* ─── DB PRESENCE ───────────────────────────────────────────────
+   Tracks connected devices in live_presence table.
+   Works regardless of WebSocket status — pure REST.
+   Each device upserts a row on join and every 30 s.
+   Rows older than PRESENCE_TTL_MS are treated as gone.
+   On leave we DELETE our row immediately for instant count drop.  */
+
+async function presenceUpsert() {
+  if (!_code) return;
+  try {
+    await fetch(REST_BASE + '/rest/v1/live_presence', {
+      method:  'POST',
+      headers: { ...restHeaders(), 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({
+        session_code: _code,
+        device_id:    _deviceId,
+        last_seen:    new Date().toISOString()
+      })
+    });
+  } catch (e) { dbg('presenceUpsert error:', e); }
+}
+
+async function presenceDelete() {
+  if (!_code) return;
+  try {
+    await fetch(
+      REST_BASE + '/rest/v1/live_presence' +
+        '?session_code=eq.' + _code +
+        '&device_id=eq.'    + _deviceId,
+      { method: 'DELETE', headers: restHeaders() }
+    );
+  } catch (e) { dbg('presenceDelete error:', e); }
+}
+
+async function presenceCount() {
+  if (!_code) return 1;
+  try {
+    const cutoff = new Date(Date.now() - PRESENCE_TTL_MS).toISOString();
+    const res = await fetch(
+      REST_BASE + '/rest/v1/live_presence' +
+        '?session_code=eq.' + _code +
+        '&last_seen=gte.'   + encodeURIComponent(cutoff) +
+        '&select=device_id',
+      { headers: { ...restHeaders(), 'Prefer': 'count=exact' } }
+    );
+    if (!res.ok) return 1;
+    // PostgREST returns count in Content-Range: 0-N/TOTAL
+    const range = res.headers.get('Content-Range') ?? '';
+    const total = parseInt(range.split('/')[1] ?? '1', 10);
+    dbg('presenceCount from DB:', total);
+    return isNaN(total) ? 1 : total;
+  } catch (e) { dbg('presenceCount error:', e); return 1; }
+}
+
+function startHeartbeat() {
+  stopHeartbeat();
+  presenceUpsert();                         // immediate on join
+  _heartbeatTimer = setInterval(presenceUpsert, HEARTBEAT_MS);
+  dbg('Heartbeat started every', HEARTBEAT_MS, 'ms');
+}
+
+function stopHeartbeat() {
+  if (_heartbeatTimer) {
+    clearInterval(_heartbeatTimer);
+    _heartbeatTimer = null;
+  }
+}
+
+
 // Only succeeds if DB version still matches _version.
 // On race-loss: re-fetch winner's version, retry once.
 async function persistContent(content, isRetry = false) {
@@ -186,7 +257,12 @@ function startPolling() {
   _pollTimer = setInterval(async () => {
     if (!_code || _pollPaused) return;
     try {
-      const row = await restGet(_code);
+      // Fetch content + presence count in parallel
+      const [row, count] = await Promise.all([
+        restGet(_code),
+        presenceCount()
+      ]);
+      updatePresence(count);
       if (!row) return;
       if (row.version > _version) {
         dbg('Poll: new version', row.version, '(had', _version + ')');
@@ -425,7 +501,8 @@ async function hostSession() {
     _reconnectN     = 0;
     showSessionScreen(code, '');
     startPolling();
-    connectChannel(code);  // non-blocking; polling covers us while WS connects
+    startHeartbeat();
+    connectChannel(code);
   } catch (e) {
     console.error('[LiveClip] hostSession error:', e);
     toast('✗ ' + e.message);
@@ -452,6 +529,7 @@ async function joinSession() {
     _reconnectN = 0;
     showSessionScreen(raw, session.content);
     startPolling();
+    startHeartbeat();
     connectChannel(raw);
   } catch (e) {
     console.error('[LiveClip] joinSession error:', e);
@@ -467,7 +545,9 @@ async function leaveSession() {
   clearTimeout(_debounce);
   clearTimeout(_reconnectTimer);
   stopPolling();
-  _reconnectN = MAX_RECONNECT + 1;   // block any pending reconnect
+  stopHeartbeat();
+  await presenceDelete();                  // instant count drop for other devices
+  _reconnectN = MAX_RECONNECT + 1;
 
   if (_channel) {
     const sb = getClient();
