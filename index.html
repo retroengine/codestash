@@ -2588,8 +2588,9 @@ async function handleAuth() {
       if (profile.status === 'rejected') { _session = null; showAuthError('Your account access has been rejected. Contact the administrator.'); return; }
       if (profile.status === 'approved') { _userProfile = profile; showApp(data); }
     }
-  } catch {
-    showAuthError('Network error. Check your connection.');
+  } catch (err) {
+    const msg = err && err.message ? err.message : String(err);
+    showAuthError('Network error: ' + msg + ' | URL: ' + _c);
   } finally {
     btn.disabled = false;
     btn.innerHTML = (modeAtSubmit === 'login' ? 'Sign In' : modeAtSubmit === 'signup' ? 'Request Access' : 'Admin Sign In') +
