@@ -44,10 +44,8 @@ function getClient() {
     return null;
   }
   _sb = window.supabase.createClient(SB_URL, SB_KEY, {
-    realtime: {
-      params: { eventsPerSecond: 20 }
-    },
-    auth: { persistSession: false }
+    // Rely on standard Supabase defaults for Realtime
+    auth: { persistSession: false } 
   });
   return _sb;
 }
@@ -148,78 +146,80 @@ async function persistContent(content, isRetry = false) {
 
 /* ── Realtime Channel ────────────────────────────────────────── */
 /* ── Realtime Channel ────────────────────────────────────────── */
-function connectChannel(code) {
+async function connectChannel(code) {
   const sb = getClient();
   if (!sb) return;
 
-  // Clean up any previous channel
+  // 1. Safety check for v2 library
+  if (typeof sb.channel !== 'function') {
+    console.error('CRITICAL ERROR: You are using Supabase v1. This requires @supabase/supabase-js v2.');
+    setStatus('disconnected');
+    return;
+  }
+
+  // 2. Cleanly await cleanup to prevent zombie socket collisions
   if (_channel) {
-    sb.removeChannel(_channel);
+    await sb.removeChannel(_channel);
     _channel = null;
   }
 
+  console.log(`[Realtime] Attempting to join channel: lcb:${code}`);
+
+  // 3. Create and chain the listeners
   _channel = sb.channel('lcb:' + code, {
     config: {
-      broadcast: { self: false },  
+      broadcast: { self: false },
       presence:  { key: _deviceId }
     }
   });
 
-  // ── Content broadcast ──────────────────────────────────────
-  _channel.on('broadcast', { event: 'content' }, ({ payload }) => {
-    if (!payload || payload.deviceId === _deviceId) return;
-
-    _fromRemote = true;
-    const ta = el('lcbTextarea');
-    if (ta) {
-      const cursor = ta.selectionStart;
-      ta.value = payload.content;
-      const newCursor = Math.min(cursor, payload.content.length);
-      ta.selectionStart = ta.selectionEnd = newCursor;
-    }
-    _fromRemote = false;
-    updateStats(payload.content || '');
-  });
-
-  // ── Presence: sync (The ONLY place we count devices) ───────
-  _channel.on('presence', { event: 'sync' }, () => {
-    const state = _channel.presenceState();
-    const count = Object.keys(state).length;
-    updatePresence(count);
-  });
-
-  // ── Presence: join (Only for toasts) ────────────────────────
-  _channel.on('presence', { event: 'join' }, ({ newPresences }) => {
-    // Prevent the host from seeing a toast for their own connection
-    const isOtherDevice = newPresences.some(p => p.deviceId !== _deviceId);
-    if (isOtherDevice) toast('📱 Device joined the session');
-  });
-
-  // ── Presence: leave (Only for toasts) ───────────────────────
-  _channel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
-    const isOtherDevice = leftPresences.some(p => p.deviceId !== _deviceId);
-    if (isOtherDevice) toast('📴 Device left the session');
-  });
-
-  // ── Subscribe ─────────────────────────────────────────────
-  _channel.subscribe(async (status) => {
-    // Only react to explicitly known connection states
-    if (status === 'SUBSCRIBED') {
-      try {
-        await _channel.track({
-          deviceId: _deviceId,
-          joinedAt: Date.now()
-        });
-      } catch (err) {
-        console.warn('Presence track failed, but broadcast is active:', err);
+  _channel
+    .on('broadcast', { event: 'content' }, ({ payload }) => {
+      if (!payload || payload.deviceId === _deviceId) return;
+      _fromRemote = true;
+      const ta = el('lcbTextarea');
+      if (ta) {
+        const cursor = ta.selectionStart;
+        ta.value = payload.content;
+        const newCursor = Math.min(cursor, payload.content.length);
+        ta.selectionStart = ta.selectionEnd = newCursor;
       }
-      // Set to live regardless of presence tracking success
-      setStatus('live'); 
-    } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-      setStatus('disconnected');
-    }
-    // Removed the greedy `else` block so background events don't break the UI
-  });
+      _fromRemote = false;
+      updateStats(payload.content || '');
+    })
+    .on('presence', { event: 'sync' }, () => {
+      const state = _channel.presenceState();
+      const count = Object.keys(state).length;
+      console.log('[Realtime] Presence synced. Connected devices:', count);
+      updatePresence(count);
+    })
+    .on('presence', { event: 'join' }, ({ newPresences }) => {
+      const isOther = newPresences.some(p => p.deviceId !== _deviceId);
+      if (isOther) toast('📱 Device joined the session');
+    })
+    .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+      const isOther = leftPresences.some(p => p.deviceId !== _deviceId);
+      if (isOther) toast('📴 Device left the session');
+    })
+    .subscribe(async (status, err) => {
+      console.log('[Realtime] Subscription status:', status);
+
+      if (status === 'SUBSCRIBED') {
+        try {
+          await _channel.track({ deviceId: _deviceId, joinedAt: Date.now() });
+          setStatus('live');
+          console.log('[Realtime] Successfully connected and tracking presence.');
+        } catch (trackErr) {
+          console.error('[Realtime] Presence track failed:', trackErr);
+          setStatus('live'); // Keep app active; broadcast still works if presence fails
+        }
+      } 
+      else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+        console.error(`[Realtime] Connection failed with status: ${status}`, err || '');
+        setStatus('disconnected');
+        toast('⚠ Realtime connection lost');
+      }
+    });
 }
 
 /* ── Broadcast to Peers ──────────────────────────────────────── */
