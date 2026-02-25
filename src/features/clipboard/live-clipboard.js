@@ -105,8 +105,12 @@ async function fetchSession(code) {
 /* ── Persist to DB with Optimistic Locking ───────────────────── */
 // Only writes if the version in DB matches what we last read.
 // If someone else wrote in the meantime, PATCH affects 0 rows → we re-fetch.
-async function persistContent(content, expectedVersion) {
+// Removed expectedVersion parameter; we read _version at execution time.
+// Added a retry flag to prevent infinite loops in edge cases.
+async function persistContent(content, isRetry = false) {
   if (!_code) return;
+  const expectedVersion = _version; // Evaluate at execution time
+
   try {
     const res = await fetch(
       REST + '/rest/v1/live_sessions?code=eq.' + _code +
@@ -126,20 +130,20 @@ async function persistContent(content, expectedVersion) {
 
     if (rows.length === 0) {
       // ── Race condition detected ──────────────────────────────
-      // Another device updated between our last read and now.
-      // Fetch the latest version so future writes use correct base.
       const latest = await fetchSession(_code);
       if (latest) {
         _version = latest.version;
-        // Note: we intentionally do NOT overwrite the user's textarea —
-        // their local broadcast already went to peers. The next keystroke
-        // will trigger another write attempt with the refreshed version.
+        // CRITICAL FIX: Retry the write immediately so data isn't lost
+        // if the user has stopped typing.
+        if (!isRetry) {
+          await persistContent(content, true); 
+        }
       }
     } else {
-      // Write succeeded — advance our version counter
+      // Write succeeded
       _version = expectedVersion + 1;
     }
-  } catch { /* network errors are silent — next keystroke retries */ }
+  } catch { /* network errors silent */ }
 }
 
 /* ── Realtime Channel ────────────────────────────────────────── */
@@ -361,10 +365,13 @@ function clearContent() {
   const ta = el('lcbTextarea');
   if (!ta || !ta.value.trim()) return;
   if (!confirm('Clear live clipboard? This affects all connected devices.')) return;
+  
+  clearTimeout(_debounce); // CRITICAL FIX: Kill pending keystroke writes
+  
   ta.value = '';
   updateStats('');
   broadcastContent('');
-  persistContent('', _version);
+  persistContent(''); 
 }
 
 /* ── Textarea Input Handler ──────────────────────────────────── */
@@ -375,15 +382,12 @@ function onInput() {
   const content = ta.value;
 
   updateStats(content);
+  broadcastContent(content); // 1. Instant peer update
 
-  // 1. Broadcast immediately (instant peer update)
-  broadcastContent(content);
-
-  // 2. Write to DB after 800ms of inactivity
+  // 2. Write to DB after 800ms
   clearTimeout(_debounce);
-  const capturedVersion = _version;
   _debounce = setTimeout(() => {
-    persistContent(content, capturedVersion);
+    persistContent(content); // Version is now evaluated inside this call
   }, 800);
 }
 
