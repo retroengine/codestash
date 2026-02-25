@@ -482,3 +482,52 @@
   .lcb-action-btn { flex: 1; justify-content: center; }
   .lcb-digit { width: 28px; height: 34px; font-size: 0.9rem; }
 }
+
+/* ── File share section ── */
+.lcb-file-section {
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.lcb-file-drop {
+  display: flex; align-items: center; gap: 10px;
+  border: 1.5px dashed var(--border); border-radius: 12px;
+  padding: 14px 16px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--muted);
+}
+.lcb-file-drop:hover, .lcb-file-drop.dragover {
+  border-color: var(--accent); background: rgba(139,120,255,0.05);
+  color: var(--text);
+}
+.lcb-file-drop-label { font-size: 0.8rem; line-height: 1.4; }
+.lcb-file-drop-label strong { color: var(--text); }
+
+.lcb-file-card {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+}
+.lcb-file-card-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.lcb-file-icon { font-size: 1.4rem; flex-shrink: 0; }
+.lcb-file-meta { min-width: 0; }
+.lcb-file-name {
+  font-size: 0.82rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 180px;
+}
+.lcb-file-size { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.lcb-file-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.lcb-file-progress {
+  display: flex; align-items: center; gap: 10px;
+}
+.lcb-file-progress-bar-wrap {
+  flex: 1; height: 4px; background: var(--surface2);
+  border-radius: 99px; overflow: hidden;
+}
+.lcb-file-progress-bar {
+  height: 100%; width: 0%; background: var(--accent);
+  border-radius: 99px; transition: width 0.2s ease;
+}
+.lcb-file-progress-text { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
