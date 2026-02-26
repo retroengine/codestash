@@ -130,30 +130,10 @@ function showScreen(id) {
 async function init() {
   const isPublic = await checkPublicView();
   if (isPublic) return;
-  // Always load site settings first so guest restrictions are applied correctly.
-  // Uses the anon key — no session required.
-  await loadSiteSettingsForGuest();
   showApp(null);
   updateRateLimitUI();
 }
 init();
-
-/* Loads site_settings using the anon key (safe for guests + unauthenticated page load).
-   Called once on init before showApp so _siteUnlocked / _guestAddSnippet are ready. */
-async function loadSiteSettingsForGuest() {
-  try {
-    const res = await fetch(
-      _c + '/rest/v1/site_settings?id=eq.1&select=locked,guest_add_snippet',
-      { headers: _headers(null) }  // _headers(null) falls back to anon key
-    );
-    const [row] = await res.json();
-    _siteUnlocked    = row ? !row.locked        : false;
-    _guestAddSnippet = row ? !!row.guest_add_snippet : false;
-    _guestNotes      = true; // Notes always on
-  } catch {
-    _siteUnlocked = false; _guestAddSnippet = false; _guestNotes = true;
-  }
-}
 
 /* ════════════════════════════════════════════
    HELPERS
@@ -342,16 +322,12 @@ function showApp(session) {
   const snippetsList      = document.getElementById('snippetsList');
 
   if (isGuest) {
-    // Auth card always visible — guests can always sign in even when site is unlocked.
     if (inlineAuth)        inlineAuth.style.display        = '';
-    // When site is unlocked, also show snippet browsing UI (public snippets only via RLS).
-    // When locked, hide snippet list so guests only see the sign-in card.
-    if (addPanel)          addPanel.style.display          = (_siteUnlocked && _guestAddSnippet) ? '' : 'none';
-    if (snippetListHeader) snippetListHeader.style.display = _siteUnlocked ? '' : 'none';
-    if (searchWrap)        searchWrap.style.display        = _siteUnlocked ? '' : 'none';
-    if (tagFilterBar)      tagFilterBar.style.display      = _siteUnlocked ? '' : 'none';
-    if (snippetsList)      snippetsList.style.display      = _siteUnlocked ? '' : 'none';
-    if (_siteUnlocked) fetchSnippets(); // fetches only public snippets for guests (RLS enforced)
+    if (addPanel)          addPanel.style.display          = 'none';
+    if (snippetListHeader) snippetListHeader.style.display = 'none';
+    if (searchWrap)        searchWrap.style.display        = 'none';
+    if (tagFilterBar)      tagFilterBar.style.display      = 'none';
+    if (snippetsList)      snippetsList.style.display      = 'none';
     setStatus('connected', 'connected');
   } else {
     if (inlineAuth)        inlineAuth.style.display        = 'none';
@@ -503,21 +479,8 @@ async function toggleSiteLock() {
  */
 function applyLiveGuestRestrictions() {
   const isGuest = !_session;
-  if (!isGuest) return; // signed-in users are never restricted by guest settings
-
-  const inlineAuth        = document.getElementById('inlineAuthWrap');
-  const addPanel          = document.getElementById('addPanel');
-  const snippetListHeader = document.querySelector('#snippetsPanel .row');
-  const searchWrap        = document.querySelector('#snippetsPanel .search-wrap');
-  const tagFilterBar      = document.getElementById('tagFilterBar');
-  const snippetsList      = document.getElementById('snippetsList');
-
-  if (inlineAuth)        inlineAuth.style.display        = ''; // always show sign-in for guests
-  if (addPanel)          addPanel.style.display          = (_siteUnlocked && _guestAddSnippet) ? '' : 'none';
-  if (snippetListHeader) snippetListHeader.style.display = _siteUnlocked ? '' : 'none';
-  if (searchWrap)        searchWrap.style.display        = _siteUnlocked ? '' : 'none';
-  if (tagFilterBar)      tagFilterBar.style.display      = _siteUnlocked ? '' : 'none';
-  if (snippetsList)      snippetsList.style.display      = _siteUnlocked ? '' : 'none';
+  const addPanel = document.getElementById('addPanel');
+  if (addPanel) addPanel.style.display = (isGuest && !_guestAddSnippet) ? 'none' : '';
 
   // Notes are always unlocked — always show navNotes
   const navNotes = document.getElementById('navNotes');
