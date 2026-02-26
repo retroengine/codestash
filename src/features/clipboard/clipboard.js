@@ -126,34 +126,64 @@ window.cbUpload = async function() {
 
     } else {
       if (!_cbFile) { cbShowUploadError('Please select a file first.'); return; }
-      // Upload file to Supabase Storage
+
       cbShowProgress(0);
-      const filePath = otp + '_' + Date.now() + '_' + _cbFile.name;
+
+      // Sanitize filename — removes spaces/special chars that break Supabase Storage URLs
+      const safeName = _cbFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const filePath = otp + '_' + Date.now() + '_' + safeName;
+
       const uploadRes = await fetch(
-        CB_URL + '/storage/v1/object/clipboard-files/' + encodeURIComponent(filePath),
+        CB_URL + '/storage/v1/object/clipboard-files/' + filePath,  // path is pre-sanitized, no encodeURIComponent needed
         {
           method: 'POST',
-          headers: { 'apikey': CB_KEY, 'Authorization': 'Bearer ' + CB_KEY, 'Content-Type': _cbFile.type || 'application/octet-stream' },
+          headers: {
+            'apikey': CB_KEY,
+            'Authorization': 'Bearer ' + CB_KEY,
+            'Content-Type': _cbFile.type || 'application/octet-stream',
+            'x-upsert': 'true'  // prevents 409 conflict errors
+          },
           body: _cbFile
         }
       );
+
       cbShowProgress(70);
-      if (!uploadRes.ok) throw new Error('File upload failed');
-      const fileUrl = CB_URL + '/storage/v1/object/public/clipboard-files/' + encodeURIComponent(filePath);
+
+      if (!uploadRes.ok) {
+        const errBody = await uploadRes.text().catch(() => String(uploadRes.status));
+        console.error('Storage upload failed:', uploadRes.status, errBody);
+        throw new Error('File upload failed (' + uploadRes.status + '): ' + errBody);
+      }
+
+      // Build the public URL using the same un-encoded path
+      const fileUrl = CB_URL + '/storage/v1/object/public/clipboard-files/' + filePath;
       cbShowProgress(90);
 
       const dbRes = await fetch(CB_URL + '/rest/v1/clipboard_entries', {
         method: 'POST',
         headers: cbHeaders(),
-        body: JSON.stringify({ otp, file_url: fileUrl, file_name: _cbFile.name, file_type: _cbFile.type, type: 'file' })
+        body: JSON.stringify({
+          otp,
+          file_url: fileUrl,
+          file_name: _cbFile.name,   // store original display name
+          file_type: _cbFile.type,
+          type: 'file'
+        })
       });
-      if (!dbRes.ok) throw new Error('DB insert failed');
+
+      if (!dbRes.ok) {
+        const errBody = await dbRes.text().catch(() => String(dbRes.status));
+        console.error('DB insert failed:', dbRes.status, errBody);
+        throw new Error('DB insert failed (' + dbRes.status + '): ' + errBody);
+      }
+
       cbShowProgress(100);
       setTimeout(() => document.getElementById('cbProgress').classList.remove('show'), 600);
       cbShowOtp(otp);
     }
   } catch(e) {
     cbShowUploadError('Something went wrong. Please try again.');
+    console.error('cbUpload error:', e);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M5 19h14"/></svg> Generate Code';
