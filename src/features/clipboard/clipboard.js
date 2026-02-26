@@ -130,14 +130,17 @@ window.cbUpload = async function() {
       cbShowProgress(0);
       const filePath = otp + '_' + Date.now() + '_' + _cbFile.name;
       const uploadRes = await fetch(
-  'https://vbtzptvgbzsvrustnwiz.supabase.co' + '/storage/v1/object/clipboard-files/' + encodeURIComponent(filePath),
+        CB_URL + '/storage/v1/object/clipboard-files/' + encodeURIComponent(filePath),
+        {
+          method: 'POST',
           headers: { 'apikey': CB_KEY, 'Authorization': 'Bearer ' + CB_KEY, 'Content-Type': _cbFile.type || 'application/octet-stream' },
           body: _cbFile
         }
       );
       cbShowProgress(70);
       if (!uploadRes.ok) throw new Error('File upload failed');
-const fileUrl = 'https://vbtzptvgbzsvrustnwiz.supabase.co' + '/storage/v1/object/public/clipboard-files/' + encodeURIComponent(filePath);      cbShowProgress(90);
+      const fileUrl = CB_URL + '/storage/v1/object/public/clipboard-files/' + encodeURIComponent(filePath);
+      cbShowProgress(90);
 
       const dbRes = await fetch(CB_URL + '/rest/v1/clipboard_entries', {
         method: 'POST',
