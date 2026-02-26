@@ -73,6 +73,11 @@ window.cbSwitchUploadMode = function(mode) {
   document.getElementById('cbTextMode').style.display = mode === 'text' ? '' : 'none';
   document.getElementById('cbFileMode').style.display = mode === 'file' ? '' : 'none';
   cbHideUploadError();
+
+  // Hide OTP result + QR and restore upload button whenever the user switches tabs
+  document.getElementById('cbOtpResult').classList.remove('show');
+  document.getElementById('cbUploadBtn').style.display = '';
+  _cbCurrentOtp = null;
 };
 
 /* ── File input + drag-drop ── */
