@@ -342,9 +342,10 @@ function showApp(session) {
   const snippetsList      = document.getElementById('snippetsList');
 
   if (isGuest) {
-    // When site is unlocked, guests can browse public snippets without logging in.
-    // When locked, show the inline auth prompt and hide all snippet content.
-    if (inlineAuth)        inlineAuth.style.display        = _siteUnlocked ? 'none' : '';
+    // Auth card always visible — guests can always sign in even when site is unlocked.
+    if (inlineAuth)        inlineAuth.style.display        = '';
+    // When site is unlocked, also show snippet browsing UI (public snippets only via RLS).
+    // When locked, hide snippet list so guests only see the sign-in card.
     if (addPanel)          addPanel.style.display          = (_siteUnlocked && _guestAddSnippet) ? '' : 'none';
     if (snippetListHeader) snippetListHeader.style.display = _siteUnlocked ? '' : 'none';
     if (searchWrap)        searchWrap.style.display        = _siteUnlocked ? '' : 'none';
@@ -511,7 +512,7 @@ function applyLiveGuestRestrictions() {
   const tagFilterBar      = document.getElementById('tagFilterBar');
   const snippetsList      = document.getElementById('snippetsList');
 
-  if (inlineAuth)        inlineAuth.style.display        = _siteUnlocked ? 'none' : '';
+  if (inlineAuth)        inlineAuth.style.display        = ''; // always show sign-in for guests
   if (addPanel)          addPanel.style.display          = (_siteUnlocked && _guestAddSnippet) ? '' : 'none';
   if (snippetListHeader) snippetListHeader.style.display = _siteUnlocked ? '' : 'none';
   if (searchWrap)        searchWrap.style.display        = _siteUnlocked ? '' : 'none';
