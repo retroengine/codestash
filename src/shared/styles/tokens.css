@@ -8,45 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 
 :root {
-  /* ── Base palette (dark default) ── */
-  --bg:        #0F0F0C;
-  --surface:   #1B1B17;
-  --surface2:  #252520;
-  --surface3:  #2E2E28;
-
-  /* Solid visible borders — neubrutalism has NO transparent/soft borders */
-  --border:    #3C3C34;
-  --border-hi: #5E5E52;
-
-  --text:      #F2EDD0;
-  --muted:     rgba(242, 237, 208, 0.5);
-  --muted2:    rgba(242, 237, 208, 0.25);
-
-  --danger:    #FF3B3B;
-  --success:   #2FD675;
-  --warning:   #FFD93D;
-  --accent:    #FFD93D;   /* electric yellow — the surprise */
-  --admin:     #FF6BFF;
-
-  /* ── Neubrutalism shadows (flat offset, no blur) ── */
-  --nb-shadow-sm:  3px 3px 0px #F2EDD0;
-  --nb-shadow-md:  4px 4px 0px #F2EDD0;
-  --nb-shadow-lg:  6px 6px 0px #F2EDD0;
-  --nb-shadow-accent: 4px 4px 0px #FFD93D;
-  --nb-border:     2px solid #3C3C34;
-  --nb-border-hi:  2px solid #F2EDD0;
-
-  /* ── Font ── */
-  --font-display: 'Space Grotesk', 'DM Sans', sans-serif;
-  --font-body:    'Space Grotesk', sans-serif;
-  --font-mono:    'DM Mono', monospace;
-
-  --theme-transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* ══ LIGHT MODE ══ */
-[data-theme="light"] {
-  --bg:        #F5EFD8;   /* warm parchment */
+  --bg:        #F5EFD8;
   --surface:   #FDFAF0;
   --surface2:  #EDE8D0;
   --surface3:  #E2DCCA;
@@ -58,40 +20,59 @@
   --danger:    #E3000F;
   --success:   #008A48;
   --warning:   #C07800;
-  --accent:    #FF4500;   /* burnt coral-orange in light mode */
+  --accent:    #FF4500;
   --admin:     #9B00D4;
 
-  --nb-shadow-sm:  3px 3px 0px #1A1A14;
-  --nb-shadow-md:  4px 4px 0px #1A1A14;
-  --nb-shadow-lg:  6px 6px 0px #1A1A14;
+  --nb-shadow-sm:     3px 3px 0px #1A1A14;
+  --nb-shadow-md:     4px 4px 0px #1A1A14;
+  --nb-shadow-lg:     6px 6px 0px #1A1A14;
   --nb-shadow-accent: 4px 4px 0px #FF4500;
-  --nb-border:     2px solid #1A1A14;
-  --nb-border-hi:  2px solid #000000;
+  --nb-border:        2px solid #1A1A14;
+  --nb-border-hi:     2px solid #000000;
+
+  --font-display: 'Space Grotesk', 'DM Sans', sans-serif;
+  --font-body:    'Space Grotesk', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+
+  --theme-transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ══ LIGHT MODE ══ */
+[data-theme="dark"] {
+  --bg:        #0F0F0C;
+  --surface:   #1B1B17;
+  --surface2:  #252520;
+  --surface3:  #2E2E28;
+  --border:    #3C3C34;
+  --border-hi: #F2EDD0;
+  --text:      #F2EDD0;
+  --muted:     rgba(242, 237, 208, 0.5);
+  --muted2:    rgba(242, 237, 208, 0.25);
+  --danger:    #FF3B3B;
+  --success:   #2FD675;
+  --warning:   #FFD93D;
+  --accent:    #FFD93D;
+  --admin:     #FF6BFF;
+
+  --nb-shadow-sm:     3px 3px 0px #F2EDD0;
+  --nb-shadow-md:     4px 4px 0px #F2EDD0;
+  --nb-shadow-lg:     6px 6px 0px #F2EDD0;
+  --nb-shadow-accent: 4px 4px 0px #FFD93D;
+  --nb-border:        2px solid #F2EDD0;
+  --nb-border-hi:     2px solid #F2EDD0;
 }
 
 /* ── Light mode specific overrides ── */
-[data-theme="light"] body::before { opacity: 0.12; }
-
-[data-theme="light"] .logo-mark {
-  background: #1A1A14;
-  box-shadow: var(--nb-shadow-sm);
-}
-[data-theme="light"] .logo-mark svg path,
-[data-theme="light"] .logo-mark svg line { stroke: #F5EFD8; }
-
-[data-theme="light"] .auth-card,
-[data-theme="light"] .pending-card {
-  box-shadow: var(--nb-shadow-lg);
-}
-
-[data-theme="light"] .code-preview { background: var(--surface2) !important; }
-
-[data-theme="light"] .hljs {
-  background: var(--surface2) !important;
-  color: #2D2400;
-}
-[data-theme="light"] #hljs-theme-dark  { display: none; }
-[data-theme="light"] #hljs-theme-light { }
+/* Dark mode specific overrides */
+[data-theme="dark"] body::before { opacity: 0.5; }
+[data-theme="dark"] .logo-mark { background: #FFD93D; }
+[data-theme="dark"] .logo-mark svg path,
+[data-theme="dark"] .logo-mark svg line { stroke: #0F0F0C; }
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .pending-card { box-shadow: 10px 10px 0px #F2EDD0; }
+[data-theme="dark"] .code-preview { background: var(--surface2) !important; }
+[data-theme="dark"] .hljs { background: var(--surface2) !important; color: #F2EDD0; }
+[data-theme="dark"] #hljs-theme-light { display: none; }
 
 /* ── Transitions ── */
 body, .sidebar, .topbar, .auth-card, .pending-card, .add-panel,
