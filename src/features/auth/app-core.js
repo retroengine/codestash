@@ -1373,8 +1373,8 @@ setInterval(() => {
    LIGHT / DARK MODE TOGGLE
 ════════════════════════════════════════════ */
 (function initTheme() {
-  // Persist in localStorage; default to dark
-  const saved = localStorage.getItem('cs_theme') || 'dark';
+  // Persist in localStorage; default to light
+  const saved = localStorage.getItem('cs_theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
   // Sync highlight.js themes
   syncHljsTheme(saved);
