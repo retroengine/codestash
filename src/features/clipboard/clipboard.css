@@ -422,13 +422,6 @@
   text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted2);
   position: relative; font-family: var(--font-display, 'Space Grotesk', sans-serif);
 }
-.lcb-divider::before, .lcb-divider::after {
-  content: ''; position: absolute; top: 50%; width: 42%; height: 2px;
-  background: var(--border);
-}
-.lcb-divider::before { left: 0; }
-.lcb-divider::after  { right: 0; }
-
 .lcb-code-input-wrap { display: flex; gap: 8px; }
 .lcb-code-input-wrap .field-input {
   flex: 1;
