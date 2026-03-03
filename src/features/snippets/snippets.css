@@ -21,7 +21,7 @@
 
 .btn-save {
   display: inline-flex; align-items: center; gap: 7px;
-  background: var(--text); color: #0a0a0a;
+  background: #0a0a0a; color: #ffffff;
   border: none; border-radius: 10px; padding: 11px 20px;
   font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700;
   cursor: pointer; transition: opacity 0.15s, transform 0.13s;
@@ -30,6 +30,11 @@
 .btn-save:hover { opacity: 0.84; transform: translateY(-1px); }
 .btn-save:active { transform: translateY(0); }
 .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Light mode override — keep contrast inverted so it stays readable */
+[data-theme="light"] .btn-save {
+  background: #0a0a0a; color: #ffffff;
+}
 
 /* Edit mode — panel label turns amber, border glows */
 .add-panel.editing {
@@ -337,7 +342,7 @@
 .pub-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 .pub-btn-copy {
   display: inline-flex; align-items: center; gap: 7px;
-  background: var(--text); color: #0a0a0a;
+  background: #0a0a0a; color: #ffffff;
   border: none; border-radius: 10px; padding: 10px 20px;
   font-family: 'DM Sans', sans-serif; font-size: 0.84rem; font-weight: 700;
   cursor: pointer; transition: opacity 0.15s;
