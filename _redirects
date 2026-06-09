@@ -1,2 +1,2 @@
-/api/sb-snippets/*  https://raxnqglobvykqylejibx.supabase.co/:splat  200
-/api/sb-clipboard/* https://vbtzptvgbzsvrustnwiz.supabase.co/:splat  200
+/api/sb-snippets/*  https://<YOUR_SNIPPETS_SUPABASE_PROJECT_ID>.supabase.co/:splat  200
+/api/sb-clipboard/* https://<YOUR_CLIPBOARD_SUPABASE_PROJECT_ID>.supabase.co/:splat  200

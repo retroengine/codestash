@@ -1,7 +1,7 @@
-/* ═══════════════════════════════════════════════
+/* ===============================================
    CODESTASH — global.css
    Neubrutalism Layout System
-═══════════════════════════════════════════════ */
+=============================================== */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,7 +30,7 @@ body::before {
   opacity: 0.5; will-change: transform;
 }
 
-/* ══════════ APP CONTAINER ══════════ */
+/* ========== APP CONTAINER ========== */
 #appContainer {
   display: none;
   grid-template-columns: 1fr;
@@ -39,7 +39,7 @@ body::before {
 }
 #appContainer.visible { display: grid; }
 
-/* ══════════ SIDEBAR ══════════ */
+/* ========== SIDEBAR ========== */
 .sidebar {
   position: fixed; left: 0; top: 0; bottom: 0;
   width: min(280px, 85vw); z-index: 150;
@@ -134,7 +134,7 @@ body::before {
   stroke: currentColor; fill: none; stroke-width: 2;
 }
 
-/* ══════════ TOPBAR ══════════ */
+/* ========== TOPBAR ========== */
 .topbar {
   grid-column: 1; grid-row: 1;
   display: flex; align-items: center;
@@ -228,7 +228,7 @@ body::before {
   box-shadow: var(--nb-shadow-sm);
 }
 
-/* ══════════ ACCOUNT DROPDOWN ══════════ */
+/* ========== ACCOUNT DROPDOWN ========== */
 .account-dropdown {
   position: fixed; top: 64px; right: 12px; left: 12px;
   width: auto;
@@ -284,11 +284,11 @@ body::before {
 .dropdown-action svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; flex-shrink: 0; }
 .dropdown-action.danger:hover { color: var(--danger); }
 
-/* ══════════ OVERLAY ══════════ */
+/* ========== OVERLAY ========== */
 .overlay { display: none; position: fixed; inset: 0; z-index: 299; }
 .overlay.active { display: block; }
 
-/* ══════════ MAIN CONTENT ══════════ */
+/* ========== MAIN CONTENT ========== */
 .main-content {
   grid-column: 1; grid-row: 2;
   padding: 14px 12px;
@@ -305,7 +305,7 @@ body::before {
   display: flex; flex-direction: column; gap: 14px;
 }
 
-/* ══════════ ADD PANEL ══════════ */
+/* ========== ADD PANEL ========== */
 .add-panel {
   background: var(--surface);
   border: 2px solid var(--border);
@@ -364,7 +364,7 @@ select.field-input { cursor: pointer; }
   transform: translate(-1px, -1px);
 }
 
-/* ══════════ BUTTONS ══════════ */
+/* ========== BUTTONS ========== */
 .btn-save {
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--accent);
@@ -423,7 +423,7 @@ select.field-input { cursor: pointer; }
 
 .panel-btn-row { display: flex; align-items: center; gap: 9px; }
 
-/* ══════════ SECTION ROW + TITLE ══════════ */
+/* ========== SECTION ROW + TITLE ========== */
 .row { display: flex; align-items: center; justify-content: space-between; }
 
 .section-title {
@@ -456,7 +456,7 @@ select.field-input { cursor: pointer; }
   letter-spacing: 0.02em;
 }
 
-/* ══════════ SEARCH ══════════ */
+/* ========== SEARCH ========== */
 .search-wrap { position: relative; }
 .search-ico {
   position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
@@ -465,7 +465,7 @@ select.field-input { cursor: pointer; }
 .search-ico svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; }
 .search-wrap .field-input { padding-left: 38px; }
 
-/* ══════════ MOBILE HAMBURGER + OVERLAY ══════════ */
+/* ========== MOBILE HAMBURGER + OVERLAY ========== */
 .mob-menu-btn {
   display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; border-radius: 6px;
@@ -490,7 +490,7 @@ select.field-input { cursor: pointer; }
 }
 .sidebar-overlay.open { display: block; }
 
-/* ══════════ DESKTOP UPGRADES ══════════ */
+/* ========== DESKTOP UPGRADES ========== */
 @media (min-width: 769px) {
   #appContainer {
     grid-template-columns: 252px 1fr;
@@ -564,7 +564,7 @@ select.field-input { cursor: pointer; }
   .cb-btn-copy-otp, .cb-btn-new { width: auto; }
 }
 
-/* ══════════ TOAST ══════════ */
+/* ========== TOAST ========== */
 .toast {
   position: fixed;
   left: 12px; right: 12px;
@@ -585,7 +585,7 @@ select.field-input { cursor: pointer; }
 .toast.error   { border-color: var(--danger);  box-shadow: 4px 4px 0px var(--danger); }
 .toast.warning { border-color: var(--warning); box-shadow: 4px 4px 0px var(--warning); }
 
-/* ══════════ THEME TOGGLE ══════════ */
+/* ========== THEME TOGGLE ========== */
 .theme-toggle-btn {
   width: 36px; height: 36px; border-radius: 6px;
   background: var(--surface3);
@@ -609,7 +609,7 @@ select.field-input { cursor: pointer; }
 [data-theme="light"] .theme-toggle-btn .icon-sun  { display: block; }
 [data-theme="light"] .theme-toggle-btn .icon-moon { display: none; }
 
-/* ══════════ MOBILE NOTES TWEAKS ══════════ */
+/* ========== MOBILE NOTES TWEAKS ========== */
 @media (max-width: 768px) {
   .notes-tab-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 5px; gap: 3px; }
   .notes-tab { padding: 7px 12px; font-size: 0.76rem; }
@@ -621,11 +621,11 @@ select.field-input { cursor: pointer; }
   .cb-otp-digit  { width: 42px; height: 52px; font-size: 1.5rem; border-radius: 6px; }
 }
 
-/* ══════════ NOTES PANEL ══════════ */
+/* ========== NOTES PANEL ========== */
 .notes-panel { display: none; flex-direction: column; gap: 14px; }
 .notes-panel.visible { display: flex; }
 
-/* ══════════ SYNTAX HIGHLIGHT OVERRIDES ══════════ */
+/* ========== SYNTAX HIGHLIGHT OVERRIDES ========== */
 .code-preview .hljs {
   background: transparent !important;
   padding: 0 !important;
@@ -639,7 +639,7 @@ select.field-input { cursor: pointer; }
   font-family: var(--font-mono, 'DM Mono', monospace);
 }
 
-/* ══════════ GUEST FEATURE CARDS ══════════ */
+/* ========== GUEST FEATURE CARDS ========== */
 .guest-features-grid {
   display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px;
 }

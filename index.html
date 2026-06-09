@@ -13,7 +13,7 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "CodeStash",
-    "url": "https://codestash.pages.dev"
+    "url": "https://<YOUR_DEPLOYMENT_URL>"
   }
   </script>
 
@@ -24,7 +24,7 @@
     style-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
     font-src   https://fonts.gstatic.com;
     img-src    'self' data: blob:;
-    connect-src 'self' https://raxnqglobvykqylejibx.supabase.co wss://raxnqglobvykqylejibx.supabase.co https://vbtzptvgbzsvrustnwiz.supabase.co wss://vbtzptvgbzsvrustnwiz.supabase.co https://cdn.jsdelivr.net;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net;
     object-src 'none';
     base-uri   'self';
   ">
@@ -44,7 +44,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="hljs-theme-light" disabled>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <!-- ── App Styles (order matters) ── -->
+  <!-- == App Styles (order matters) == -->
   <link rel="stylesheet" href="src/shared/styles/tokens.css">
   <link rel="stylesheet" href="src/shared/styles/global.css">
   <link rel="stylesheet" href="src/features/auth/auth.css">
@@ -80,7 +80,7 @@
 
 <body>
 
-<!-- ── SVG SYMBOL DEFS (icons defined once, referenced everywhere) ── -->
+<!-- == SVG SYMBOL DEFS (icons defined once, referenced everywhere) == -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
   <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <rect x="9" y="9" width="13" height="13" rx="2"/>
@@ -114,10 +114,10 @@
   </symbol>
 </svg>
 
-<!-- ── CLICK-AWAY OVERLAY FOR DROPDOWN ── -->
+<!-- == CLICK-AWAY OVERLAY FOR DROPDOWN == -->
 <div class="overlay" id="overlay"></div>
 
-<!-- ── FIXED LOGO (shows only on auth screens) ── -->
+<!-- == FIXED LOGO (shows only on auth screens) == -->
 <div class="auth-fixed-logo" id="authFixedLogo">
   <div class="logo-mark">
     <svg viewBox="0 0 20 20" fill="none">
@@ -131,7 +131,7 @@
   </div>
 </div>
 
-<!-- ═══════════ PENDING SCREEN ═══════════ -->
+<!-- == PENDING SCREEN == -->
 <div class="screen" id="pendingScreen">
   <div class="pending-card">
     <div class="pending-title">Awaiting Approval</div>
@@ -141,7 +141,7 @@
   </div>
 </div>
 
-<!-- ═══════════ ADMIN PORTAL ═══════════ -->
+<!-- == ADMIN PORTAL == -->
 <div id="adminPortal">
   <div class="admin-header">
     <div class="admin-title">
@@ -261,7 +261,7 @@
   </div>
 </div>
 
-<!-- ═══════════ PUBLIC SNIPPET VIEW ═══════════ -->
+<!-- == PUBLIC SNIPPET VIEW == -->
 <div id="publicViewScreen">
   <div class="pub-header">
     <div class="pub-header-logo">
@@ -292,7 +292,7 @@
   </div>
 </div>
 
-<!-- ═══════════ SHARE MODAL ═══════════ -->
+<!-- == SHARE MODAL == -->
 <div class="share-modal-overlay" id="shareModalOverlay">
   <div class="share-modal">
     <button class="share-modal-close" onclick="closeShareModal()">✕</button>
@@ -319,10 +319,10 @@
   </div>
 </div>
 
-<!-- ── SIDEBAR OVERLAY (mobile) ── -->
+<!-- == SIDEBAR OVERLAY (mobile) == -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
-<!-- ═══════════ APP LAYOUT ═══════════ -->
+<!-- == APP LAYOUT == -->
 <div id="appContainer">
 
   <!-- SIDEBAR -->
@@ -423,10 +423,10 @@
   <!-- MAIN -->
   <main class="main-content">
 
-    <!-- ══ SNIPPETS PANEL ══ -->
+    <!-- == SNIPPETS PANEL == -->
     <div id="snippetsPanel" style="display:none">
 
-    <!-- ── INLINE AUTH CARD (shown to guests) ── -->
+    <!-- == INLINE AUTH CARD (shown to guests) == -->
     <div id="inlineAuthWrap" style="display:none; max-width:390px; margin:0 auto; width:100%; padding-top:8px;">
       <div class="auth-card" style="animation:up 0.4s cubic-bezier(0.16,1,0.3,1);">
 
@@ -556,10 +556,10 @@
 
     </div><!-- end #snippetsPanel -->
 
-    <!-- ══ ONLINE CLIPBOARD PANEL ══ -->
+    <!-- == ONLINE CLIPBOARD PANEL == -->
     <div class="clipboard-panel visible" id="clipboardPanel">
 
-      <!-- ── Mode Tabs: Share / Live ── -->
+      <!-- == Mode Tabs: Share / Live == -->
       <div class="cb-mode-tabs">
         <button class="cb-mode-tab active" id="cbModeShare" onclick="cbSwitchMode('share')">
           Share Clipboard
@@ -569,7 +569,7 @@
         </button>
       </div>
 
-      <!-- ── Share Mode (existing upload + retrieve) ── -->
+      <!-- == Share Mode (existing upload + retrieve) == -->
       <div id="cbShareMode">
 
       <!-- Upload Card -->
@@ -683,7 +683,7 @@
 
       </div><!-- end #cbShareMode -->
 
-      <!-- ── Live Mode ── -->
+      <!-- == Live Mode == -->
       <div id="cbLiveMode" style="display:none">
         <div class="lcb-panel visible" id="lcbPanel">
 
@@ -816,7 +816,7 @@
 
     </div><!-- end #clipboardPanel -->
 
-    <!-- ══ QUICK NOTES PANEL ══ -->
+    <!-- == QUICK NOTES PANEL == -->
     <div class="notes-panel" id="notesPanel">
 
       <!-- Header row -->
@@ -908,13 +908,13 @@
   </main>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- == TOAST == -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════
+<!-- ==========================================
      App Scripts (order matters — each file
      depends on the ones above it)
-══════════════════════════════════════════ -->
+========================================== -->
 
 <!-- 0. Supabase JS client — needed for Realtime WebSocket in Live Clipboard -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

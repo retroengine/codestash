@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    AppLiveClipboard  —  Real-time shared clipboard + file share
-   ─────────────────────────────────────────────────────────────
+   -------------------------------------------------------------
    SYNC:      WebSocket broadcast (~50ms) + DB poll every 2s
    PRESENCE:  DB heartbeat 10s, TTL 25s
    FILE:      One file per session via Supabase Storage (max 15MB)
@@ -10,15 +10,15 @@
      https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js
 
    CSP connect-src must include:
-     https://vbtzptvgbzsvrustnwiz.supabase.co
-     wss://vbtzptvgbzsvrustnwiz.supabase.co
-═══════════════════════════════════════════════════════════════ */
+     https://*.supabase.co
+     wss://*.supabase.co
+=============================================================== */
 
 const AppLiveClipboard = (function () {
 'use strict';
 
-/* ─── CONFIG ────────────────────────────────────────────────── */
-const SB_URL         = 'https://vbtzptvgbzsvrustnwiz.supabase.co';
+/* --- CONFIG -------------------------------------------------- */
+const SB_URL         = typeof SUPABASE_CLIPBOARD_URL !== 'undefined' ? SUPABASE_CLIPBOARD_URL : 'https://<YOUR_CLIPBOARD_SUPABASE_PROJECT_ID>.supabase.co';
 const SB_KEY         = typeof SUPABASE_CLIPBOARD_KEY !== 'undefined' ? SUPABASE_CLIPBOARD_KEY : null;
 const REST_BASE      = typeof SUPABASE_CLIPBOARD_URL !== 'undefined' ? SUPABASE_CLIPBOARD_URL : SB_URL;
 const STORAGE_BUCKET = 'live-clipboard-files';
@@ -32,7 +32,7 @@ const PRESENCE_TTL   = 25000;
 const MAX_RECONNECT  = 4;
 const RECONNECT_BASE = 2500;
 
-/* ─── STATE ─────────────────────────────────────────────────── */
+/* --- STATE --------------------------------------------------- */
 let _sb             = null;
 let _channel        = null;
 let _code           = null;
@@ -48,7 +48,7 @@ let _wsAlive        = false;
 let _file           = null;  // { name, size, type, path } | null
 let _deviceId       = 'lcb_' + Math.random().toString(36).slice(2, 10);
 
-/* ─── UTILS ─────────────────────────────────────────────────── */
+/* --- UTILS --------------------------------------------------- */
 function dbg(...a) { console.log('[LiveClip]', ...a); }
 function el(id)    { return document.getElementById(id); }
 function toast(m)  { if (typeof showToast === 'function') showToast(m, ''); }
@@ -70,7 +70,7 @@ function fileIcon(type = '') {
   return '📄';
 }
 
-/* ─── SUPABASE CLIENT ───────────────────────────────────────── */
+/* --- SUPABASE CLIENT ----------------------------------------- */
 function getClient() {
   if (_sb) return _sb;
   if (!window.supabase?.createClient) {
@@ -86,7 +86,7 @@ function getClient() {
   return _sb;
 }
 
-/* ─── REST HELPERS ──────────────────────────────────────────── */
+/* --- REST HELPERS -------------------------------------------- */
 function rh(extra) {
   return Object.assign({
     'apikey':        SB_KEY,
@@ -111,7 +111,7 @@ async function restPost(code) {
   if (!res.ok) throw new Error('Create failed: ' + await res.text());
 }
 
-/* ─── OPTIMISTIC-LOCK CONTENT PATCH ────────────────────────── */
+/* --- OPTIMISTIC-LOCK CONTENT PATCH -------------------------- */
 async function persistContent(content, isRetry) {
   if (!_code) return;
   const expected = _version;
@@ -133,7 +133,7 @@ async function persistContent(content, isRetry) {
   } catch (e) { dbg('persistContent error:', e); }
 }
 
-/* ─── PRESENCE ──────────────────────────────────────────────── */
+/* --- PRESENCE ------------------------------------------------ */
 async function presenceUpsert() {
   if (!_code) return;
   try {
@@ -174,7 +174,7 @@ async function presenceCount() {
 function startHeartbeat() { stopHeartbeat(); presenceUpsert(); _heartbeatTimer = setInterval(presenceUpsert, HEARTBEAT_MS); }
 function stopHeartbeat()  { clearInterval(_heartbeatTimer); _heartbeatTimer = null; }
 
-/* ─── POLLING FALLBACK ──────────────────────────────────────── */
+/* --- POLLING FALLBACK ---------------------------------------- */
 function startPolling() {
   stopPolling();
   _pollTimer = setInterval(async () => {
@@ -190,7 +190,7 @@ function startPolling() {
 }
 function stopPolling() { clearInterval(_pollTimer); _pollTimer = null; }
 
-/* ─── REALTIME CHANNEL ──────────────────────────────────────── */
+/* --- REALTIME CHANNEL ---------------------------------------- */
 async function connectChannel(code) {
   const sb = getClient();
   if (!sb) { setStatus('connected'); return; }
@@ -235,7 +235,7 @@ function scheduleReconnect(code) {
   _reconnectTimer = setTimeout(() => connectChannel(code), RECONNECT_BASE * _reconnectN);
 }
 
-/* ─── APPLY REMOTE CONTENT ──────────────────────────────────── */
+/* --- APPLY REMOTE CONTENT ------------------------------------ */
 function applyRemoteContent(content) {
   const ta = el('lcbTextarea');
   if (!ta) return;
@@ -253,7 +253,7 @@ function broadcastContent(content) {
   _channel.send({ type: 'broadcast', event: 'content', payload: { content, version: _version, deviceId: _deviceId, ts: Date.now() } }).catch(() => {});
 }
 
-/* ─── FILE: DB SYNC ─────────────────────────────────────────── */
+/* --- FILE: DB SYNC ------------------------------------------- */
 function syncFileFromRow(row) {
   const remotePath = row.file_path ?? null;
   const localPath  = _file?.path ?? null;
@@ -273,7 +273,7 @@ async function persistFileMeta(meta) {
   } catch (e) { dbg('persistFileMeta error:', e); }
 }
 
-/* ─── FILE: UPLOAD ──────────────────────────────────────────── */
+/* --- FILE: UPLOAD -------------------------------------------- */
 async function uploadFile(file) {
   if (file.size > MAX_FILE_BYTES) { toast('✗ File too large — max 15 MB'); return; }
   if (_file?.path) await deleteStorageFile(_file.path);
@@ -345,7 +345,7 @@ async function downloadFile() {
   } catch (e) { toast('✗ ' + e.message); }
 }
 
-/* ─── FILE UI ───────────────────────────────────────────────── */
+/* --- FILE UI ------------------------------------------------- */
 function renderFileCard(meta, _isOwner) {
   const drop = el('lcbFileDrop');
   const card = el('lcbFileCard');
@@ -386,7 +386,7 @@ function initFileDropZone() {
   drop.addEventListener('drop',      e  => { e.preventDefault(); drop.classList.remove('dragover'); if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); });
 }
 
-/* ─── UI HELPERS ────────────────────────────────────────────── */
+/* --- UI HELPERS ---------------------------------------------- */
 function setStatus(status) {
   const dot  = el('lcbStatusDot');
   const text = el('lcbStatusText');
@@ -438,7 +438,7 @@ function showSessionScreen(code, content, row) {
   if (row) syncFileFromRow(row);
 }
 
-/* ─── PUBLIC: HOST ──────────────────────────────────────────── */
+/* --- PUBLIC: HOST -------------------------------------------- */
 async function hostSession() {
   const btn = el('lcbHostBtn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…'; }
@@ -453,7 +453,7 @@ async function hostSession() {
   finally { if (btn) { btn.disabled = false; btn.innerHTML = '＋ New Session'; } }
 }
 
-/* ─── PUBLIC: JOIN ──────────────────────────────────────────── */
+/* --- PUBLIC: JOIN -------------------------------------------- */
 async function joinSession() {
   const input = el('lcbCodeInput');
   const raw   = (input ? input.value : '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -471,7 +471,7 @@ async function joinSession() {
   finally { if (btn) { btn.disabled = false; btn.innerHTML = 'Join →'; } }
 }
 
-/* ─── PUBLIC: LEAVE — instant UI, background cleanup ────────── */
+/* --- PUBLIC: LEAVE — instant UI, background cleanup ---------- */
 function leaveSession() {
   clearTimeout(_debounce); clearTimeout(_reconnectTimer);
   stopPolling(); stopHeartbeat();
@@ -492,7 +492,7 @@ function leaveSession() {
   ]);
 }
 
-/* ─── INPUT ─────────────────────────────────────────────────── */
+/* --- INPUT --------------------------------------------------- */
 function onInput() {
   if (_applying || !_code) return;
   const ta = el('lcbTextarea'); if (!ta) return;
@@ -508,7 +508,7 @@ function onCodeInput(e) {
   if (e.target.value.length === 6) { const b = el('lcbJoinBtn'); if (b) b.focus(); }
 }
 
-/* ─── INIT ──────────────────────────────────────────────────── */
+/* --- INIT ---------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
   if (!SB_KEY) console.error('[LiveClip] SUPABASE_CLIPBOARD_KEY not defined — check supabase.js loads before this file');
   dbg('Init. Device:', _deviceId, '| REST:', REST_BASE);

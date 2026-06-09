@@ -2,7 +2,7 @@
 
 A personal code snippet library with an online clipboard and quick notes — built with vanilla HTML, CSS, and JavaScript, backed by Supabase and deployed on Vercel.
 
-**Live site:** https://codestash-gamma.vercel.app
+**Live site:** https://<YOUR_DEPLOYMENT_URL>.vercel.app
 
 ---
 
@@ -111,8 +111,8 @@ CodeStash uses **two separate Supabase projects** intentionally:
 
 | Project | Used for | Key constant |
 |---|---|---|
-| `raxnqglobvykqylejibx` | Snippets, auth, profiles, site settings | `SUPABASE_SNIPPETS_KEY` |
-| `vbtzptvgbzsvrustnwiz` | Clipboard (ephemeral, no auth needed) | `SUPABASE_CLIPBOARD_KEY` |
+| `<YOUR_SNIPPETS_SUPABASE_PROJECT_ID>` | Snippets, auth, profiles, site settings | `SUPABASE_SNIPPETS_KEY` |
+| `<YOUR_CLIPBOARD_SUPABASE_PROJECT_ID>` | Clipboard (ephemeral, no auth needed) | `SUPABASE_CLIPBOARD_KEY` |
 
 Both are proxied through Vercel rewrites in `vercel.json` so the raw Supabase URLs never appear in the browser network tab.
 

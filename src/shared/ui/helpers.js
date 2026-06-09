@@ -1,7 +1,7 @@
-/* ═══════════════════════════════════════════
+/* ===========================================
    SHARED HELPERS — global utilities
    These must be loaded BEFORE app-core.js
-════════════════════════════════════════════ */
+============================================ */
 
 /* Language select — show custom input when "custom" chosen */
 function handleLangChange(sel) {

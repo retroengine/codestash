@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════════════
+/* ===============================================
    CODESTASH — tokens.css
    Neubrutalism Design System
    Dark: Warm Charcoal + Electric Yellow
    Light: Parchment + Burnt Coral
-═══════════════════════════════════════════════ */
+=============================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 
@@ -37,7 +37,7 @@
   --theme-transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ══ LIGHT MODE ══ */
+/* == LIGHT MODE == */
 [data-theme="dark"] {
   --bg:        #0F0F0C;
   --surface:   #1B1B17;
@@ -62,7 +62,7 @@
   --nb-border-hi:     2px solid #F2EDD0;
 }
 
-/* ── Light mode specific overrides ── */
+/* -- Light mode specific overrides -- */
 /* Dark mode specific overrides */
 [data-theme="dark"] body::before { opacity: 0.5; }
 [data-theme="dark"] .logo-mark { background: #FFD93D; }
@@ -74,7 +74,7 @@
 [data-theme="dark"] .hljs { background: var(--surface2) !important; color: #F2EDD0; }
 [data-theme="dark"] #hljs-theme-light { display: none; }
 
-/* ── Transitions ── */
+/* -- Transitions -- */
 body, .sidebar, .topbar, .auth-card, .pending-card, .add-panel,
 .snippet-card, .code-preview, .field-input, .btn-primary, .btn-ghost,
 .btn-save, .nav-item, .tag-input-wrap, .cb-card, .account-dropdown,

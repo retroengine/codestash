@@ -1,15 +1,15 @@
-/* ═══════════════════════════════════════════
+/* ===========================================
    MODULE: AppClipboard + AppNotes
    NOTE: AppNotes is nested inside AppClipboard
    because they share the same IIFE scope in the
    original code. Do not separate them.
    Depends on: supabase.js loaded first.
-════════════════════════════════════════════ */
+============================================ */
 
-/* ════════════════════════════════════════════
+/* ============================================
    MODULE: AppClipboard — online clipboard upload/retrieve
    Separate Supabase project for ephemeral clipboard data.
-════════════════════════════════════════════ */
+============================================ */
 const AppClipboard = (function() {
 'use strict';
 
@@ -24,7 +24,7 @@ function cbHeaders() {
   };
 }
 
-/* ── OTP Generation — easy-to-type patterns ── */
+/* -- OTP Generation — easy-to-type patterns -- */
 const OTP_GENERATORS = [
   // Sequential: 1234, 8765, 3456
   () => { const s = Math.floor(Math.random()*6)+1; const d = Math.random()>0.5?1:-1; return [0,1,2,3].map(i=>((s+i*d+10)%10)).join(''); },
@@ -60,12 +60,12 @@ async function generateOTP() {
   return otp;
 }
 
-/* ── State ── */
+/* -- State -- */
 let _cbMode       = 'text'; // 'text' | 'file'
 let _cbFile       = null;
 let _cbCurrentOtp = null;
 
-/* ── Upload mode switching ── */
+/* -- Upload mode switching -- */
 window.cbSwitchUploadMode = function(mode) {
   _cbMode = mode;
   document.getElementById('cbTabText').classList.toggle('active', mode === 'text');
@@ -80,7 +80,7 @@ window.cbSwitchUploadMode = function(mode) {
   _cbCurrentOtp = null;
 };
 
-/* ── File input + drag-drop ── */
+/* -- File input + drag-drop -- */
 const dropZone = document.getElementById('cbDropZone');
 const fileInput = document.getElementById('cbFileInput');
 
@@ -107,7 +107,7 @@ window.cbClearFile = function() {
   document.getElementById('cbFileChosen').classList.remove('show');
 };
 
-/* ── Main upload handler ── */
+/* -- Main upload handler -- */
 window.cbUpload = async function() {
   cbHideUploadError();
   const btn = document.getElementById('cbUploadBtn');
@@ -265,7 +265,7 @@ function cbHideUploadError() {
   document.getElementById('cbUploadError').classList.remove('show');
 }
 
-/* ── OTP Input boxes (retrieve side) ── */
+/* -- OTP Input boxes (retrieve side) -- */
 window.cbOtpNext = function(el, idx) {
   // Keep only digits
   const val = el.value.replace(/\D/g,'');
@@ -283,7 +283,7 @@ window.cbOtpKey = function(e, idx) {
   if (e.key === 'Enter') cbRetrieve();
 };
 
-/* ── Retrieve handler ── */
+/* -- Retrieve handler -- */
 window.cbRetrieve = async function() {
   const digits = [0,1,2,3].map(i => document.getElementById('cbIn'+i).value).join('');
   if (digits.length < 4) { cbShowRetrieveError('Please enter all 4 digits.'); return; }
@@ -401,11 +401,11 @@ function cbHideRetrieveError() {
   }
 })();
 
-/* ══════════════════════════════════════════
+/* ==========================================
    MODULE: AppNotes — quick notes scratchpad
-══════════════════════════════════════════ */
+========================================== */
 const AppNotes = (function () {
-  // ── State ────────────────────────────────
+  // -- State --------------------------------
   const MAX_NOTES = 4;
   const notes = Array.from({ length: MAX_NOTES }, (_, i) => ({
     label: `Note ${i + 1}`,
@@ -414,7 +414,7 @@ const AppNotes = (function () {
   let activeNote = 0;
   let isFullscreen = false;
 
-  // ── DOM refs ─────────────────────────────
+  // -- DOM refs -----------------------------
   const textarea      = document.getElementById('notesTextarea');
   const statPill      = document.getElementById('notesStatPill');
   const editorWrap    = document.getElementById('notesEditorWrap');
@@ -429,7 +429,7 @@ const AppNotes = (function () {
   const clearBtn      = document.getElementById('notesClearBtn');
   const expandBtn     = document.getElementById('notesExpandBtn');
 
-  // ── Helpers ──────────────────────────────
+  // -- Helpers ------------------------------
   function updateStats() {
     const text  = textarea.value;
     const chars = text.length;
@@ -456,18 +456,18 @@ const AppNotes = (function () {
     tabs[activeNote].classList.add('active');
   }
 
-  // ── Tab switching ────────────────────────
+  // -- Tab switching ------------------------
   tabs.forEach((tab, i) => {
     tab.addEventListener('click', () => switchToNote(i));
   });
 
-  // ── Textarea input ───────────────────────
+  // -- Textarea input -----------------------
   textarea.addEventListener('input', () => {
     notes[activeNote].content = textarea.value;
     updateStats();
   });
 
-  // ── Rename ───────────────────────────────
+  // -- Rename -------------------------------
   renameBtn.addEventListener('click', () => {
     renameInput.value = notes[activeNote].label;
     renameWrap.style.display = 'flex';
@@ -491,7 +491,7 @@ const AppNotes = (function () {
     if (e.key === 'Escape') renameWrap.style.display = 'none';
   });
 
-  // ── Toolbar helpers ──────────────────────
+  // -- Toolbar helpers ----------------------
   function insertAtCursor(before, after = '', placeholder = '') {
     const start = textarea.selectionStart;
     const end   = textarea.selectionEnd;
@@ -524,7 +524,7 @@ const AppNotes = (function () {
   document.getElementById('notesBoldBtn').addEventListener('click',   () => insertAtCursor('**', '**', 'bold text'));
   document.getElementById('notesItalicBtn').addEventListener('click', () => insertAtCursor('_', '_', 'italic text'));
   document.getElementById('notesUlBtn').addEventListener('click',     () => insertLine('• '));
-  document.getElementById('notesHrBtn').addEventListener('click',     () => insertAtCursor('\n──────────────────\n'));
+  document.getElementById('notesHrBtn').addEventListener('click',     () => insertAtCursor('\n------------------\n'));
   document.getElementById('notesTsBtn').addEventListener('click', () => {
     const now = new Date();
     const ts  = now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -542,7 +542,7 @@ const AppNotes = (function () {
     }
   });
 
-  // ── Fullscreen ───────────────────────────
+  // -- Fullscreen ---------------------------
   expandBtn.addEventListener('click', () => {
     isFullscreen = !isFullscreen;
     editorWrap.classList.toggle('fullscreen', isFullscreen);
@@ -561,7 +561,7 @@ const AppNotes = (function () {
     }
   });
 
-  // ── Copy ─────────────────────────────────
+  // -- Copy ---------------------------------
   copyBtn.addEventListener('click', () => {
     const text = textarea.value;
     if (!text.trim()) return;
@@ -575,7 +575,7 @@ const AppNotes = (function () {
     });
   });
 
-  // ── Download as .txt ─────────────────────
+  // -- Download as .txt ---------------------
   downloadBtn.addEventListener('click', () => {
     const text = textarea.value;
     if (!text.trim()) return;
@@ -588,7 +588,7 @@ const AppNotes = (function () {
     URL.revokeObjectURL(url);
   });
 
-  // ── Clear ────────────────────────────────
+  // -- Clear --------------------------------
   clearBtn.addEventListener('click', () => {
     if (!textarea.value.trim()) return;
     if (!confirm(`Clear "${notes[activeNote].label}"? This can't be undone.`)) return;
@@ -598,7 +598,7 @@ const AppNotes = (function () {
     textarea.focus();
   });
 
-  // ── Init ─────────────────────────────────
+  // -- Init ---------------------------------
   updateStats();
 
   return {}; // AppNotes has no public API

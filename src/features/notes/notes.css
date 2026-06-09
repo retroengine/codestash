@@ -1,12 +1,12 @@
-/* ═══════════════════════════════════════════════
+/* ===============================================
    CODESTASH — notes.css
    Neubrutalism Quick Notes Panel
-═══════════════════════════════════════════════ */
+=============================================== */
 
 .notes-panel { display: none; flex-direction: column; gap: 14px; }
 .notes-panel.visible { display: flex; }
 
-/* ══════════ HEADER ══════════ */
+/* ========== HEADER ========== */
 .notes-header-right { display: flex; align-items: center; gap: 10px; }
 .notes-stat-pill {
   font-size: 0.66rem; font-weight: 800;
@@ -19,7 +19,7 @@
   transition: color 0.2s;
 }
 
-/* ══════════ TAB BAR ══════════ */
+/* ========== TAB BAR ========== */
 .notes-tab-bar {
   display: flex; align-items: center; gap: 4px;
   background: var(--surface2);
@@ -64,7 +64,7 @@
 }
 .notes-tab-rename-btn svg { flex-shrink: 0; }
 
-/* ══════════ RENAME ROW ══════════ */
+/* ========== RENAME ROW ========== */
 .notes-rename-wrap { display: flex; align-items: center; gap: 8px; }
 .notes-rename-input { flex: 1; max-width: 280px; }
 
@@ -95,7 +95,7 @@
   transform: translate(-1px, -1px); box-shadow: 1px 1px 0px var(--border-hi);
 }
 
-/* ══════════ TOOLBAR ══════════ */
+/* ========== TOOLBAR ========== */
 .notes-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   background: var(--surface);
@@ -127,7 +127,7 @@
   width: 2px; height: 18px; background: var(--border); margin: 0 4px;
 }
 
-/* ══════════ EDITOR ══════════ */
+/* ========== EDITOR ========== */
 .notes-editor-wrap {
   position: relative;
   background: var(--surface);
@@ -172,7 +172,7 @@
   font-weight: 700;
 }
 
-/* ══════════ FOOTER ══════════ */
+/* ========== FOOTER ========== */
 .notes-footer {
   display: flex; align-items: center; justify-content: space-between;
   gap: 10px; flex-wrap: wrap;
@@ -205,7 +205,7 @@
   box-shadow: 3px 3px 0px var(--success);
 }
 
-/* ══════════ MOBILE ══════════ */
+/* ========== MOBILE ========== */
 @media (max-width: 768px) {
   .notes-tab-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 5px; gap: 3px; }
   .notes-tab { padding: 7px 12px; font-size: 0.76rem; }

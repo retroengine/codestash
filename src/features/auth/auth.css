@@ -1,7 +1,7 @@
-/* ═══════════════════════════════════════════════
+/* ===============================================
    CODESTASH — auth.css
    Neubrutalism Auth, Admin & Admin Portal
-═══════════════════════════════════════════════ */
+=============================================== */
 
 .screen {
   position: fixed; inset: 0;
@@ -47,7 +47,7 @@
 .pw-toggle:hover { color: var(--accent); }
 .pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-/* ══════════ DEVTOOLS OVERLAY ══════════ */
+/* ========== DEVTOOLS OVERLAY ========== */
 #devtoolsOverlay {
   display: none; position: fixed; inset: 0;
   background: var(--bg); z-index: 9999;
@@ -62,7 +62,7 @@
 }
 #devtoolsOverlay p { color: var(--muted); font-size: 0.82rem; }
 
-/* ══════════ AUTH CARD ══════════ */
+/* ========== AUTH CARD ========== */
 .auth-card {
   background: var(--surface);
   border: 2px solid var(--border-hi);
@@ -283,7 +283,7 @@ select.field-input option { background: var(--surface2); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ══════════ PENDING SCREEN ══════════ */
+/* ========== PENDING SCREEN ========== */
 .pending-card {
   background: var(--surface);
   border: 2px solid var(--border-hi);
@@ -334,7 +334,7 @@ select.field-input option { background: var(--surface2); }
   box-shadow: var(--nb-shadow-sm);
 }
 
-/* ══════════ ADMIN PORTAL ══════════ */
+/* ========== ADMIN PORTAL ========== */
 #adminPortal {
   position: fixed; inset: 0; background: var(--bg);
   z-index: 200; display: none; flex-direction: column; overflow: hidden;

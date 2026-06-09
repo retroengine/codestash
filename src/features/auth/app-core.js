@@ -1,51 +1,51 @@
-/* ═══════════════════════════════════════════
+/* ===========================================
    MODULE: AppCore
    Handles: auth, snippets, admin panel,
             navigation, UI state, AppUI.
    Depends on: supabase.js loaded first.
-════════════════════════════════════════════ */
+============================================ */
 
-/* ════════════════════════════════════════════
+/* ============================================
    MODULE: AppCore — auth, snippets, admin, UI state
    Main application logic for CodeStash.
-════════════════════════════════════════════ */
+============================================ */
 (function () {
 'use strict';
 
-/* ════════════════════════════════════════════
+/* ============================================
    NOTE: DevTools blocking has been removed.
    It was bypassable in one console command, broke
    screen readers and keyboard accessibility, and
    gave a false sense of security. Real protection
    lives in Supabase RLS and server-side validation.
-════════════════════════════════════════════ */
+============================================ */
 
-/* ════════════════════════════════════════════
+/* ============================================
    CONFIG  — replace with your Supabase project
-════════════════════════════════════════════ */
+============================================ */
 const _c = SUPABASE_SNIPPETS_URL;  /* from shared/lib/supabase.js */
 const _k = SUPABASE_SNIPPETS_KEY;  /* from shared/lib/supabase.js */
 
-/* ════════════════════════════════════════════
+/* ============================================
    ADMIN PASSPHRASE — stored as SHA-256 hash only.
    The real passphrase is NEVER in this file.
    To change it: run this in your browser console:
      crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassphrase'))
        .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
    Then paste the output hash below.
-════════════════════════════════════════════ */
-const _adminPhraseHash = '158a323a7ba44870f23d96f1516dd70aa48e9a72db4ebb026b0a89e212a208ab';
+============================================ */
+const _adminPhraseHash = '<YOUR_ADMIN_PASSPHRASE_HASH>';
 // ↑ Replace this hash with the hash of YOUR chosen passphrase (see instructions above)
-// Current hash = SHA-256("2026") — change this before deploying!
+// Ensure you change this before deploying!
 
 async function _hashPhrase(str) {
   const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    RATE LIMITING
-════════════════════════════════════════════ */
+============================================ */
 const RATE_LIMIT = { max: 5 };
 
 function getRateData() {
@@ -73,16 +73,16 @@ function updateRateLimitUI() {
   }
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    INPUT SECURITY
-════════════════════════════════════════════ */
+============================================ */
 function sanitizeInput(el) { el.value = el.value.replace(/[<>"'`]/g, ''); }
 function validateEmail(e)   { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function validatePassword(p){ return p.length >= 8; }
 
-/* ════════════════════════════════════════════
+/* ============================================
    INACTIVITY TIMEOUT
-════════════════════════════════════════════ */
+============================================ */
 let _inactivityTimer = null;
 const INACTIVITY_MS = 30 * 60 * 1000;
 function resetInactivityTimer() {
@@ -95,9 +95,9 @@ function resetInactivityTimer() {
   document.addEventListener(ev, resetInactivityTimer, { passive: true })
 );
 
-/* ════════════════════════════════════════════
+/* ============================================
    STATE
-════════════════════════════════════════════ */
+============================================ */
 let _session      = null;
 let _siteUnlocked    = false;
 let _guestNotes      = false;   // always forced true — Notes are permanently unlocked
@@ -111,9 +111,9 @@ let _lastSyncTime = null;
 // Edit mode: holds the id of the snippet currently being edited, or null.
 let _editingId    = null;
 
-/* ════════════════════════════════════════════
+/* ============================================
    SCREEN MANAGER
-════════════════════════════════════════════ */
+============================================ */
 function showScreen(id) {
   // #authScreen no longer exists as a full-screen — auth is inline in snippets panel
   const pendingEl = document.getElementById('pendingScreen');
@@ -124,9 +124,9 @@ function showScreen(id) {
   document.getElementById('authFixedLogo').classList.toggle('visible', id === 'pendingScreen');
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    INIT
-════════════════════════════════════════════ */
+============================================ */
 async function init() {
   const isPublic = await checkPublicView();
   if (isPublic) return;
@@ -135,9 +135,9 @@ async function init() {
 }
 init();
 
-/* ════════════════════════════════════════════
+/* ============================================
    HELPERS
-════════════════════════════════════════════ */
+============================================ */
 function _headers(token) {
   return {
     'apikey': _k,
@@ -147,9 +147,9 @@ function _headers(token) {
   };
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    AUTH TAB SWITCHING
-════════════════════════════════════════════ */
+============================================ */
 function switchTab(mode) {
   _authMode = mode;
   document.getElementById('tabLogin').classList.toggle('active',  mode === 'login');
@@ -189,9 +189,9 @@ function switchTab(mode) {
   }
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    AUTH HANDLER
-════════════════════════════════════════════ */
+============================================ */
 async function handleAuth() {
   const lockUntil = isRateLimited();
   if (lockUntil) {
@@ -276,9 +276,9 @@ async function handleAuth() {
   }
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    PROFILE HELPERS
-════════════════════════════════════════════ */
+============================================ */
 async function fetchProfile(userId, token) {
   try {
     const res = await fetch(_c + '/rest/v1/profiles?id=eq.' + encodeURIComponent(userId) + '&limit=1', { headers: _headers(token) });
@@ -297,9 +297,9 @@ async function createProfile(userId, email, role, status, token) {
   } catch {}
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    SCREENS: APP / PENDING / ADMIN
-════════════════════════════════════════════ */
+============================================ */
 function showApp(session) {
   _session = session;
   const isGuest = !session;
@@ -341,7 +341,7 @@ function showApp(session) {
   const navNotes = document.getElementById('navNotes');
   if (navNotes) navNotes.style.display = ''; // Notes always visible
 
-  // ── Lock icon on Snippets nav item ──
+  // -- Lock icon on Snippets nav item --
   AppUI.updateSnippetsLock(!isGuest);
 
   showScreen('app');
@@ -364,9 +364,9 @@ async function showAdminPortal() {
   resetInactivityTimer();
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    ADMIN — LOCK / UNLOCK + USER MANAGEMENT
-════════════════════════════════════════════ */
+============================================ */
 async function loadAdminData() {
   await Promise.all([loadSiteLock(), loadAllUsers()]);
 }
@@ -556,9 +556,9 @@ async function updateUserStatus(userId, status) {
   } catch { showToast('✗ Failed to update user', 'error'); }
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    SIGN OUT
-════════════════════════════════════════════ */
+============================================ */
 function signOut() {
   _session = _userProfile = null;
   snippets = [];
@@ -583,9 +583,9 @@ function adminSignOut() {
   showApp(null); // back to inline auth
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    SNIPPETS — FETCH / SAVE / DELETE
-════════════════════════════════════════════ */
+============================================ */
 async function fetchSnippets() {
   try {
     const token = _session ? _session.access_token : _k;
@@ -634,7 +634,7 @@ async function saveSnippet() {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
 
-  // ── EDIT MODE — PATCH existing row ──────────────────────────────────────
+  // -- EDIT MODE — PATCH existing row --------------------------------------
   if (_editingId) {
     btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Updating...';
     try {
@@ -661,7 +661,7 @@ async function saveSnippet() {
     return;
   }
 
-  // ── CREATE MODE — POST new row ───────────────────────────────────────────
+  // -- CREATE MODE — POST new row -------------------------------------------
   btn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0a"></span> Saving...';
   try {
     const res = await fetch(_c + '/rest/v1/snippets', {
@@ -745,9 +745,9 @@ function cancelEdit() {
   saveBtn.innerHTML = '<svg width="13" height="13"><use href="#icon-save"/></svg> Save Snippet';
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    TAG SYSTEM
-════════════════════════════════════════════ */
+============================================ */
 let _currentTags   = [];   // tags being typed in the add/edit panel
 let _activeTagFilter = null; // currently filtered tag
 
@@ -836,9 +836,9 @@ function renderTagFilterBar() {
   }
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    SHARE MODAL
-════════════════════════════════════════════ */
+============================================ */
 let _shareSnippetId = null;
 
 window.openShareModal = function(id) {
@@ -901,9 +901,9 @@ document.getElementById('shareModalOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeShareModal();
 });
 
-/* ════════════════════════════════════════════
+/* ============================================
    PUBLIC VIEW — check URL on load
-════════════════════════════════════════════ */
+============================================ */
 async function checkPublicView() {
   const params = new URLSearchParams(location.search);
   const publicId = params.get('s');
@@ -963,9 +963,9 @@ async function checkPublicView() {
   return true;
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    SNIPPETS — RENDER (pins, tags, share)
-════════════════════════════════════════════ */
+============================================ */
 function renderSnippets() {
   const query = (document.getElementById('searchInput').value || '').toLowerCase();
   let filtered = snippets.filter(s =>
@@ -1172,9 +1172,9 @@ async function pinSnippet(id) {
   } catch { showToast('✗ Failed to pin snippet', 'error'); }
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    UTILS
-════════════════════════════════════════════ */
+============================================ */
 function setStatus(text, type) {
   const el  = document.getElementById('statusText');
   const dot = document.getElementById('statusDot');
@@ -1211,9 +1211,9 @@ function relTime(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    EVENT DELEGATION — all interactions
-════════════════════════════════════════════ */
+============================================ */
 
 // Auth tabs
 document.querySelector('.tab-switcher').addEventListener('click', e => {
@@ -1310,9 +1310,9 @@ document.getElementById('snippetsList').addEventListener('click', e => {
   card.classList.toggle('expanded');
 });
 
-/* ════════════════════════════════════════════
+/* ============================================
    MOBILE SIDEBAR
-════════════════════════════════════════════ */
+============================================ */
 window.toggleMobileSidebar = function() {
   document.querySelector('.sidebar').classList.toggle('mob-open');
   document.getElementById('sidebarOverlay').classList.toggle('open');
@@ -1359,9 +1359,9 @@ document.getElementById('dropdownSignOut').addEventListener('click', (e) => {
   signOut();
 });
 
-/* ════════════════════════════════════════════
+/* ============================================
    AUTO-REFRESH (every 30s while logged in)
-════════════════════════════════════════════ */
+============================================ */
 setInterval(() => {
   if (_session && document.getElementById('appContainer').classList.contains('visible')) fetchSnippets();
 }, 30000);
@@ -1369,9 +1369,9 @@ setInterval(() => {
   if (document.getElementById('adminPortal').classList.contains('active')) loadAdminData();
 }, 30000);
 
-/* ════════════════════════════════════════════
+/* ============================================
    LIGHT / DARK MODE TOGGLE
-════════════════════════════════════════════ */
+============================================ */
 (function initTheme() {
   // Persist in localStorage; default to light
   const saved = localStorage.getItem('cs_theme') || 'light';
@@ -1403,9 +1403,9 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   if (typeof renderSnippets === 'function') renderSnippets();
 });
 
-/* ════════════════════════════════════════════
+/* ============================================
    MODULE: AppUI — panel switching + lock icon
-════════════════════════════════════════════ */
+============================================ */
 const AppUI = (() => {
   const PANELS = {
     navClipboard: { panel: 'clipboardPanel', title: 'Clipboard', type: 'class' },

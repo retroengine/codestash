@@ -1,4 +1,4 @@
-/* ═══════════ SNIPPETS STYLES ═══════════ */
+/* =========== SNIPPETS STYLES =========== */
 
 }
 .panel-label {
@@ -75,7 +75,7 @@
 .search-ico svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
 .search-wrap .field-input { padding-left: 38px; }
 
-/* ── SNIPPET CARDS ── */
+/* -- SNIPPET CARDS -- */
 .snippets-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -168,9 +168,9 @@
 }
 .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
 
-/* ════════════════════════════════════════════
+/* ============================================
    PINNED SNIPPETS
-════════════════════════════════════════════ */
+============================================ */
 .snippet-card.pinned {
   border-color: rgba(139,120,255,0.3);
   box-shadow: 0 0 0 1px rgba(139,120,255,0.1);
@@ -183,9 +183,9 @@
 .btn-icon.pinned { border-color: rgba(139,120,255,0.4); color: var(--accent); background: rgba(139,120,255,0.08); }
 .btn-icon.pinned:hover { border-color: var(--accent); background: rgba(139,120,255,0.16); }
 
-/* ════════════════════════════════════════════
+/* ============================================
    TAGS
-════════════════════════════════════════════ */
+============================================ */
 .tag-input-wrap {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
   background: var(--surface2); border: 1px solid var(--border);
@@ -253,9 +253,9 @@
   border-radius: 20px; white-space: nowrap;
 }
 
-/* ════════════════════════════════════════════
+/* ============================================
    PUBLIC SHARE
-════════════════════════════════════════════ */
+============================================ */
 .share-modal-overlay {
   display: none; position: fixed; inset: 0; z-index: 500;
   background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);

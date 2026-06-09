@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════════════
+/* ===============================================
    CODESTASH — clipboard.css
    Neubrutalism Clipboard, Live Clipboard & QR
-═══════════════════════════════════════════════ */
+=============================================== */
 
-/* ══════════ QR CODE ══════════ */
+/* ========== QR CODE ========== */
 .cb-qr-wrap {
   display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px;
 }
@@ -21,7 +21,7 @@
 }
 .cb-qr-hint { font-size: 0.7rem; color: var(--muted); }
 
-/* ══════════ NAV EXTRAS ══════════ */
+/* ========== NAV EXTRAS ========== */
 .nav-lock-icon {
   display: inline-flex; align-items: center; margin-left: auto;
   color: var(--danger); opacity: 0.75; flex-shrink: 0;
@@ -41,7 +41,7 @@
   box-shadow: 2px 2px 0px var(--accent);
 }
 
-/* ══════════ CLIPBOARD PANEL ══════════ */
+/* ========== CLIPBOARD PANEL ========== */
 .clipboard-panel { display: none; flex-direction: column; gap: 22px; }
 .clipboard-panel.visible { display: flex; }
 
@@ -162,7 +162,7 @@
   transform: translate(-1px, -1px);
 }
 
-/* ══════════ OTP RESULT DISPLAY ══════════ */
+/* ========== OTP RESULT DISPLAY ========== */
 .cb-otp-result {
   display: none; flex-direction: column; align-items: center;
   background: var(--surface2);
@@ -223,7 +223,7 @@
   transform: translate(-2px, -2px); box-shadow: var(--nb-shadow-sm);
 }
 
-/* ══════════ RETRIEVE MODE ══════════ */
+/* ========== RETRIEVE MODE ========== */
 .cb-retrieve-label {
   font-size: 0.75rem; color: var(--muted); margin-bottom: 20px;
   line-height: 1.6; text-align: center;
@@ -363,7 +363,7 @@
 }
 .cb-progress-text { font-size: 0.72rem; font-weight: 700; color: var(--muted); flex-shrink: 0; font-family: var(--font-mono, 'DM Mono', monospace); }
 
-/* ══════════ LIVE CLIPBOARD ══════════ */
+/* ========== LIVE CLIPBOARD ========== */
 .cb-mode-tabs {
   display: flex; gap: 4px;
   background: var(--surface2);
@@ -623,7 +623,7 @@
 .lcb-step-text { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
 .lcb-step-text strong { color: var(--text); font-weight: 800; }
 
-/* ── File share section ── */
+/* -- File share section -- */
 .lcb-file-section { display: flex; flex-direction: column; gap: 8px; }
 .lcb-file-drop {
   display: flex; align-items: center; gap: 10px;
