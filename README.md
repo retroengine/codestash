@@ -1,8 +1,44 @@
 # CodeStash
 
-A personal code snippet library with an online clipboard and quick notes — built with vanilla HTML, CSS, and JavaScript, backed by Supabase and deployed on Vercel.
+A personal code snippet library with an online clipboard and quick notes — vanilla HTML/CSS/JS frontend,
+backed by a Node/Express + Postgres API that owns auth, authorization, and the schema directly.
 
 **Live site:** https://<YOUR_DEPLOYMENT_URL>.vercel.app
+
+---
+
+## ⚠ Current status
+
+The **backend** (`server/`) is a working, curl-verified Express + Postgres API: JWT auth with bcrypt-hashed
+passwords, server-side ownership checks, a migrated schema with indexes and full-text search, cursor
+pagination, and a scheduled clipboard-expiry job. See [`LEARNING.md`](./LEARNING.md) for what was built and
+verified, step by step.
+
+The **frontend** (`src/`, `index.html`) has **not been rewired to it yet** — it still calls Supabase directly,
+as it did before this backend existed. Pointing the frontend at `/auth` and `/snippets` instead is the next
+piece of work, not something silently skipped.
+
+Also: `npm run treat`. Just try it.
+
+---
+
+## Meet the crew
+
+The `server/` code is run by a small forest of animals who each mind their own business.
+Nobody asked for this, it just happened somewhere around the third migration file.
+
+| | Animal | Job | Lives in |
+|---|---|---|---|
+| 🦉 | Owl | guards the door, checks every JWT, never blinks | `middleware/auth.js`, `services/auth.service.js` |
+| 🦦 | Otter | cracks open every request to check what's inside before letting it through | `middleware/validate.js` |
+| 🐢 | Turtle | slow, unbothered, catches everything everyone else drops | `middleware/error.js` |
+| 🐘 | Elephant | remembers every migration and every DB connection, forever | `db/pool.js`, `db/migrate.js` |
+| 🐿️ | Squirrel | buries and digs up your snippets on request | `services/snippets.service.js` |
+| 🦡 | Badger | tidies the clipboard burrow every 10 minutes | `jobs/cleanup.js` |
+| 🦥 | Sloth | personally slows down anyone hammering `/auth/login` | `routes/auth.routes.js` |
+| 🦫 | Beaver | builds and holds a live shared session between your devices | `live-clipboard.js` (frontend, still Supabase-direct) |
+
+(there may or may not be a hidden route that introduces the whole crew properly. 🐾)
 
 ---
 
@@ -118,18 +154,64 @@ Both are proxied through Vercel rewrites in `vercel.json` so the raw Supabase UR
 
 ---
 
-## Deploying
+## Backend — setup & API
 
-1. Push to GitHub
-2. Import the repo on [vercel.com](https://vercel.com)
-3. Vercel auto-detects it as a static site — no build settings needed
-4. Every `git push` to `main` triggers an automatic redeploy
+### Setup
+
+```bash
+npm install
+cp .env.example .env        # fill in DATABASE_URL and JWT_SECRET
+npm run migrate              # runs server/db/migrations/*.sql, tracked in a _migrations table
+npm run dev                  # nodemon server/server.js — API on http://localhost:4000
+```
+
+`DATABASE_URL` can point at a Supabase project's Postgres connection string (Project Settings → Database →
+Connection string) or a local/Docker Postgres for development — SSL is enabled automatically unless the host
+is `localhost`/`127.0.0.1`. Generate `JWT_SECRET` with `openssl rand -hex 32`.
+
+New users are created with `is_approved = false`; approve them manually until an admin API route exists:
+```sql
+UPDATE users SET is_approved = true WHERE email = 'someone@example.com';
+```
+
+### API
+
+| Method | Route | Auth | Notes |
+|---|---|---|---|
+| GET | `/health` | — | liveness check |
+| POST | `/auth/register` | — | bcrypt-hashes the password, `is_approved` defaults false |
+| POST | `/auth/login` | — | rate-limited (10/15min/IP); returns a 15-minute JWT |
+| GET | `/snippets` | — | public feed; `?q=` runs GIN-indexed full-text search, otherwise cursor-paginated (`?cursor=&limit=`) |
+| GET | `/snippets/mine` | JWT | cursor-paginated list of the caller's own snippets |
+| POST | `/snippets` | JWT | `user_id` comes from the token, never the request body |
+| PATCH | `/snippets/:id` | JWT | 403 if the token's user doesn't own the snippet |
+| DELETE | `/snippets/:id` | JWT | same ownership check |
+
+All errors share one shape: `{ "error": { "code": "...", "message": "..." } }`.
+
+### Schema
+
+`users` → `snippets` (FK, `ON DELETE CASCADE`) → `clipboard_entries` (independent, OTP-keyed). Indexes: a plain
+index on `snippets.user_id`, a composite `(created_at DESC, id DESC)` index backing cursor pagination, a
+partial index on `is_public = true`, and a GIN index over a generated `tsvector` column for search. A
+`node-cron` job deletes expired `clipboard_entries` every 10 minutes.
 
 ---
 
-## Changing the Admin Passphrase
+## Deploying
 
-The admin passphrase is stored as a SHA-256 hash in `app-core.js` — the real passphrase is never in the code. To change it:
+The old "push to GitHub, Vercel auto-detects a static site" flow only covered the frontend, and no longer
+reflects reality now that there's a real Node process to run — a proper deploy target (Docker, a Node host,
+etc.) is Phase 5 work in the larger plan, not decided yet.
+
+---
+
+## Changing the Admin Passphrase *(legacy — frontend only, not yet wired to the new backend)*
+
+The frontend still contains its original client-side admin-passphrase flow, unchanged by the new `server/`
+API (which has no equivalent route yet — see "Not done yet" in [`LEARNING.md`](./LEARNING.md)). Until the
+frontend is rewired, this still describes how that legacy flow works: the admin passphrase is stored as a
+SHA-256 hash in `app-core.js` — the real passphrase is never in the code. To change it:
 
 1. Open your browser console and run:
 ```js
@@ -151,9 +233,13 @@ crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassphrase'))
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vanilla HTML + CSS + JavaScript (no framework) |
-| Auth + Database | [Supabase](https://supabase.com) (Postgres + Auth) |
+| Frontend | Vanilla HTML + CSS + JavaScript (no framework) — still calling Supabase directly, not yet rewired |
+| Backend API | Node.js + Express (`server/`) |
+| Database | Postgres (raw `pg`, own schema + migrations — Supabase used only as a hosted Postgres, not via its REST/Auth APIs) |
+| Auth | Custom JWT + bcrypt (`jsonwebtoken`, `bcryptjs`) |
+| Validation | [Zod](https://zod.dev) |
+| Scheduled jobs | [node-cron](https://github.com/node-cron/node-cron) |
 | Syntax Highlighting | [highlight.js](https://highlightjs.org) |
 | QR Codes | [qrcodejs](https://github.com/davidshimjs/qrcodejs) |
 | Fonts | DM Sans + DM Mono (Google Fonts) |
-| Hosting | [Vercel](https://vercel.com) |
+| Hosting | [Vercel](https://vercel.com) (frontend, legacy) — backend hosting TBD (Phase 5) |

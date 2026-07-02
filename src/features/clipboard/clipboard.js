@@ -7,8 +7,11 @@
 ============================================ */
 
 /* ============================================
-   MODULE: AppClipboard — online clipboard upload/retrieve
+   MODULE: AppClipboard  🦡 (badger territory, ephemeral)
+   Online clipboard upload/retrieve.
    Separate Supabase project for ephemeral clipboard data.
+   The badger (server/jobs/cleanup.js) only knows about the
+   Postgres side of this so far — this file's still on Supabase.
 ============================================ */
 const AppClipboard = (function() {
 'use strict';
@@ -402,7 +405,8 @@ function cbHideRetrieveError() {
 })();
 
 /* ==========================================
-   MODULE: AppNotes — quick notes scratchpad
+   MODULE: AppNotes  📝 (no animal here, just you and a textarea)
+   Quick notes scratchpad — fully local, no backend at all.
 ========================================== */
 const AppNotes = (function () {
   // -- State --------------------------------

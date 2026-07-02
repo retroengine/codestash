@@ -1,8 +1,10 @@
 /* ===========================================
-   MODULE: AppCore
+   MODULE: AppCore  🐿️ (the squirrel's front desk)
    Handles: auth, snippets, admin panel,
             navigation, UI state, AppUI.
    Depends on: supabase.js loaded first.
+   NOTE: still talking to Supabase directly for now —
+   hasn't met the owl (server/) yet. see README.
 ============================================ */
 
 /* ============================================

@@ -1,5 +1,8 @@
 /* ===============================================================
-   AppLiveClipboard  —  Real-time shared clipboard + file share
+   AppLiveClipboard  🦫  —  Real-time shared clipboard + file share
+   (the beaver: builds and holds a live session between devices —
+   the one module that never got introduced to the backend crew
+   on purpose, see README "Live sync" decision)
    -------------------------------------------------------------
    SYNC:      WebSocket broadcast (~50ms) + DB poll every 2s
    PRESENCE:  DB heartbeat 10s, TTL 25s
