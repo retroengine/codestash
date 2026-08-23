@@ -1,29 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="description" content="CodeStash — save, search and share code snippets with online clipboard." />
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "CodeStash",
-  "url": "https://your-vercel-url.vercel.app"
-}
-</script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="referrer" content="no-referrer">
-<title>CodeStash</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="CodeStash — save, search and share code snippets with online clipboard." />
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CodeStash",
+    "url": "https://<YOUR_DEPLOYMENT_URL>"
+  }
+  </script>
+
+  <!-- Security headers -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
+    style-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+    font-src   https://fonts.gstatic.com;
+    img-src    'self' data: blob:;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net;
+    object-src 'none';
+    base-uri   'self';
+  ">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+
+  <title>CodeStash</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Third-party libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme-dark">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="hljs-theme-light" disabled>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- == App Styles (order matters) == -->
+  <link rel="stylesheet" href="src/shared/styles/tokens.css">
+  <link rel="stylesheet" href="src/shared/styles/global.css">
+  <link rel="stylesheet" href="src/features/auth/auth.css">
+  <link rel="stylesheet" href="src/features/snippets/snippets.css">
+  <link rel="stylesheet" href="src/features/clipboard/clipboard.css">
+  <link rel="stylesheet" href="src/features/notes/notes.css">
+  <style>
+    /* Hide subtitle and topbar span */
+    .lw-sub { display: none; }
+    .topbar-page-title span { display: none; }
+
+    /* Logo mark sizing */
+    .logo-mark {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      background: #0a0a0a;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { width: 18px; height: 18px; }
+    .lw-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; border-radius: 10px; }
+    .sidebar-logo .logo-mark svg { width: 20px; height: 20px; }
+    .sidebar-logo .lw-name { font-size: 1.05rem; }
+  </style>
 </head>
+
 <body>
 
-<!-- ── SVG SYMBOL DEFS (icons defined once, referenced everywhere) ── -->
+<!-- == SVG SYMBOL DEFS (icons defined once, referenced everywhere) == -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
   <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <rect x="9" y="9" width="13" height="13" rx="2"/>
@@ -57,17 +114,10 @@
   </symbol>
 </svg>
 
-<!-- ── DEVTOOLS OVERLAY ── -->
-<div id="devtoolsOverlay">
-  <div class="dt-icon">🔒</div>
-  <h2>Access Restricted</h2>
-  <p>Close developer tools to continue.</p>
-</div>
-
-<!-- ── CLICK-AWAY OVERLAY FOR DROPDOWN ── -->
+<!-- == CLICK-AWAY OVERLAY FOR DROPDOWN == -->
 <div class="overlay" id="overlay"></div>
 
-<!-- ── FIXED LOGO (shows only on auth screens) ── -->
+<!-- == FIXED LOGO (shows only on auth screens) == -->
 <div class="auth-fixed-logo" id="authFixedLogo">
   <div class="logo-mark">
     <svg viewBox="0 0 20 20" fill="none">
@@ -78,86 +128,23 @@
   </div>
   <div class="logo-wordmark">
     <div class="lw-name">CodeStash</div>
-    <div class="lw-sub">Snippet Library</div>
   </div>
 </div>
 
-<!-- ═══════════ AUTH SCREEN ═══════════ -->
-<div class="screen" id="authScreen">
-  <div class="auth-card">
-
-    <div class="auth-headline" id="authHeadline">Welcome back.</div>
-    <p class="auth-sub" id="authSubline">Sign in to access your personal snippet library.</p>
-
-    <div class="tab-switcher">
-      <button class="tab-btn active" id="tabLogin">Sign In</button>
-      <button class="tab-btn" id="tabSignup">Sign Up</button>
-      <button class="tab-btn admin-tab" id="tabAdmin">Admin</button>
-    </div>
-
-    <div class="rate-limit-bar" id="rateLimitBar">
-      <div class="rate-limit-bar-label" id="rateLimitLabel">⚠ Failed attempts</div>
-      <div class="rate-limit-dots" id="rateLimitDots"></div>
-    </div>
-
-    <div class="auth-notice" id="authNotice" style="display:none"></div>
-    <div class="auth-error" id="authError"></div>
-
-    <div class="auth-field">
-      <div class="field-label">Email</div>
-      <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" />
-    </div>
-    <div class="auth-field">
-      <div class="field-label">Password</div>
-      <div class="pw-wrap">
-        <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" />
-        <button class="pw-toggle" type="button" onclick="togglePw('authPassword',this)" aria-label="Show password">
-          <svg viewBox="0 0 24 24" id="eyeMain"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="auth-field" id="confirmField" style="display:none">
-      <div class="field-label">Confirm Password</div>
-      <div class="pw-wrap">
-        <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" />
-        <button class="pw-toggle" type="button" onclick="togglePw('authConfirm',this)" aria-label="Show confirm password">
-          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="auth-field" id="adminKeyField" style="display:none">
-      <div class="field-label">Admin Passphrase</div>
-      <div class="pw-wrap">
-        <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" />
-        <button class="pw-toggle" type="button" onclick="togglePw('adminKey',this)" aria-label="Show passphrase">
-          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <button class="btn-primary" id="authBtn">
-      Sign In
-      <svg width="13" height="13"><use href="#icon-arrow"/></svg>
-    </button>
-  </div>
-</div>
-
-<!-- ═══════════ PENDING SCREEN ═══════════ -->
+<!-- == PENDING SCREEN == -->
 <div class="screen" id="pendingScreen">
   <div class="pending-card">
-    <div class="pending-icon">⏳</div>
     <div class="pending-title">Awaiting Approval</div>
-    <p class="pending-sub">Your account is pending admin review.<br>You can sign in once approved.</p>
+    <p class="pending-sub">Your account is pending admin review. You'll be notified once approved.</p>
     <div class="pending-email" id="pendingEmail">—</div>
     <button class="btn-ghost" id="pendingBack">Back to Sign In</button>
   </div>
 </div>
 
-<!-- ═══════════ ADMIN PORTAL ═══════════ -->
+<!-- == ADMIN PORTAL == -->
 <div id="adminPortal">
   <div class="admin-header">
     <div class="admin-title">
-      <span>🛡</span>
       <span>Admin Portal</span>
       <span class="admin-title-badge">SECURE</span>
     </div>
@@ -168,25 +155,6 @@
   </div>
 
   <div class="admin-body">
-
-    <!-- Stats -->
-    <div class="admin-section">
-      <div class="admin-section-title">Overview</div>
-      <div class="admin-stats">
-        <div class="stat-card">
-          <div class="stat-num pending-color"  id="statPending">—</div>
-          <div class="stat-label">Pending</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num approved-color" id="statApproved">—</div>
-          <div class="stat-label">Approved</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num rejected-color" id="statRejected">—</div>
-          <div class="stat-label">Rejected</div>
-        </div>
-      </div>
-    </div>
 
     <!-- Site Lock -->
     <div class="admin-section">
@@ -212,24 +180,23 @@
       </div>
     </div>
 
-    <!-- Guest Feature Permissions (only relevant when site is unlocked) -->
+    <!-- Guest Feature Permissions -->
     <div class="admin-section" id="guestFeaturesSection">
       <div class="admin-section-title">Guest Permissions
         <span style="font-size:0.65rem;font-weight:500;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0;">
-          — controls what public visitors can do when site is unlocked
+          — applies when site is unlocked
         </span>
       </div>
       <div class="guest-features-note" id="guestFeaturesNote">
-        ⚠ These settings only apply when the site is <strong>unlocked</strong>. Lock the site first if you want to restrict all access.
+        Only applies when the site is <strong>unlocked</strong>.
       </div>
       <div class="guest-features-grid">
 
         <!-- Add Snippet toggle -->
         <div class="guest-feature-card" id="gfCardSnippet">
           <div class="guest-feature-info">
-            <div class="guest-feature-icon">✏️</div>
             <div class="guest-feature-title">Add Snippet</div>
-            <div class="guest-feature-sub">Allow guests to create and save new snippets without an account.</div>
+            <div class="guest-feature-sub">Allow guests to save snippets without an account.</div>
           </div>
           <div class="toggle-wrap">
             <label class="toggle">
@@ -240,22 +207,40 @@
           </div>
         </div>
 
-        <!-- Quick Notes toggle -->
+        <!-- Quick Notes toggle (always on) -->
         <div class="guest-feature-card" id="gfCardNotes">
           <div class="guest-feature-info">
-            <div class="guest-feature-icon">📝</div>
             <div class="guest-feature-title">Quick Notes</div>
-            <div class="guest-feature-sub">Allow guests to use the Quick Notes scratchpad (session only, no saving).</div>
+            <div class="guest-feature-sub">Always available to guests.</div>
           </div>
           <div class="toggle-wrap">
             <label class="toggle">
-              <input type="checkbox" id="guestNotes" />
+              <input type="checkbox" id="guestNotes" checked disabled />
               <span class="toggle-slider"></span>
             </label>
-            <div class="toggle-label" id="guestNotesLabel">Off</div>
+            <div class="toggle-label" id="guestNotesLabel">Always On</div>
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-section">
+      <div class="admin-section-title">Overview</div>
+      <div class="admin-stats">
+        <div class="stat-card">
+          <div class="stat-num pending-color"  id="statPending">—</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num approved-color" id="statApproved">—</div>
+          <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num rejected-color" id="statRejected">—</div>
+          <div class="stat-label">Rejected</div>
+        </div>
       </div>
     </div>
 
@@ -263,20 +248,20 @@
     <div class="admin-section">
       <div class="admin-section-title">User Management</div>
       <div class="filter-tabs" id="filterTabs">
-        <button class="filter-tab active" data-filter="pending">⏳ Pending</button>
+        <button class="filter-tab active" data-filter="pending">Pending</button>
         <button class="filter-tab" data-filter="approved">✓ Approved</button>
         <button class="filter-tab" data-filter="rejected">✗ Rejected</button>
         <button class="filter-tab" data-filter="all">All</button>
       </div>
       <div class="user-queue" id="userQueue">
-        <div class="empty-queue"><div class="eq-icon">👥</div><p>Loading users...</p></div>
+        <div class="empty-queue"><p>Loading users...</p></div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- ═══════════ PUBLIC SNIPPET VIEW ═══════════ -->
+<!-- == PUBLIC SNIPPET VIEW == -->
 <div id="publicViewScreen">
   <div class="pub-header">
     <div class="pub-header-logo">
@@ -289,10 +274,9 @@
       </div>
       <div class="logo-wordmark">
         <div class="lw-name">CodeStash</div>
-        <div class="lw-sub">Snippet Library</div>
       </div>
     </div>
-    <span class="pub-badge">🔗 Public Snippet</span>
+    <span class="pub-badge">Public Snippet</span>
   </div>
   <div class="pub-body">
     <div class="pub-snippet-name" id="pubName">Loading...</div>
@@ -308,12 +292,12 @@
   </div>
 </div>
 
-<!-- ═══════════ SHARE MODAL ═══════════ -->
+<!-- == SHARE MODAL == -->
 <div class="share-modal-overlay" id="shareModalOverlay">
   <div class="share-modal">
     <button class="share-modal-close" onclick="closeShareModal()">✕</button>
-    <div class="share-modal-title">🔗 Share Snippet</div>
-    <p class="share-modal-sub">Make this snippet publicly accessible — anyone with the link can view and copy the code. No account required.</p>
+    <div class="share-modal-title">Share Snippet</div>
+    <p class="share-modal-sub">Anyone with the link can view and copy the code. No account required.</p>
 
     <div class="share-toggle-row">
       <div>
@@ -335,10 +319,10 @@
   </div>
 </div>
 
-<!-- ── SIDEBAR OVERLAY (mobile) ── -->
+<!-- == SIDEBAR OVERLAY (mobile) == -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
-<!-- ═══════════ APP LAYOUT ═══════════ -->
+<!-- == APP LAYOUT == -->
 <div id="appContainer">
 
   <!-- SIDEBAR -->
@@ -353,16 +337,10 @@
       </div>
       <div class="logo-wordmark">
         <div class="lw-name">CodeStash</div>
-        <div class="lw-sub">Snippet Library</div>
       </div>
     </div>
 
-    <a class="nav-item active" href="#" id="navSnippets" aria-label="Snippets">
-      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
-      Snippets
-    </a>
-
-    <a class="nav-item" href="#" id="navClipboard" aria-label="Online Clipboard">
+    <a class="nav-item active" href="#" id="navClipboard" aria-label="Clipboard">
       <span class="nav-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="2" width="6" height="4" rx="1"/>
@@ -371,17 +349,29 @@
           <line x1="9" y1="14" x2="15" y2="14"/>
         </svg>
       </span>
-      Online Clipboard
+      Clipboard
     </a>
 
-    <a class="nav-item" href="#" id="navNotes" aria-label="Quick Notes">
+    <a class="nav-item" href="#" id="navNotes" aria-label="Notes">
       <span class="nav-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
       </span>
-      Quick Notes
-      <span class="nav-badge" style="margin-left:auto">NEW</span>
+      Notes
+    </a>
+
+    <a class="nav-item" href="#" id="navSnippets" aria-label="Snippets">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </span>
+      Snippets
+      <span class="nav-lock-icon" id="navSnippetsLock" title="Sign in to access snippets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </span>
     </a>
 
   </aside>
@@ -390,9 +380,12 @@
   <header class="topbar">
     <!-- Mobile menu button -->
     <button class="mob-menu-btn" id="mobMenuBtn" aria-label="Open menu" onclick="toggleMobileSidebar()">
-      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="8" x2="21" y2="8"/>
+        <line x1="3" y1="15" x2="15" y2="15"/>
+      </svg>
     </button>
-    <div class="topbar-page-title">Snippets <span>/ Library</span></div>
+    <div class="topbar-page-title" id="topbarPageTitle">Clipboard</div>
     <div class="topbar-spacer"></div>
     <div class="topbar-right">
 
@@ -401,13 +394,19 @@
         <span id="statusText">connecting...</span>
       </div>
 
+      <!-- Theme toggle -->
+      <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle light/dark mode" title="Toggle theme">
+        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+
       <!-- User avatar + dropdown -->
       <div class="user-btn" id="userBtn" role="button" aria-label="Account menu" aria-expanded="false">
         <span id="userAvatar">?</span>
         <div class="account-dropdown" id="accountDropdown" role="menu">
           <div class="dropdown-email" id="dropdownEmail">—</div>
           <div class="dropdown-avatar" id="dropdownAvatar">?</div>
-          <div class="dropdown-name" id="dropdownName">Hello!</div>
+          <div class="dropdown-name" id="dropdownName"></div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-actions">
             <div class="dropdown-action danger" role="menuitem" id="dropdownSignOut" style="grid-column:1/-1;">
@@ -424,14 +423,74 @@
   <!-- MAIN -->
   <main class="main-content">
 
-    <!-- ══ SNIPPETS PANEL ══ -->
-    <div id="snippetsPanel">
+    <!-- == SNIPPETS PANEL == -->
+    <div id="snippetsPanel" style="display:none">
+
+    <!-- == INLINE AUTH CARD (shown to guests) == -->
+    <div id="inlineAuthWrap" style="display:none; max-width:390px; margin:0 auto; width:100%; padding-top:8px;">
+      <div class="auth-card" style="animation:up 0.4s cubic-bezier(0.16,1,0.3,1);">
+
+        <div class="auth-headline" id="authHeadline">Welcome back.</div>
+        <p class="auth-sub" id="authSubline">Sign in to access your personal snippet library.</p>
+
+        <div class="tab-switcher">
+          <button class="tab-btn active" id="tabLogin">Sign In</button>
+          <button class="tab-btn" id="tabSignup">Sign Up</button>
+          <button class="tab-btn admin-tab" id="tabAdmin">Admin</button>
+        </div>
+
+        <div class="rate-limit-bar" id="rateLimitBar">
+          <div class="rate-limit-bar-label" id="rateLimitLabel">Failed attempts</div>
+          <div class="rate-limit-dots" id="rateLimitDots"></div>
+        </div>
+
+        <div class="auth-notice" id="authNotice" style="display:none"></div>
+        <div class="auth-error" id="authError"></div>
+
+        <div class="auth-field">
+          <div class="field-label">Email</div>
+          <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" maxlength="254" />
+        </div>
+        <div class="auth-field">
+          <div class="field-label">Password</div>
+          <div class="pw-wrap">
+            <input class="field-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" maxlength="128" />
+            <button class="pw-toggle" type="button" onclick="togglePw('authPassword',this)" aria-label="Show password">
+              <svg viewBox="0 0 24 24" id="eyeMain"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="auth-field" id="confirmField" style="display:none">
+          <div class="field-label">Confirm Password</div>
+          <div class="pw-wrap">
+            <input class="field-input" type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" maxlength="128" />
+            <button class="pw-toggle" type="button" onclick="togglePw('authConfirm',this)" aria-label="Show confirm password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="auth-field" id="adminKeyField" style="display:none">
+          <div class="field-label">Admin Passphrase</div>
+          <div class="pw-wrap">
+            <input class="field-input" type="password" id="adminKey" placeholder="Enter passphrase" autocomplete="off" maxlength="128" />
+            <button class="pw-toggle" type="button" onclick="togglePw('adminKey',this)" aria-label="Show passphrase">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="authBtn">
+          Sign In
+          <svg width="13" height="13"><use href="#icon-arrow"/></svg>
+        </button>
+      </div>
+    </div>
 
     <!-- Add snippet panel -->
     <div class="add-panel" id="addPanel">
       <div class="panel-label" id="panelLabel">New Snippet</div>
       <div class="input-row">
-        <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" />
+        <input class="field-input" type="text" id="snippetName" placeholder="Snippet name (e.g. FFT solver)" aria-label="Snippet name" maxlength="80" />
         <select class="field-input" id="snippetLang" aria-label="Language" onchange="handleLangChange(this)">
           <option value="python">Python</option>
           <option value="java">Java</option>
@@ -440,8 +499,8 @@
           <option value="javascript">JavaScript</option>
           <option value="cpp">C++</option>
           <option value="sql">SQL</option>
-          <option value="note">📝 Notes</option>
-          <option value="custom">✏ Custom…</option>
+          <option value="note">Notes</option>
+          <option value="custom">Custom…</option>
         </select>
         <input class="field-input" type="text" id="customLangInput"
           placeholder="Enter language name…"
@@ -456,9 +515,7 @@
       </div>
       <div class="tag-input-hint">Press Enter or comma to add a tag · max 6 tags</div>
       <textarea class="code-area" id="snippetCode"
-        placeholder="Paste your code here...
-Line 2 will stay on line 2.
-Indentation is preserved."
+        placeholder="Paste your code here…"
         aria-label="Code"
         spellcheck="false"
         autocorrect="off"
@@ -466,7 +523,8 @@ Indentation is preserved."
         autocomplete="off"
         data-gramm="false"
         data-gramm_editor="false"
-        data-enable-grammarly="false"></textarea>
+        data-enable-grammarly="false"
+        maxlength="100000"></textarea>
       <div class="panel-btn-row">
         <button class="btn-save" id="saveBtn">
           <svg width="13" height="13"><use href="#icon-save"/></svg>
@@ -493,50 +551,61 @@ Indentation is preserved."
 
     <!-- Tag filter bar (rendered by JS) -->
     <div class="tag-filter-bar" id="tagFilterBar" style="display:none"></div>
-
     <!-- Snippets grid (rendered by JS) -->
     <div class="snippets-grid" id="snippetsList"></div>
 
     </div><!-- end #snippetsPanel -->
 
-    <!-- ══ ONLINE CLIPBOARD PANEL ══ -->
-    <div class="clipboard-panel" id="clipboardPanel">
+    <!-- == ONLINE CLIPBOARD PANEL == -->
+    <div class="clipboard-panel visible" id="clipboardPanel">
+
+      <!-- == Mode Tabs: Share / Live == -->
+      <div class="cb-mode-tabs">
+        <button class="cb-mode-tab active" id="cbModeShare" onclick="cbSwitchMode('share')">
+          Share Clipboard
+        </button>
+        <button class="cb-mode-tab" id="cbModeLive" onclick="cbSwitchMode('live')">
+          Live Clipboard
+        </button>
+      </div>
+
+      <!-- == Share Mode (existing upload + retrieve) == -->
+      <div id="cbShareMode">
 
       <!-- Upload Card -->
-      <div class="cb-card" id="cbUploadCard">
+      <div class="cb-card" id="cbUploadCard" style="margin-bottom:20px">
         <div class="cb-card-header">
           <div class="cb-card-icon">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
           <div>
             <div class="cb-card-title">Upload to Clipboard</div>
-            <div class="cb-card-sub">Share text or a file — get a 4-digit code instantly</div>
           </div>
         </div>
 
         <!-- Mode tabs -->
         <div class="cb-tabs">
-          <button class="cb-tab active" id="cbTabText" onclick="cbSwitchUploadMode('text')">📝 Paste Text</button>
-          <button class="cb-tab" id="cbTabFile" onclick="cbSwitchUploadMode('file')">📎 Upload File</button>
+          <button class="cb-tab active" id="cbTabText" onclick="cbSwitchUploadMode('text')">Paste Text</button>
+          <button class="cb-tab" id="cbTabFile" onclick="cbSwitchUploadMode('file')">Upload File</button>
         </div>
 
         <!-- Text mode -->
         <div id="cbTextMode">
-          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste your text, code, or notes here...&#10;It will be available for 24 hours." spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+          <textarea class="cb-textarea" id="cbTextarea" placeholder="Paste text, code, or notes here…" spellcheck="false" autocorrect="off" autocapitalize="off" maxlength="50000"></textarea>
         </div>
 
         <!-- File mode -->
         <div id="cbFileMode" style="display:none">
           <div class="cb-upload-area" id="cbDropZone">
             <input type="file" id="cbFileInput" />
-            <div class="cb-upload-icon">📂</div>
+            <div class="cb-upload-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
             <div class="cb-upload-label">
-              <strong>Click to browse</strong> or drag & drop a file here<br>
-              <span style="font-size:0.72rem">Max 15 MB — any file type</span>
+              <strong>Click to browse</strong> or drag & drop — max 15 MB
             </div>
           </div>
           <div class="cb-file-chosen" id="cbFileChosen">
-            <span style="font-size:1.1rem">📄</span>
             <span class="cb-file-name" id="cbFileName">—</span>
             <button class="cb-file-clear" onclick="cbClearFile()" title="Remove file">✕</button>
           </div>
@@ -556,7 +625,7 @@ Indentation is preserved."
         <div class="cb-otp-result" id="cbOtpResult">
           <div class="cb-otp-label">Your Clipboard Code</div>
           <div class="cb-otp-digits" id="cbOtpDigits"></div>
-          <div class="cb-otp-expiry" id="cbOtpExpiry">⏱ Expires in 24 hours</div>
+          <div class="cb-otp-expiry" id="cbOtpExpiry">Expires in 24 hours</div>
           <!-- QR Code -->
           <div class="cb-qr-wrap">
             <div class="cb-qr-label">or scan QR code</div>
@@ -583,11 +652,8 @@ Indentation is preserved."
           </div>
           <div>
             <div class="cb-card-title">Retrieve from Clipboard</div>
-            <div class="cb-card-sub">Enter a 4-digit code to get the content</div>
           </div>
         </div>
-
-        <p class="cb-retrieve-label">Type each digit below — the boxes auto-advance as you type.</p>
 
         <div class="cb-otp-inputs" id="cbOtpInputs">
           <input class="cb-otp-input" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" id="cbIn0" oninput="cbOtpNext(this,0)" onkeydown="cbOtpKey(event,0)" autocomplete="off" />
@@ -615,9 +681,142 @@ Indentation is preserved."
 
 
 
+      </div><!-- end #cbShareMode -->
+
+      <!-- == Live Mode == -->
+      <div id="cbLiveMode" style="display:none">
+        <div class="lcb-panel visible" id="lcbPanel">
+
+          <!-- Join / Create Screen -->
+          <div class="lcb-join-screen" id="lcbJoinScreen">
+
+            <!-- Host card -->
+            <div class="lcb-join-card">
+              <div class="lcb-join-header">
+                <div>
+                  <div class="lcb-join-title">Start a Session</div>
+                </div>
+              </div>
+              <button class="btn-primary" id="lcbHostBtn">New Session</button>
+            </div>
+
+            <div class="lcb-divider">or join an existing session</div>
+
+            <!-- Join card -->
+            <div class="lcb-join-card">
+              <div class="lcb-join-header">
+                <div>
+                  <div class="lcb-join-title">Join a Session</div>
+                </div>
+              </div>
+              <div class="lcb-code-input-wrap">
+                <input class="field-input" type="text" id="lcbCodeInput"
+                  placeholder="A B C 1 2 3"
+                  maxlength="6" autocomplete="off" autocorrect="off"
+                  autocapitalize="characters" spellcheck="false" />
+                <button class="lcb-join-btn" id="lcbJoinBtn">Join →</button>
+              </div>
+            </div>
+
+          </div><!-- end lcbJoinScreen -->
+
+          <!-- Active Session Screen -->
+          <div class="lcb-session-screen" id="lcbSessionScreen">
+
+            <!-- Status bar -->
+            <div class="lcb-status-bar">
+              <div class="lcb-status-left">
+                <div class="lcb-dot disconnected" id="lcbStatusDot"></div>
+                <span class="lcb-status-text" id="lcbStatusText">connecting</span>
+                <span class="lcb-presence" id="lcbPresence"></span>
+              </div>
+              <button class="lcb-leave-btn" id="lcbLeaveBtn">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Leave
+              </button>
+            </div>
+
+            <!-- Session code -->
+            <div class="lcb-code-bar">
+              <div>
+                <div class="lcb-code-label">Session Code</div>
+                <div class="lcb-code-digits" id="lcbCodeDigits"></div>
+              </div>
+              <button class="lcb-copy-code-btn" id="lcbCopyCodeBtn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Code
+              </button>
+            </div>
+
+            <!-- Text editor -->
+            <div class="lcb-editor-wrap">
+              <textarea class="lcb-textarea" id="lcbTextarea"
+                placeholder="Start typing — syncs to all connected devices instantly."
+                spellcheck="true" autocorrect="on" autocapitalize="sentences"></textarea>
+            </div>
+
+            <!-- File share -->
+            <div class="lcb-file-section">
+              <!-- Drop zone (shown when no file) -->
+              <div class="lcb-file-drop" id="lcbFileDrop">
+                <input type="file" id="lcbFileInput" style="display:none" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span class="lcb-file-drop-label"><strong>Click to attach</strong> or drag a file — max 15 MB</span>
+              </div>
+              <!-- File card (shown when a file is attached) -->
+              <div class="lcb-file-card" id="lcbFileCard" style="display:none">
+                <div class="lcb-file-card-info">
+                  <div class="lcb-file-icon" id="lcbFileIcon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
+                  <div class="lcb-file-meta">
+                    <div class="lcb-file-name" id="lcbFileName">—</div>
+                    <div class="lcb-file-size" id="lcbFileSize">—</div>
+                  </div>
+                </div>
+                <div class="lcb-file-card-actions">
+                  <button class="lcb-action-btn" id="lcbFileDownloadBtn" style="display:none">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download
+                  </button>
+                  <button class="lcb-action-btn danger" id="lcbFileRemoveBtn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <!-- Upload progress -->
+              <div class="lcb-file-progress" id="lcbFileProgress" style="display:none">
+                <div class="lcb-file-progress-bar-wrap"><div class="lcb-file-progress-bar" id="lcbFileProgressBar"></div></div>
+                <span class="lcb-file-progress-text" id="lcbFileProgressText">Uploading…</span>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="lcb-footer">
+              <div class="lcb-footer-left">
+                <button class="lcb-action-btn" id="lcbCopyBtn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Text
+                </button>
+                <button class="lcb-action-btn danger" id="lcbClearBtn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  Clear Text
+                </button>
+              </div>
+              <div class="lcb-footer-right">
+                <span class="lcb-stats" id="lcbStats">0 words · 0 chars</span>
+              </div>
+            </div>
+
+          </div><!-- end lcbSessionScreen -->
+
+        </div><!-- end lcbPanel -->
+      </div><!-- end #cbLiveMode -->
+
     </div><!-- end #clipboardPanel -->
 
-    <!-- ══ QUICK NOTES PANEL ══ -->
+    <!-- == QUICK NOTES PANEL == -->
     <div class="notes-panel" id="notesPanel">
 
       <!-- Header row -->
@@ -678,7 +877,7 @@ Indentation is preserved."
       <!-- Textarea -->
       <div class="notes-editor-wrap" id="notesEditorWrap">
         <textarea class="notes-textarea" id="notesTextarea"
-          placeholder="Start typing your note…&#10;&#10;Use the toolbar above to format, or just write freely."
+          placeholder="Start typing…"
           spellcheck="true"
           autocorrect="on"
           autocapitalize="sentences"></textarea>
@@ -709,9 +908,56 @@ Indentation is preserved."
   </main>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- == TOAST == -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js"></script>
+<!-- ==========================================
+     App Scripts (order matters — each file
+     depends on the ones above it)
+========================================== -->
+
+<!-- 0. Supabase JS client — needed for Realtime WebSocket in Live Clipboard -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
+<!-- 1. Config — Supabase URLs & keys -->
+<script src="src/shared/lib/supabase.js"></script>
+
+<!-- 2. Global helpers (togglePw, handleLangChange) -->
+<script src="src/shared/ui/helpers.js"></script>
+
+<!-- Clipboard mode switcher (Share / Live tabs) -->
+<script>
+function cbSwitchMode(mode) {
+  document.getElementById('cbShareMode').style.display = mode === 'share' ? '' : 'none';
+  document.getElementById('cbLiveMode').style.display  = mode === 'live'  ? '' : 'none';
+  document.getElementById('cbModeShare').classList.toggle('active', mode === 'share');
+  document.getElementById('cbModeLive').classList.toggle('active',  mode === 'live');
+}
+</script>
+
+<!-- Theme toggle is handled inside app-core.js -->
+
+<!-- 4. Core app: auth, snippets, admin, navigation -->
+<script src="src/features/auth/app-core.js"></script>
+
+<!-- 5. Online Clipboard + Quick Notes -->
+<script src="src/features/clipboard/clipboard.js"></script>
+
+<!-- 6. Live Clipboard — real-time shared sessions -->
+<script src="src/features/clipboard/live-clipboard.js"></script>
+
+<!-- AppNotes is nested inside clipboard.js -->
+
+<!-- Auto-close mobile sidebar when a nav item is tapped -->
+<script>
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      if (window.innerWidth < 769) {
+        if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
+      }
+    });
+  });
+</script>
+
 </body>
 </html>

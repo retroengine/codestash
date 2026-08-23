@@ -1,0 +1,217 @@
+/* ===============================================
+   CODESTASH — notes.css
+   Neubrutalism Quick Notes Panel
+=============================================== */
+
+.notes-panel { display: none; flex-direction: column; gap: 14px; }
+.notes-panel.visible { display: flex; }
+
+/* ========== HEADER ========== */
+.notes-header-right { display: flex; align-items: center; gap: 10px; }
+.notes-stat-pill {
+  font-size: 0.66rem; font-weight: 800;
+  color: var(--muted);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 4px; padding: 3px 10px; white-space: nowrap;
+  box-shadow: var(--nb-shadow-sm);
+  font-family: var(--font-mono, 'DM Mono', monospace);
+  transition: color 0.2s;
+}
+
+/* ========== TAB BAR ========== */
+.notes-tab-bar {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 6px; padding: 4px 5px;
+  box-shadow: var(--nb-shadow-sm);
+}
+.notes-tab {
+  padding: 7px 16px; border-radius: 4px;
+  border: 2px solid transparent;
+  background: transparent; color: var(--muted);
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+}
+.notes-tab:hover { background: var(--surface3); color: var(--text); }
+.notes-tab.active {
+  background: var(--accent); color: var(--bg);
+  border-color: var(--border-hi); font-weight: 800;
+  transform: translate(-1px, -1px);
+  box-shadow: 1px 1px 0px var(--border-hi);
+}
+
+.notes-tab-spacer { flex: 1; }
+
+.notes-tab-rename-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 4px;
+  border: 2px solid var(--border);
+  background: transparent; color: var(--muted);
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 0.72rem; font-weight: 700; cursor: pointer;
+  transition: color 0.12s, border-color 0.12s,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+}
+.notes-tab-rename-btn:hover {
+  color: var(--text); border-color: var(--border-hi);
+  transform: translate(-1px, -1px);
+  box-shadow: 1px 1px 0px var(--border-hi);
+}
+.notes-tab-rename-btn svg { flex-shrink: 0; }
+
+/* ========== RENAME ROW ========== */
+.notes-rename-wrap { display: flex; align-items: center; gap: 8px; }
+.notes-rename-input { flex: 1; max-width: 280px; }
+
+.notes-rename-confirm {
+  padding: 9px 18px; border-radius: 5px;
+  border: 2px solid var(--border-hi);
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 0.8rem; font-weight: 800;
+  cursor: pointer; white-space: nowrap;
+  box-shadow: var(--nb-shadow-sm);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+}
+.notes-rename-confirm:hover { transform: translate(-2px, -2px); box-shadow: var(--nb-shadow-md); }
+
+.notes-rename-cancel {
+  padding: 9px 14px; border-radius: 5px;
+  border: 2px solid var(--border);
+  background: transparent; color: var(--muted);
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 0.8rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: color 0.12s, border-color 0.12s,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+}
+.notes-rename-cancel:hover {
+  color: var(--text); border-color: var(--border-hi);
+  transform: translate(-1px, -1px); box-shadow: 1px 1px 0px var(--border-hi);
+}
+
+/* ========== TOOLBAR ========== */
+.notes-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 6px; padding: 5px 9px; gap: 4px;
+  box-shadow: var(--nb-shadow-sm);
+}
+.notes-toolbar-left  { display: flex; align-items: center; gap: 2px; }
+.notes-toolbar-right { display: flex; align-items: center; gap: 2px; }
+
+.notes-tool-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 4px;
+  border: 2px solid transparent;
+  background: transparent; color: var(--muted); cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+}
+.notes-tool-btn:hover {
+  background: var(--surface2); color: var(--text); border-color: var(--border);
+  transform: translate(-1px, -1px); box-shadow: 1px 1px 0px var(--border);
+}
+.notes-tool-btn.active {
+  background: var(--accent); color: var(--bg); border-color: var(--border-hi);
+  transform: translate(-1px, -1px); box-shadow: 1px 1px 0px var(--border-hi);
+}
+
+.notes-tool-divider {
+  width: 2px; height: 18px; background: var(--border); margin: 0 4px;
+}
+
+/* ========== EDITOR ========== */
+.notes-editor-wrap {
+  position: relative;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+  box-shadow: var(--nb-shadow-md);
+  transition: border-color 0.12s, box-shadow 0.15s;
+}
+.notes-editor-wrap:focus-within {
+  border-color: var(--border-hi);
+  box-shadow: var(--nb-shadow-lg);
+}
+.notes-editor-wrap.fullscreen {
+  position: fixed; inset: 0; z-index: 400;
+  border-radius: 0; border: none;
+  border-top: 3px solid var(--accent);
+  box-shadow: none;
+  display: flex; flex-direction: column;
+}
+
+.notes-textarea {
+  width: 100%; min-height: 340px;
+  background: transparent; border: none; outline: none; resize: none;
+  color: var(--text);
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 0.92rem; line-height: 1.85;
+  padding: 22px 24px;
+  caret-color: var(--accent);
+}
+.notes-editor-wrap.fullscreen .notes-textarea {
+  flex: 1; min-height: 0; font-size: 1rem; padding: 32px 40px;
+}
+.notes-textarea::placeholder { color: var(--muted2); }
+
+/* Char counter */
+.notes-editor-wrap::after {
+  content: attr(data-count);
+  position: absolute; bottom: 10px; right: 14px;
+  font-size: 0.63rem; color: var(--muted2);
+  pointer-events: none;
+  font-family: var(--font-mono, 'DM Mono', monospace);
+  font-weight: 700;
+}
+
+/* ========== FOOTER ========== */
+.notes-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.notes-footer-left  { display: flex; align-items: center; gap: 8px; }
+.notes-footer-right { display: flex; align-items: center; gap: 8px; }
+
+.notes-action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 5px;
+  border: 2px solid var(--border);
+  background: var(--surface); color: var(--muted);
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+}
+.notes-action-btn:hover {
+  background: var(--surface2); color: var(--text); border-color: var(--border-hi);
+  transform: translate(-2px, -2px); box-shadow: var(--nb-shadow-sm);
+}
+.notes-action-btn.danger:hover {
+  color: var(--danger); border-color: var(--danger);
+  background: transparent;
+  box-shadow: 3px 3px 0px var(--danger);
+}
+.notes-action-btn.success {
+  color: var(--success); border-color: var(--success);
+  box-shadow: 3px 3px 0px var(--success);
+}
+
+/* ========== MOBILE ========== */
+@media (max-width: 768px) {
+  .notes-tab-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 5px; gap: 3px; }
+  .notes-tab { padding: 7px 12px; font-size: 0.76rem; }
+  .notes-tab-rename-btn { display: none; }
+  .notes-textarea { min-height: 260px; padding: 16px; font-size: 0.88rem; }
+  .notes-footer { flex-direction: column; align-items: stretch; }
+  .notes-footer-left, .notes-footer-right { width: 100%; }
+  .notes-action-btn { flex: 1; justify-content: center; }
+}
