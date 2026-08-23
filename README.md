@@ -26,33 +26,35 @@ A self-hosted, private snippet library and online clipboard — built as a singl
 
 | Layer | Tool |
 |---|---|
-| Frontend | Vanilla HTML/CSS/JS (single file) |
+| Frontend | Vanilla HTML/CSS/JS (`index.html`, `styles.css`, `app.js`) |
+| Backend | Thin Node.js proxy (`api/admin/*.js`), deployed as Vercel Serverless Functions |
 | Auth | Supabase Auth |
 | Database | Supabase Postgres (REST API) |
 | File Storage | Supabase Storage |
 | Fonts | DM Sans + DM Mono (Google Fonts) |
 
+Almost everything still talks to Supabase directly from the browser, protected by
+Row Level Security — that hasn't changed. The one exception is the admin portal:
+the admin passphrase is verified server-side by `api/admin/login.js` and never
+shipped to the client, and the other admin actions (site lock, guest features,
+user approve/reject) are proxied through `api/admin/*.js` so they forward the
+admin's own session token rather than duplicating any authorization logic. See
+[Configuration](#configuration) for the env vars this requires.
+
 ---
 
 ## Project Structure
 
-Everything lives in **one file**: `index.html`
-
-Internally it's organized as:
-
 ```
-index.html
-├── CSS tokens & global styles
-├── Auth screen (Sign In / Sign Up / Admin)
-├── Pending approval screen
-├── Admin portal (user management, site lock)
-├── App layout
-│   ├── Sidebar (Snippets nav, Online Clipboard nav)
-│   ├── Topbar (status, user dropdown)
-│   ├── Snippets panel (add, search, grid)
-│   └── Clipboard panel (upload, retrieve)
-├── Script — CodeStash (Supabase project #1)
-└── Script — Online Clipboard (Supabase project #2)
+index.html              HTML shell (head, auth/admin/app markup)
+styles.css               All styling
+app.js                    All frontend logic — auth, snippets, admin, clipboard, quick notes
+api/
+├── admin/login.js         POST — verifies the admin passphrase server-side, then Supabase auth
+├── admin/site-settings.js GET/PATCH — site lock + guest feature toggles
+├── admin/users.js          GET — list users pending/approved/rejected
+└── admin/users/[id].js     PATCH — approve/reject/revoke a user
+dev-server.js            Local Express stand-in for the Vercel functions above (`npm run dev`)
 ```
 
 ---
@@ -169,33 +171,70 @@ CREATE POLICY "public_read_files" ON storage.objects FOR SELECT USING (bucket_id
 
 ## Configuration
 
-Open `index.html` and update the two config blocks near the top of the `<script>` section:
+Two separate places now need config — the frontend (still hardcoded, since there's
+still no build step) and the backend (real environment variables, since `api/*.js`
+runs in a Node runtime).
+
+### Frontend — `app.js`
+
+The snippet-library Supabase URL/anon key and the clipboard project's URL/key are
+near the top of `app.js` and in the `ONLINE CLIPBOARD` section respectively. These
+are the **anon/public** keys from Supabase → Settings → API — safe to ship to the
+browser because Row Level Security (RLS) enforces all access rules at the database
+level for every call they make.
 
 ```js
-// ── Snippet Library (Project #1)
 const _c = 'https://YOUR-PROJECT.supabase.co';
 const _k = 'YOUR-ANON-KEY';
-const _adminPhrase = 'your-secret-passphrase';
-
-// ── Online Clipboard (Project #2)
+// ...
 const CB_URL = 'https://YOUR-CLIPBOARD-PROJECT.supabase.co';
 const CB_KEY = 'YOUR-CLIPBOARD-ANON-KEY';
 ```
 
-Both keys are the **anon/public** keys from Supabase → Settings → API. They are safe to use in frontend code because Row Level Security (RLS) enforces all access rules at the database level.
+### Backend — environment variables
+
+Copy `.env.example` to `.env` and fill in:
+
+```
+SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+SUPABASE_ANON_KEY=YOUR-ANON-KEY
+ADMIN_PASSPHRASE=your-secret-passphrase
+```
+
+`SUPABASE_URL`/`SUPABASE_ANON_KEY` here are the **same** snippet-library project
+values as above — `api/*.js` needs its own copy since it can't read `app.js`.
+`ADMIN_PASSPHRASE` is the admin-portal gate; it's checked entirely server-side in
+`api/admin/login.js` and is never sent to the browser. Pick a fresh value — the
+old hardcoded passphrase is permanently readable in this repo's git history, so
+reusing it doesn't actually protect anything.
+
+`.env` is git-ignored. For local dev: `npm install && npm run dev` (runs
+`dev-server.js`, an Express stand-in for the Vercel functions, on `:3000`). On
+Vercel: Project → Settings → Environment Variables, add the same three, then
+redeploy.
 
 ---
 
 ## Deployment
 
-Since everything is a single HTML file, deployment is straightforward:
+The app is a static frontend (`index.html`/`styles.css`/`app.js`) plus a handful
+of Vercel Serverless Functions in `api/` — Vercel is the only target set up for
+this out of the box (no `vercel.json` needed, it detects the `api/` layout on its
+own):
 
-- **GitHub Pages** — push `index.html` to a repo and enable Pages
-- **Netlify / Vercel** — drop the file or connect a repo
-- **Cloudflare Pages** — same as above
-- **Self-hosted** — serve it from any static file host or Nginx/Caddy
+1. Connect the repo on [vercel.com](https://vercel.com) (or push — if already
+   connected via GitHub integration, every push deploys automatically).
+2. Add the three environment variables above under Project Settings.
+3. **Deployment Protection**: by default a new Vercel project may have
+   "Vercel Authentication" enabled, which puts the whole site behind a login
+   wall even though it deployed successfully — check Project → Settings →
+   Deployment Protection and turn it off for Production if you want the site
+   actually public.
 
-No build step, no dependencies, no Node.js required.
+Other static hosts (GitHub Pages, Netlify, Cloudflare Pages) can still serve
+`index.html`/`styles.css`/`app.js`, but the admin portal won't work there since
+they don't run `api/*.js` — only the snippet library (as a regular signed-in
+user) and the Online Clipboard would function.
 
 ---
 
@@ -226,12 +265,20 @@ No build step, no dependencies, no Node.js required.
 
 ## Security Notes
 
-- Change `_adminPhrase` before deploying — the default is a placeholder
-- All data access is enforced by Supabase RLS policies, not just the frontend
+- The admin passphrase lives only in the `ADMIN_PASSPHRASE` env var and is checked
+  server-side in `api/admin/login.js` — it is never present in `app.js` or any
+  page source shipped to the browser
+- All data access is additionally enforced by Supabase RLS policies at the
+  database level, not just the frontend or the API routes
 - The clipboard is intentionally anonymous — security relies on the OTP being unguessable (1-in-10,000 odds)
 - The app blocks DevTools (right-click, F12, Ctrl+Shift+I) to deter casual inspection
 - Failed login attempts are rate-limited (5 attempts max per session)
-- Never commit your Supabase anon key to a public repo if you've hardcoded it — use environment variables or a build step instead
+- The Supabase anon key in `app.js` is expected to be public/committed — it's
+  designed to be safe as long as RLS policies are correct (see the SQL above)
+- If this repo has ever had a *real* admin passphrase or service-role key
+  committed to it, rotating the value going forward does **not** remove it from
+  git history — anyone can still read old commits. Purge history
+  (`git filter-repo`/BFG) if that matters for your deployment
 
 ---
 

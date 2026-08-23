@@ -1,0 +1,16 @@
+{
+  "name": "codestash",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CodeStash — snippet library and online clipboard",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "dev": "node dev-server.js"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
