@@ -29,21 +29,11 @@ const _c = SUPABASE_SNIPPETS_URL;  /* from shared/lib/supabase.js */
 const _k = SUPABASE_SNIPPETS_KEY;  /* from shared/lib/supabase.js */
 
 /* ============================================
-   ADMIN PASSPHRASE — stored as SHA-256 hash only.
-   The real passphrase is NEVER in this file.
-   To change it: run this in your browser console:
-     crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassphrase'))
-       .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
-   Then paste the output hash below.
+   ADMIN PASSPHRASE — verified server-side only, via
+   POST /api/admin/login (api/admin/login.js). The
+   passphrase itself never lives in this file or any
+   code shipped to the browser.
 ============================================ */
-const _adminPhraseHash = '<YOUR_ADMIN_PASSPHRASE_HASH>';
-// ↑ Replace this hash with the hash of YOUR chosen passphrase (see instructions above)
-// Ensure you change this before deploying!
-
-async function _hashPhrase(str) {
-  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
-}
 
 /* ============================================
    RATE LIMITING
@@ -217,13 +207,6 @@ async function handleAuth() {
   if (_authMode === 'admin') {
     const key = document.getElementById('adminKey').value || '';
     if (key.length < 1) { showAuthError('Please enter the admin passphrase.'); return; }
-    // Compare hash of what was typed — never compare plaintext
-    const typedHash = await _hashPhrase(key);
-    if (typedHash !== _adminPhraseHash) {
-      recordFailedAttempt();
-      showAuthError('Invalid admin passphrase.');
-      return;
-    }
   }
 
   const modeAtSubmit = _authMode;
@@ -232,6 +215,21 @@ async function handleAuth() {
     (modeAtSubmit === 'signup' ? 'Requesting...' : modeAtSubmit === 'admin' ? 'Authenticating...' : 'Signing in...');
 
   try {
+    if (modeAtSubmit === 'admin') {
+      const res  = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, passphrase: document.getElementById('adminKey').value || '' })
+      });
+      const data = await res.json();
+      if (!res.ok) { recordFailedAttempt(); showAuthError(data.error || 'Authentication failed.'); return; }
+      _session = data.session;
+      _userProfile = data.profile;
+      resetRateLimit();
+      showAdminPortal();
+      return;
+    }
+
     const url  = modeAtSubmit === 'signup' ? _c + '/auth/v1/signup' : _c + '/auth/v1/token?grant_type=password';
     const res  = await fetch(url, { method:'POST', headers:{'apikey':_k,'Content-Type':'application/json'}, body: JSON.stringify({email,password}) });
     const data = await res.json();
@@ -254,20 +252,10 @@ async function handleAuth() {
     resetRateLimit();
     const profile = await fetchProfile(data.user.id, data.access_token);
 
-    if (modeAtSubmit === 'admin') {
-      if (!profile || profile.role !== 'admin') {
-        recordFailedAttempt(); _session = null;
-        showAuthError('Access denied. This account does not have admin privileges.');
-        return;
-      }
-      _userProfile = profile;
-      showAdminPortal();
-    } else {
-      if (!profile) { await createProfile(data.user.id, email, 'user', 'pending', data.access_token); showPendingScreen(email); return; }
-      if (profile.status === 'pending')  { showPendingScreen(email); return; }
-      if (profile.status === 'rejected') { _session = null; showAuthError('Your account access has been rejected. Contact the administrator.'); return; }
-      if (profile.status === 'approved') { _userProfile = profile; showApp(data); }
-    }
+    if (!profile) { await createProfile(data.user.id, email, 'user', 'pending', data.access_token); showPendingScreen(email); return; }
+    if (profile.status === 'pending')  { showPendingScreen(email); return; }
+    if (profile.status === 'rejected') { _session = null; showAuthError('Your account access has been rejected. Contact the administrator.'); return; }
+    if (profile.status === 'approved') { _userProfile = profile; showApp(data); }
   } catch (err) {
     const msg = err && err.message ? err.message : String(err);
     showAuthError('Network error: ' + msg + ' | URL: ' + _c);

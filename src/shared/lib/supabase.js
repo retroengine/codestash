@@ -8,9 +8,9 @@
 ============================================ */
 
 /* -- Snippets project -- */
-const SUPABASE_SNIPPETS_URL = 'https://<YOUR_SNIPPETS_SUPABASE_PROJECT_ID>.supabase.co';
-const SUPABASE_SNIPPETS_KEY = '<YOUR_SNIPPETS_SUPABASE_ANON_KEY>';
+const SUPABASE_SNIPPETS_URL = 'https://raxnqglobvykqylejibx.supabase.co';
+const SUPABASE_SNIPPETS_KEY = 'sb_publishable_zyQ4xqqrd5yGLGBdC73lsA_PYqqHGRb';
 
 /* -- Clipboard project -- */
-const SUPABASE_CLIPBOARD_URL = 'https://<YOUR_CLIPBOARD_SUPABASE_PROJECT_ID>.supabase.co';
-const SUPABASE_CLIPBOARD_KEY = '<YOUR_CLIPBOARD_SUPABASE_ANON_KEY>';
+const SUPABASE_CLIPBOARD_URL = 'https://vbtzptvgbzsvrustnwiz.supabase.co';
+const SUPABASE_CLIPBOARD_KEY = 'sb_publishable_C_9ftqCYFtiwKuQTDnRBXg_mC3ypDYJ';

@@ -1,6 +1,6 @@
 // Admin user status update (approve/reject/revoke) — forwards the caller's own Supabase
 // session token; RLS (admin_update) does the real authorization.
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'PATCH') {
     res.setHeader('Allow', 'PATCH');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -31,4 +31,4 @@ module.exports = async (req, res) => {
   } catch (err) {
     return res.status(502).json({ error: 'Upstream error.' });
   }
-};
+}

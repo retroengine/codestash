@@ -1,7 +1,7 @@
 // Admin site-settings: read/toggle site lock + guest feature flags.
 // Forwards the caller's own Supabase session token — RLS (admin_update_settings)
 // does the real authorization, this route doesn't duplicate that logic.
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ error: 'Missing authorization token.' });
 
@@ -34,4 +34,4 @@ module.exports = async (req, res) => {
   } catch (err) {
     return res.status(502).json({ error: 'Upstream error.' });
   }
-};
+}

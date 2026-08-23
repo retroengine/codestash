@@ -1,6 +1,6 @@
 // Admin user list — forwards the caller's own Supabase session token; RLS (admin_read_all)
 // does the real authorization.
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -21,4 +21,4 @@ module.exports = async (req, res) => {
   } catch (err) {
     return res.status(502).json({ error: 'Upstream error.' });
   }
-};
+}

@@ -1,15 +1,17 @@
 // Local dev stand-in for Vercel's serverless functions — mounts the same
 // api/admin/*.js handlers directly so the backend can be tested without a
 // Vercel login. Not deployed; Vercel runs api/**/*.js as functions natively.
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
+import 'dotenv/config';
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const login = require('./api/admin/login.js');
-const siteSettings = require('./api/admin/site-settings.js');
-const users = require('./api/admin/users.js');
-const userById = require('./api/admin/users/[id].js');
+import login from './api/admin/login.js';
+import siteSettings from './api/admin/site-settings.js';
+import users from './api/admin/users.js';
+import userById from './api/admin/users/[id].js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));

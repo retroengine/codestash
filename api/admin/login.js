@@ -1,6 +1,6 @@
 // Admin sign-in — verifies the passphrase server-side (never shipped to the client),
 // then authenticates against Supabase and confirms the profile has role='admin'.
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -43,4 +43,4 @@ module.exports = async (req, res) => {
   } catch (err) {
     return res.status(502).json({ error: 'Upstream authentication error.' });
   }
-};
+}
