@@ -498,11 +498,12 @@ select.field-input { cursor: pointer; }
   }
 
   .sidebar {
-    position: fixed; top: 0; left: 0; height: 100vh;
-    transform: translateX(0);
+    position: sticky; top: 0; height: 100vh;
+    transform: none;
     padding: 24px 14px;
     width: 252px;
     border-right: 2px solid var(--border);
+    grid-row: 1 / -1;
   }
   .sidebar-overlay { display: none !important; }
   .mob-menu-btn { display: none; }
