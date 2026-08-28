@@ -498,9 +498,8 @@ select.field-input { cursor: pointer; }
   }
 
   .sidebar {
-    position: sticky; top: 0; height: 100vh;
+    position: fixed; top: 0; left: 0; height: 100vh;
     transform: translateX(0);
-    grid-column: 1; grid-row: 1 / -1;
     padding: 24px 14px;
     width: 252px;
     border-right: 2px solid var(--border);
